@@ -1,0 +1,8 @@
+// Testing: Scope
+//
+// A Variable must not be redeclarable within the same Scope.
+//
+// Expected output: Error
+
+String greeting := "Guten Morgen"
+String greeting := "Guten Tag"

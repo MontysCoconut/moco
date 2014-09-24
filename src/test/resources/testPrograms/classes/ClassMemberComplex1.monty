@@ -1,0 +1,33 @@
+// Testing: VariableDeclaration in ClassDeclaration.
+//
+// The attributes of a class with multiple attributes of different types are
+// written and read from within the initializer and outside the class.
+//
+// Expected output: 18Paul119Paula0
+
+class Person:
+    + initializer():
+        self.isMale := false
+        self.age := 0
+        self.name := ""
+
+    + Bool isMale
+    + Int age
+    + String name
+
+Person person := Person()
+person.age := 18
+person.name := "Paul"
+person.isMale := true
+
+print(person.age)
+print(person.name)
+print(person.isMale)
+
+person.age := 19
+person.name := "Paula"
+person.isMale := false
+
+print(person.age)
+print(person.name)
+print(person.isMale)

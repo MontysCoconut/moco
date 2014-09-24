@@ -1,0 +1,7 @@
+// Testing: ConditionalExpression with simple expressions.
+//
+// The condition is true, so the first part should be returned.
+//
+// Expected output: 42
+
+print(42 if true else 24)

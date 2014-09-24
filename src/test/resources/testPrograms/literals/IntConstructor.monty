@@ -1,0 +1,11 @@
+// Testing: Int as Object
+//
+// An int-initializer call must work.
+//
+// Expected output: 042
+
+Int z := Int(0)
+Int i := Int(42)
+
+print(z)
+print(i)

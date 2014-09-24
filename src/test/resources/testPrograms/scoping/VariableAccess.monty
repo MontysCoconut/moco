@@ -1,0 +1,13 @@
+// Testing: Lexical scoping
+//
+// answer is not declared within function calcAnswerToLifeAndStuff,
+// so answer from outer scope is accessed.
+//
+// Expected output: 42
+
+Int answer := 42
+
+calcAnswerToLifeAndStuff():
+	print(answer)
+
+calcAnswerToLifeAndStuff()

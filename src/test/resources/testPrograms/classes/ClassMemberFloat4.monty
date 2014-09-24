@@ -1,0 +1,16 @@
+// Testing: VariableDeclaration in ClassDeclaration.
+//
+// The float attribute is written and a copy printed. The access via self
+// must work.
+//
+// Expected output: 1.3
+
+class Ab:
+    + initializer():
+        self.attr := 1.3
+        Float copy := self.attr
+        print(copy)
+
+    + Float attr
+
+Ab b := Ab()

@@ -1,0 +1,36 @@
+// Testing: Methods of classes
+//
+// The methods (functions and procedures) of multiple classes must work
+// together if classes are passed as arguments and return values.
+//
+// Expected output: 12
+
+class Edge:
+  + Node start
+  + Node end
+
+  + initializer(Node start, Node end):
+    self.start := start
+    self.end := end
+
+  + Node getStart():
+    return self.start
+
+  + Node getEnd():
+    return self.end
+
+class Node:
+  + Int id
+
+  + initializer(Int id):
+    self.id := id
+
+  + Int getId():
+    return self.id
+
+Node s := Node(1)
+Node e := Node(2)
+Edge edge := Edge(s,e)
+
+print(edge.getStart().getId())
+print(edge.getEnd().getId())

@@ -1,0 +1,21 @@
+// Testing: ClassDeclaration with single inheritance and casting.
+//
+// The program must fail casting the expression as the expression was never an
+// instance of B. The program fails before printing.
+//
+// Expected output:
+
+class Ab:
+    + initializer():
+        pass
+
+class Ba inherits Ab:
+    + initializer():
+        pass
+
+    + methodB():
+        print("Nope")
+
+Ab a := Ab()
+Ba b := a as Ba
+b.methodB()

@@ -1,0 +1,11 @@
+// Testing: The operator * on int.
+//
+// The result of an multiplication should be an int.
+//
+// Expected output: 63
+
+Int b := 2*3
+print(b)
+
+Int a := 3
+print(a*1)

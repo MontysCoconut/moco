@@ -1,0 +1,10 @@
+// Testing: The operator - on int.
+//
+// The result of an subtraction should be an int.
+//
+// Expected output: -51
+
+Int b := 3-8
+print(b)
+Int a := -1
+print(a+2)

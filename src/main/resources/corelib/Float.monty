@@ -1,0 +1,36 @@
+class Float:
+    + initializer(Float f):
+        pass
+
+    + Float operator-():
+        pass
+
+    + Float operator+(Float other):
+        pass
+
+    + Float operator-(Float other):
+        pass
+
+    + Float operator*(Float other):
+        pass
+
+    + Float operator/(Float other):
+        pass
+
+    + Bool operator<(Float other):
+        pass
+
+    + Bool operator>(Float other):
+        pass
+
+    + Bool operator<=(Float other):
+        pass
+
+    + Bool operator>=(Float other):
+        pass
+
+    + Bool operator=(Float other):
+        pass
+
+    + Bool operator!=(Float other):
+        pass

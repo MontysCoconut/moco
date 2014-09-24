@@ -1,0 +1,24 @@
+// Testing: ClassDeclaration, default initializer / attr assignments
+//
+// The assignments of member attributes of the class must be executed in all
+// given initializers.
+//
+// Expected output: null!eins!zwei!
+
+class MyClass:
+ + String null := "null!"
+ + String eins := "eins!"
+ + String zwei := "zwei!"
+
+ + initializer():
+   print(self.null)
+
+ + initializer(String egal):
+   print(self.eins)
+
+ + initializer(String egal, String auchunwichtig):
+   print(self.zwei)
+
+MyClass clazz0 := MyClass()
+MyClass clazz1 := MyClass("1")
+MyClass clazz2 := MyClass("1", "2")

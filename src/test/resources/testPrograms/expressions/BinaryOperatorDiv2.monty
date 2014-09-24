@@ -1,0 +1,10 @@
+// Testing: The operator / on float.
+//
+// The result of a division should be an float.
+//
+// Expected output: 1.57
+
+Float b := 3.0/2.0
+print(b)
+Float a := 35.0
+print(a/5.0)

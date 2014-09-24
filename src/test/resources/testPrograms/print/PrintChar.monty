@@ -1,0 +1,8 @@
+// Testing: The print function with char.
+//
+// Expected output: HAHA
+
+print('H')
+print('A')
+print('H')
+print('A')

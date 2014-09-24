@@ -1,0 +1,47 @@
+// Testing: Overloading of functions
+//
+// The correct overloaded function with predefined types must be called.
+//
+// Expected output: :No:i:s:f:b:ii:ss:ff:bb
+
+Bool function():
+    print(":No")
+    return false
+
+Bool function(Int x):
+    print(":i")
+    return false
+Bool function(String x):
+    print(":s")
+    return false
+Bool function(Float x):
+    print(":f")
+    return false
+Bool function(Bool x):
+    print(":b")
+    return false
+
+Bool function(Int x1, Int x2):
+    print(":ii")
+    return false
+Bool function(String x1, String x2):
+    print(":ss")
+    return false
+Bool function(Float x1, Float x2):
+    print(":ff")
+    return false
+Bool function(Bool x1, Bool x2):
+    print(":bb")
+    return false
+
+function()
+
+function(42)
+function("Hallo")
+function(1.3)
+function(true)
+
+function(42, 42)
+function("Hallo", "Welt")
+function(1.3, 3.1)
+function(true, false)

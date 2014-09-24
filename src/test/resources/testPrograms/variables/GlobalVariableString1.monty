@@ -1,0 +1,13 @@
+// Testing: VariableDeclaration and VariableAccess in a ModuleDeclaration.
+//
+// The string variable must be visible and readable inside the procedure
+// output().
+//
+// Expected output: Hello
+
+String hello := "Hello"
+
+output():
+  print(hello)
+
+output()

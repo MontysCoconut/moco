@@ -1,0 +1,17 @@
+// Testing: ClassDeclaration
+//
+// The simple initializer call of an inherited class with a variable as
+// parameter must work.
+//
+// Expected output: HALLO
+
+class Ab:
+ + initializer(String a):
+   print(a)
+
+class Ba inherits Ab:
+ + initializer(String a):
+   parent(Ab).initializer(a)
+
+String hallo := "HALLO"
+Ba x := Ba(hallo)

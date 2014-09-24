@@ -1,0 +1,13 @@
+// Testing: Arrays
+//
+// Read/Write with an array of size 2 must work.
+//
+// Expected output: 011011
+
+Array a := [0, 1]
+print(a[0])
+print(a[1])
+a[0] := 10
+a[1] := 11
+print(a[0])
+print(a[1])

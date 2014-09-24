@@ -1,0 +1,20 @@
+// Testing: Methods of classes
+//
+// The methods (functions and procedures) of a class with parameters must be
+// called correctly.
+//
+// Expected output: BAUM FAELLT!uiuiui
+
+class Laute:
+  + initializer():
+    pass
+
+  + String gibLaut(String ausruf):
+    return ausruf
+
+  + printLaut(String ausruf):
+    print(ausruf)
+
+Laute laut := Laute()
+print(laut.gibLaut("BAUM FAELLT!"))
+laut.printLaut("uiuiui")

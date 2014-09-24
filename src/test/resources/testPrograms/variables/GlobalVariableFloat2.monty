@@ -1,0 +1,14 @@
+// Testing: VariableDeclaration and VariableAccess in a ModuleDeclaration.
+//
+// The float variable must be visible, writable and readable inside the
+// procedure output().
+//
+// Expected output: 1.3
+
+Float hello
+
+output():
+  hello := 1.3
+  print(hello)
+
+output()

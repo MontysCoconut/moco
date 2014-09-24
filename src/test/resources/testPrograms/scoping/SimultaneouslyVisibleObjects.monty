@@ -1,0 +1,15 @@
+// Testing: Lexical scoping / Simultaneous visibility
+//
+// The class attributes einBaum and einAst must be visible before their lexical
+// declaration for the reason that their scope is created by class instantiation.
+//
+// Expected output: reihenfolge ist equal
+
+Wald einWald := Wald()
+print(einWald.einBaum.einAst)
+
+class Baum:
+    + String einAst := "reihenfolge ist equal"
+
+class Wald:
+    + Baum einBaum := Baum()

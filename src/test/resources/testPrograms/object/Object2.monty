@@ -1,0 +1,10 @@
+// Testing: The monty baseclass Object.
+//
+// Object must be usable as normal Object (e.g. pass it arround).
+//
+// Expected output:
+
+Object returnsObject(Object o):
+    return o
+
+Object o := returnsObject(Object())

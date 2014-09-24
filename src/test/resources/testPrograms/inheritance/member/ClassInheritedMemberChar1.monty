@@ -1,0 +1,19 @@
+// Testing: VariableDeclaration in ClassDeclaration with single inheritance.
+//
+// The char inherited attribute is written and printed. The access via self
+// must work.
+//
+// Expected output: M
+
+class Ab:
+    + initializer():
+        self.attr := 'M'
+
+    + Char attr
+
+class Ba inherits Ab:
+    + initializer():
+        parent(Ab).initializer()
+        print(self.attr)
+
+Ba b := Ba()

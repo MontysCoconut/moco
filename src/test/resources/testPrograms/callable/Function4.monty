@@ -1,0 +1,19 @@
+// Testing: Nested FunctionDeclaration, FunctionCall, ConditionalStatement
+//
+// The function must be called correctly and return the evaluated return
+// expression.
+//
+// Expected output: 42
+
+Int identity(Int x):
+  return x
+
+Int square(Int x):
+  if x < 3:
+    return identity(4)
+  else:
+    return identity(2)
+  return 9000 // this is needed at the moment, should be fixed
+
+print(square(2))
+print(square(100))

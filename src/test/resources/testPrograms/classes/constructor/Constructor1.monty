@@ -1,0 +1,13 @@
+// Testing: ClassDeclaration
+//
+// The simple initializer call must work.
+//
+// Expected output: Hi
+
+class Ab:
+ + String someAttr
+
+ + initializer():
+   print("Hi")
+
+Ab x := Ab()

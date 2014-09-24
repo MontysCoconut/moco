@@ -1,0 +1,21 @@
+// Testing: ClassDeclaration with single inheritance and upcasting.
+//
+// The compiler must upcast automatically at an assignment.
+//
+// Expected output: 1
+
+class Ab:
+    + initializer(Bool value):
+        self.attr := value
+
+    + Bool attr
+
+    + printIt():
+        print(self.attr)
+
+class Ba inherits Ab:
+    + initializer():
+        parent(Ab).initializer(true)
+
+Ab b := Ba()
+b.printIt()

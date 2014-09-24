@@ -1,0 +1,93 @@
+// Testing: User defined operators.
+//
+// The user must be able to define operators on some class.
+//
+// Expected output: operator_unary-operator+operator-operator*operator/
+//                  operator%operator<operator>operator<=operator>=operator=
+//                  operator!=operator_notoperator_xoroperator_andoperator_or
+
+class SomeClass:
+    + SomeClass operator-():
+        print("operator_unary-")
+        return self
+
+    + SomeClass operator+(SomeClass other):
+        print("operator+")
+        return self
+
+    + SomeClass operator-(SomeClass other):
+        print("operator-")
+        return self
+
+    + SomeClass operator*(SomeClass other):
+        print("operator*")
+        return self
+
+    + SomeClass operator/(SomeClass other):
+        print("operator/")
+        return self
+
+    + SomeClass operator%(SomeClass other):
+        print("operator%")
+        return self
+
+    + SomeClass operator<(SomeClass other):
+        print("operator<")
+        return self
+
+    + SomeClass operator>(SomeClass other):
+        print("operator>")
+        return self
+
+    + SomeClass operator<=(SomeClass other):
+        print("operator<=")
+        return self
+
+    + SomeClass operator>=(SomeClass other):
+        print("operator>=")
+        return self
+
+    + SomeClass operator=(SomeClass other):
+        print("operator=")
+        return self
+
+    + SomeClass operator!=(SomeClass other):
+        print("operator!=")
+        return self
+
+    + SomeClass operator_not():
+        print("operator_not")
+        return self
+
+    + SomeClass operator_xor(SomeClass other):
+        print("operator_xor")
+        return self
+
+    + SomeClass operator_and(SomeClass other):
+        print("operator_and")
+        return self
+
+    + SomeClass operator_or(SomeClass other):
+        print("operator_or")
+        return self
+
+SomeClass foo := SomeClass()
+SomeClass bar := SomeClass()
+SomeClass result := SomeClass()
+
+result := -bar
+result := foo + bar
+result := foo - bar
+result := foo * bar
+result := foo / bar
+result := foo % bar
+result := foo < bar
+result := foo > bar
+result := foo <= bar
+result := foo >= bar
+result := foo = bar
+result := foo != bar
+result := not bar
+result := foo xor bar
+result := foo and bar
+result := foo or bar

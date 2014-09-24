@@ -1,0 +1,12 @@
+// Testing: VariableDeclaration, VariableAccess, FunctionCall
+//
+// A global float variable as parameter and local copy as return value.
+//
+// Expected output: 1.3
+
+Float function(Float var):
+    Float copy := var
+    return copy
+
+Float var := 1.3
+print(function(var))

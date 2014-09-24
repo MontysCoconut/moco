@@ -1,0 +1,9 @@
+// Testing: CompoundAssignment
+//
+// Using the CompoundAssignment Mod
+//
+// Expected output: 1
+
+Int a := 5
+a %= 2
+print(a)

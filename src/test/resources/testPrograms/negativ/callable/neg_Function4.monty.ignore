@@ -1,0 +1,17 @@
+// Testing: FunctionDeclaration & Return
+//
+// A function must contain a return in every branch of conditional
+// statement.
+//
+// Expected output: Error
+
+String branch(Int x):
+	String y
+	if x = 10:
+		y := "10"
+		return y
+	else:
+		y := "2"
+
+
+print(branch(1))

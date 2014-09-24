@@ -1,0 +1,8 @@
+// Testing: Lexical scoping
+//
+// var must not be readable if it is not declared yet.
+//
+// Expected output: Error
+
+print(var)
+Int var := 42

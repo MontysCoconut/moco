@@ -1,0 +1,7 @@
+// Testing: Arrays
+//
+// An emtpy array must be initializable.
+//
+// Expected output:
+
+Array a := []

@@ -1,0 +1,14 @@
+// Testing: VariableDeclaration and VariableAccess in a ModuleDeclaration.
+//
+// The char variable must be visible, writable and readable inside the
+// procedure output().
+//
+// Expected output: M
+
+Char hello
+
+output():
+  hello := 'M'
+  print(hello)
+
+output()

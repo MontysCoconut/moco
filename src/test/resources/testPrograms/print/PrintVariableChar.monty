@@ -1,0 +1,6 @@
+// Testing: The print function with a char variable.
+//
+// Expected output: M
+
+Char var := 'M'
+print(var)

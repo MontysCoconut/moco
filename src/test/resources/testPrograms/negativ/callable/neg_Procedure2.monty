@@ -1,0 +1,13 @@
+// Testing: ProcedureDeclaration & Return
+//
+// Printing the result of a procedure should end in an error
+// or print emtpy String XXXTODO Currently this tests ends in a
+// Java NullPointer Exception.
+//
+// Expected output: Error or Empty String
+
+calc(Int x):
+	Int val := x*x
+	return
+
+print(calc(2))

@@ -1,0 +1,21 @@
+// Testing: FunctionDeclaration and FunctionCall
+//
+// The function must be called correctly and return the evaluated return
+// expression.
+//
+// Expected output: 3611230
+
+Int func1(Int dummy1, Int dummy2,  Int value1 := 2, Int value2 := 6):
+   print(value1)
+   print (value2)
+   return dummy1
+
+print(func1(1,2,3))
+
+Int func2(Int dummy1, Int value3 := 3,  Int value1 := 1, Int value2 := 2):
+   print(value1)
+   print (value2)
+   print(value3)
+   return dummy1
+
+print(func2(0))

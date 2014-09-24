@@ -1,0 +1,28 @@
+// Testing: Overloading of functions.
+//
+// The correct overloaded function with user defined types must be called.
+//
+// Expected output: :A:B
+
+class Ab:
+    + Bool attr
+
+    + initializer():
+        self.attr := true
+
+class Ba:
+    + Bool attr
+
+    + initializer():
+        self.attr := true
+
+Bool function(Ab a):
+    print(":A")
+    return false
+
+Bool function(Ba b):
+    print(":B")
+    return false
+
+function(Ab())
+function(Ba())

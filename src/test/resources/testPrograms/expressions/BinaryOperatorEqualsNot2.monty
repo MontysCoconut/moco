@@ -1,0 +1,11 @@
+// Testing: The operator '!=' on int.
+//
+// The result of an '!=' should be an bool.
+//
+// Expected output: 1010
+
+Bool b := 51 != 21
+print(b)
+print(10 != 10)
+print(-10 != 30)
+print(-18 != -18)

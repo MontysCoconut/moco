@@ -1,0 +1,17 @@
+// Testing: ClassDeclaration
+//
+// The simple initializer call of an inherited class must work.
+//
+// Expected output: Hi
+
+class Ab:
+ + String someAttr
+
+ + initializer():
+   print("Hi")
+
+class Ba inherits Ab:
+    + initializer():
+        parent(Ab).initializer()
+
+Ba x := Ba()

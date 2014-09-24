@@ -1,0 +1,17 @@
+// Testing: Char as Object
+//
+// A char must be an Object
+//
+// Expected output: Ok(Char)Ok(Char)
+
+Object c := 'a'
+
+if c is Char:
+    print("Ok(Char)")
+else:
+    print("Nope(Char)")
+
+if 'a' is Object:
+    print("Ok(Char)")
+else:
+    print("Nope(Char)")

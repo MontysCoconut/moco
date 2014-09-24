@@ -1,0 +1,10 @@
+// Testing: The operator > on float.
+//
+// The result of a comparison should be a bool.
+//
+// Expected output: 001
+
+print(2.0>3.0)
+Float a := 4.9
+print(a>5.0)
+print(3.0 > -2.3)

@@ -1,0 +1,15 @@
+// Testing: ClassDeclaration
+//
+// The simple initializer call with a variable as parameter and an assignment
+// to an attribute must work.
+//
+// Expected output: HALLO
+
+class Ab:
+ + String someAttr
+
+ + initializer(String a):
+   self.someAttr := a
+
+Ab x := Ab("HALLO")
+print(x.someAttr)

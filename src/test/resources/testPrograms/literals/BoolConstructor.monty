@@ -1,0 +1,11 @@
+// Testing: Bool as Object
+//
+// A bool-initializer call must work.
+//
+// Expected output: 10
+
+Bool t := Bool(true)
+Bool f := Bool(false)
+
+print(t)
+print(f)

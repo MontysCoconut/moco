@@ -1,0 +1,24 @@
+// Testing: FunctionCall in ClassDeclaration with single inheritance.
+//
+// The inherited overriden methods (procedure/function) must be callable and
+// do/return the right stuff.
+//
+// Expected output: HelloWorldHelloWorld
+
+class Ab:
+    + printHelloWorld():
+        print("WorldHello")
+
+    + String returnHelloWorld():
+        return "WorldHello"
+
+class Ba inherits Ab:
+    + printHelloWorld():
+        print("HelloWorld")
+
+    + String returnHelloWorld():
+        return "HelloWorld"
+
+Ab b := Ba()
+b.printHelloWorld()
+print(b.returnHelloWorld())

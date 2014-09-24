@@ -1,0 +1,23 @@
+// Testing: Methods of classes
+//
+// The methods (functions and procedures) of a class must be called correctly
+// with the class as a reference to an instance.
+//
+// Expected output: Wuff
+
+class Dog:
+  + initializer():
+    pass
+
+  + bark():
+    print("Wuff")
+
+Dog buildDog():
+    Dog dog := Dog()
+    return dog
+
+bark(Dog dogy):
+  dogy.bark()
+
+Dog dog := Dog()
+bark(dog)

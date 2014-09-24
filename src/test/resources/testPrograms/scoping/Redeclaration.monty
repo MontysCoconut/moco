@@ -1,0 +1,17 @@
+// Testing: Scope
+//
+// A Variable must be redeclarable within a new Scope.
+//
+// Expected output: outerinnerinnerinnerouter
+
+Int counter := 0
+String ausgabe := "outer"
+
+print(ausgabe)
+
+while counter < 3:
+	String ausgabe := "inner"
+	print(ausgabe)
+	counter := counter + 1
+
+print(ausgabe)

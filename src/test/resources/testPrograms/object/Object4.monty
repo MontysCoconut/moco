@@ -1,0 +1,12 @@
+// Testing: The monty baseclass Object.
+//
+// A class inheriting nothing must inherit Object and be castable..
+//
+// Expected output: 42
+
+class Ab:
+    + Int attr := 42
+
+Object o := Ab()
+Ab a := o as Ab
+print(a.attr)

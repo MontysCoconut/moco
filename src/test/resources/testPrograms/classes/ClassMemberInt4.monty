@@ -1,0 +1,16 @@
+// Testing: VariableDeclaration in ClassDeclaration.
+//
+// The int attribute is written and a copy printed. The access via self
+// must work.
+//
+// Expected output: 1
+
+class Ab:
+    + initializer():
+        self.attr := 1
+        Int copy := self.attr
+        print(copy)
+
+    + Int attr
+
+Ab b := Ab()

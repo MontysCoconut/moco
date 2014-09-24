@@ -1,0 +1,12 @@
+// Testing: The operator '=' on int.
+//
+// The result of an '=' should be an bool.
+//
+// Expected output: 101
+
+Bool b := 20 = 20
+print(b)
+print(3 = 4)
+Int x := 5
+Int y := 5
+print(x=y)

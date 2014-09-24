@@ -1,0 +1,17 @@
+// Testing: ProcedureDeclaration and FunctionCall
+//
+// The procedures must be called correctly and execute the body.
+//
+// Expected output: Hello World
+
+output1():
+  print("Hello ")
+
+output2():
+  print("World")
+  if true:
+    return
+  print("Nope")
+
+output1()
+output2()

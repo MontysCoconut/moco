@@ -1,0 +1,9 @@
+// Testing: CompoundAssignment
+//
+// Using the CompoundAssignment Power
+//
+// Expected output: 64
+
+Int a := 8
+a ^= 2
+print(a)

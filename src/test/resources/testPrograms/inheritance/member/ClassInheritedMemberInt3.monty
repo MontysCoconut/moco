@@ -1,0 +1,21 @@
+// Testing: VariableDeclaration in ClassDeclaration with single inheritance.
+//
+// An int inherited attribute and a local variable exist with the same name.
+// Both must be writable and readable.
+//
+// Expected output: 10
+
+class Ab:
+    + initializer():
+        self.attr := 1
+
+    + Int attr
+
+class Ba inherits Ab:
+    + initializer():
+        parent(Ab).initializer()
+        Int attr := 0
+        print(self.attr)
+        print(attr)
+
+Ba b := Ba()

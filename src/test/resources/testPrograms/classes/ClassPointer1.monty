@@ -1,0 +1,31 @@
+// Testing: VariableDeclaration of type ClassDeclaration.
+//
+// The variable 'person' is a reference to an instance of Person. Passing this
+// reference arround must work. Storing it under alternative names and
+// altering the attribute must be visible under all references.
+//
+// Expected output: PeterPaulPetraPetraPaulaPaula
+
+class Person:
+    + initializer(String name):
+        self.name := name
+
+    + String name
+
+Person alterPerson(Person per):
+    per.name := "Petra"
+    return per
+
+Person person := Person("Peter")
+print(person.name)
+
+person.name := "Paul"
+print(person.name)
+
+Person new := alterPerson(person)
+print(person.name)
+print(new.name)
+
+person.name := "Paula"
+print(person.name)
+print(new.name)

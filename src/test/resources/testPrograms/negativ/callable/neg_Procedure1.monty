@@ -1,0 +1,9 @@
+// Testing: ProcedureDeclaration and ProcedureCall
+//
+// Procedures can't have return types so they mustn't return
+// an expression that evaluates to a type.
+//
+// Expected output: Error
+
+square(Int value):
+	return value

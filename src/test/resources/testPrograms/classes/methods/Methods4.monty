@@ -1,0 +1,22 @@
+// Testing: Methods of classes
+//
+// The methods (functions and procedures) of multiple classes must work
+// together.
+//
+// Expected output: 123
+
+class Node:
+  + initializer(String id):
+    self.id := id
+
+  - String id
+  + String getId():
+    return self.id
+  + setId(String value):
+    self.id := value
+
+Node node := Node("")
+Node node2 := Node("123")
+
+node.setId(node2.getId())
+print(node.getId())

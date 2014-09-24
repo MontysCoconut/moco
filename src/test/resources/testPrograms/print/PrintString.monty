@@ -1,0 +1,6 @@
+// Testing: The print function with string.
+//
+// Expected output: Hallo
+
+print("")
+print("Hallo")

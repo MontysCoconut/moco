@@ -1,0 +1,18 @@
+// Testing: ClassDeclaration with single inheritance and inheritance check.
+//
+// The type-check of an instance of B bound to a variable of type A must be
+// true as B inherits A.
+//
+// Expected output: Ok
+
+class Ab:
+    pass
+
+class Ba inherits Ab:
+    pass
+
+Ab a := Ba()
+if (a is Ba):
+    print("Ok")
+else:
+    print("No")

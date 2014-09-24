@@ -1,0 +1,17 @@
+// Testing: VariableDeclaration in ClassDeclaration.
+//
+// A string attribute and a local variable exist with the same name. Both
+// must be writable and readable.
+//
+// Expected output: HalloWelt
+
+class Ab:
+    + initializer():
+        self.attr := "Hallo"
+        String attr := "Welt"
+        print(self.attr)
+        print(attr)
+
+    + String attr
+
+Ab b := Ab()

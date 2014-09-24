@@ -1,0 +1,17 @@
+// Testing: VariableDeclaration in ClassDeclaration.
+//
+// An char attribute and a local variable exist with the same name. Both
+// must be writable and readable.
+//
+// Expected output: JO
+
+class Ab:
+    + initializer():
+        self.attr := 'J'
+        Char attr := 'O'
+        print(self.attr)
+        print(attr)
+
+    + Char attr
+
+Ab b := Ab()

@@ -1,0 +1,13 @@
+// Testing: ConditionalStatement
+//
+// The if-elif-else nesting should be converted into simple if-else
+// statements.
+//
+// Expected output: 1
+
+if false:
+    print(3)
+elif false:
+    print(2)
+else:
+    print(1)

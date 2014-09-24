@@ -1,0 +1,11 @@
+// Testing: WhileLoop
+//
+// The control-flow never enters the loop-body so the print("Should not
+// print") never gets called.
+//
+// Expected output: Ok
+
+while false:
+    print("Should not print")
+
+print("Ok")

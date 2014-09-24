@@ -1,0 +1,10 @@
+// Testing: CompoundAssignment
+//
+// Using the CompoundAssignment Power with a slightly
+// more complicated right hand expression
+//
+// Expected output: 243
+
+Int a := 3
+a ^= 2 + 1 * 3
+print(a)

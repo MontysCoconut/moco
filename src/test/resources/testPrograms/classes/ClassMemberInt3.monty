@@ -1,0 +1,17 @@
+// Testing: VariableDeclaration in ClassDeclaration.
+//
+// An int attribute and a local variable exist with the same name. Both
+// must be writable and readable.
+//
+// Expected output: 10
+
+class Ab:
+    + initializer():
+        self.attr := 1
+        Int attr := 0
+        print(self.attr)
+        print(attr)
+
+    + Int attr
+
+Ab b := Ab()

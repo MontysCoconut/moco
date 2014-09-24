@@ -1,0 +1,19 @@
+// Testing: VariableDeclaration in ClassDeclaration with single inheritance.
+//
+// The string inherited attribute is written and printed from outside the
+// class. The access via self and the member access must work.
+//
+// Expected output: Hallo
+
+class Ab:
+    + initializer():
+        self.attr := "Hallo"
+
+    + String attr
+
+class Ba inherits Ab:
+    + initializer():
+        parent(Ab).initializer()
+
+Ba b := Ba()
+print(b.attr)

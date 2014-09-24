@@ -1,0 +1,33 @@
+// Testing: Default-Parameter for methods
+//
+// The methods (functions and procedures) of a class with parameters must be
+// called correctly.
+//
+// Expected output:
+
+class Person:
+  + constructor():
+    pass
+
+  + saySomething1(String text := "Hello"):
+    print(text)
+
+  + saySomething2(Person person := Person()):
+    person.saySomething1()
+
+  + Int stupidMethod(Int dummy1, Int value1 := 3,  Int value2 := 1, Int value3 := 2):
+    print(value1)
+    print (value2)
+    print(value3)
+    return dummy1
+
+  + Float liftWeight(Float weight := 100.0):
+    return weight
+
+Person person := Person()
+person.saySomething1()
+person.saySomething1("World")
+person.saySomething2()
+person.saySomething2(person)
+print(person.stupidMethod(12))
+print(person.liftWeight())

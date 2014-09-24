@@ -1,0 +1,19 @@
+class Ab:
+  + String x
+
+  + Float y := 2.4
+
+  + proc1(Int t):
+    pass
+
+  + String func1(Bool b):
+    pass
+
+Float f
+String s := ""
+
+Int func2(Bool b):
+  pass
+
+proc2(Int t):
+  pass

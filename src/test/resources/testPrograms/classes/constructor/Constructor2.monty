@@ -1,0 +1,11 @@
+// Testing: ClassDeclaration
+//
+// The simple initializer call with a parameter must work.
+//
+// Expected output: HALLO
+
+class Ab:
+ + initializer(String a):
+   print(a)
+
+Ab x := Ab("HALLO")

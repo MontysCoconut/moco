@@ -1,0 +1,12 @@
+// Testing: VariableDeclaration, VariableAccess, FunctionCall
+//
+// A global boolean variable as parameter and local copy as return value.
+//
+// Expected output: 1
+
+Bool function(Bool var):
+    Bool copy := var
+    return copy
+
+Bool var := true
+print(function(var))

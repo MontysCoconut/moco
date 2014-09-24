@@ -1,0 +1,7 @@
+// Testing: The monty baseclass Object.
+//
+// Object must be instantiable.
+//
+// Expected output:
+
+Object b := Object()

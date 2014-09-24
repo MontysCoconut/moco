@@ -1,0 +1,10 @@
+// Testing: The operator + on float.
+//
+// The result of an addition should be an float.
+//
+// Expected output: 3.15
+
+Float b := 2.3+0.8
+print(b)
+Float a := 4.25
+print(a+0.75)

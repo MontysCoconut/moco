@@ -1,0 +1,17 @@
+// Testing: WhileLoop with SkipStatement.
+//
+// The control-flow enters the loop-body, the skip jumpes back to the
+// evaluation of the condition so the print("Should not print") never gets
+// called.
+//
+// Expected output: Ok16
+
+Int counter := 1
+
+while counter < 15:
+    counter := counter * 2
+    skip
+    print("Should not print")
+
+print("Ok")
+print(counter)

@@ -1,0 +1,17 @@
+// Testing: Int as Object
+//
+// An int must be an Object
+//
+// Expected output: Ok(Int)Ok(Int)
+
+Object i := 42
+
+if i is Int:
+    print("Ok(Int)")
+else:
+    print("Nope(Int)")
+
+if 0 is Object:
+    print("Ok(Int)")
+else:
+    print("Nope(Int)")

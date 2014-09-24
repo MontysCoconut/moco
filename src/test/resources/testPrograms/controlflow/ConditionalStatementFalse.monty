@@ -1,0 +1,10 @@
+// Testing: ConditionalStatement
+//
+// The condition is false, so the print() shall never be called.
+//
+// Expected output: <nothing>
+
+Bool value2 := false
+
+if value2:
+    print(0)

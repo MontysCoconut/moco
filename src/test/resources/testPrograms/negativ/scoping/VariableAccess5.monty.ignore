@@ -1,0 +1,12 @@
+// Testing: Lexical scoping
+//
+// var must not be readable if it is not initialized yet.
+//
+// Expected output: Error
+//
+// This test is ignored atm, since a lot more contextual analysis is needed, in
+// order to correclty ensure only access of already initialized variables.
+
+Int var
+print(var)
+var := 42

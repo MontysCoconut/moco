@@ -1,0 +1,6 @@
+// Testing: The print function with boolean.
+//
+// Expected output: 10
+
+print(true)
+print(false)

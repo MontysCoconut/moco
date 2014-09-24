@@ -1,0 +1,8 @@
+// Testing: Arrays
+//
+// A write into an empty array must yield an error.
+//
+// Expected error
+
+Array a := []
+a[0] := 0

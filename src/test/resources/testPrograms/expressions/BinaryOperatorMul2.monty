@@ -1,0 +1,11 @@
+// Testing: The operator * on float.
+//
+// The result of an multiplication should be an int.
+//
+// Expected output: 53.75
+
+Float b := 2.5*2.0
+print(b)
+
+Float a := 1.25
+print(a*3.0)

@@ -1,0 +1,11 @@
+// Testing: The operator 'xor' on bool.
+//
+// The result of an 'xor' should be an bool.
+//
+// Expected output: 0110
+
+Bool b := false xor false
+print(b)
+print(false xor true)
+print(true xor false)
+print(true xor true)

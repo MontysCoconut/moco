@@ -1,0 +1,14 @@
+// Testing: VariableDeclaration and VariableAccess in a ModuleDeclaration.
+//
+// The boolean variable must be visible, writable and readable inside the
+// procedure output().
+//
+// Expected output: 1
+
+Bool hello
+
+output():
+  hello := true
+  print(hello)
+
+output()

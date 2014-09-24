@@ -1,0 +1,9 @@
+// Testing: Char as Object
+//
+// A char-initializer call must work.
+//
+// Expected output: a
+
+Char c := Char('a')
+
+print(c)

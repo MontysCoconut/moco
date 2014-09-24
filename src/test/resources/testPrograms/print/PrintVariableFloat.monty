@@ -1,0 +1,6 @@
+// Testing: The print function with a float variable.
+//
+// Expected output: 1.3
+
+Float var := 1.3
+print(var)

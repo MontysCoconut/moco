@@ -1,0 +1,20 @@
+// Testing: ClassDeclaration with single inheritance and casting.
+//
+// The compiler must cast the expression and call the right method.
+//
+// Expected output: Ok
+
+class Ab:
+    + initializer():
+        pass
+
+class Ba inherits Ab:
+    + initializer():
+        pass
+
+    + methodB():
+        print("Ok")
+
+Ab a := Ba()
+Ba b := a as Ba
+b.methodB()

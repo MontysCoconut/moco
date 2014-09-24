@@ -1,0 +1,7 @@
+// Testing: Access to undefined variable
+//
+// Calls the print function with undefined variable x
+//
+// Expected output: Error
+
+print(x)

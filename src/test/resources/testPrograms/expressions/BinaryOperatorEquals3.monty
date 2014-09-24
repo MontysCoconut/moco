@@ -1,0 +1,13 @@
+// Testing: The operator '=' on float.
+//
+// The result of an '=' should be an bool.
+//
+// Expected output: 1110
+
+Bool b := 20.0 = 20.0
+print(b)
+print(3.3 = 3.3)
+Float x := 8.125
+Float y := 8.125
+print(x=y)
+print(x=8.124)

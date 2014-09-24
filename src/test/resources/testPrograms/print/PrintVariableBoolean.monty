@@ -1,0 +1,6 @@
+// Testing: The print function with a boolean variable.
+//
+// Expected output: 1
+
+Bool var := true
+print(var)

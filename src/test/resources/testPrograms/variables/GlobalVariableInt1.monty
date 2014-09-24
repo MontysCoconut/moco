@@ -1,0 +1,13 @@
+// Testing: VariableDeclaration and VariableAccess in a ModuleDeclaration.
+//
+// The int variable must be visible and readable inside the procedure
+// output().
+//
+// Expected output: 42
+
+Int hello := 42
+
+output():
+  print(hello)
+
+output()

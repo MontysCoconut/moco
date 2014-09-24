@@ -1,0 +1,17 @@
+// Testing: VariableDeclaration in ClassDeclaration.
+//
+// A boolean attribute and a local variable exist with the same name. Both
+// must be writable and readable.
+//
+// Expected output: 10
+
+class Ab:
+    + initializer():
+        self.attr := true
+        Bool attr := false
+        print(self.attr)
+        print(attr)
+
+    + Bool attr
+
+Ab b := Ab()

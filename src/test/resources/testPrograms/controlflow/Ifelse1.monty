@@ -1,0 +1,19 @@
+// Testing: ConditionalStatement
+//
+// The if-elif-else nesting should be converted into simple if-else
+// statements.
+//
+// Expected output: 2020
+
+Int a := 20
+
+if a = 10:
+  print(10)
+else:
+  print(a)
+
+if a = 10:
+  print(10)
+else:
+  if a = 20:
+    print(a)

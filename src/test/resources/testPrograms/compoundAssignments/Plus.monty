@@ -1,0 +1,9 @@
+// Testing: CompoundAssignment
+//
+// Using the CompoundAssignment Plus
+//
+// Expected output: 7
+
+Int a := 5
+a += 2
+print(a)

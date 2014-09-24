@@ -1,0 +1,15 @@
+// Testing: VariableDeclaration in ClassDeclaration.
+//
+// The float attribute is written and printed from outside the class. The
+// access via self and the member access must work.
+//
+// Expected output: 1.3
+
+class Ab:
+    + initializer():
+        self.attr := 1.3
+
+    + Float attr
+
+Ab b := Ab()
+print(b.attr)

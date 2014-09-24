@@ -1,0 +1,11 @@
+// Testing: The operator + on int.
+//
+// The result of an addition should be an int.
+//
+// Expected output: 54
+
+Int b := 2+3
+print(b)
+Int a := 3
+print(a+1)
+

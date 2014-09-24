@@ -1,0 +1,11 @@
+// Testing: Bool as Object
+//
+// A bool object must be castable to an Bool
+//
+// Expected output: 10
+
+Object t := true
+Object f := false
+
+print(t as Bool)
+print(f as Bool)

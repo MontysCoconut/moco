@@ -1,0 +1,11 @@
+// Testing: The operator '%' on int.
+//
+// The result of an '%' should be an int.
+//
+// Expected output: 1038
+
+Int b := 10 % 3
+print(b)
+print(9000 % 5)
+print(47 % 4)
+print(8 % 10)

@@ -1,0 +1,21 @@
+class Bool:
+    + initializer(Bool b):
+        pass
+
+    + Bool operator_not():
+        pass
+
+    + Bool operator_xor(Bool other):
+        pass
+
+    + Bool operator_and(Bool other):
+        pass
+
+    + Bool operator_or(Bool other):
+        pass
+
+    + Bool operator=(Bool other):
+        pass
+
+    + Bool operator!=(Bool other):
+        pass

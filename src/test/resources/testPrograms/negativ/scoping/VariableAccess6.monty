@@ -1,0 +1,15 @@
+// Testing: Lexical scoping vs simultaneous visibility
+//
+// answer within calcAnswerToLifeAndStuff shadows the outer scope one.
+// But since we do not have simultaneous visibility within procedures,
+// answers must not be accessible, when accessed prior to declaration.
+//
+// Expected output: Error
+
+Int answer := 42
+
+calcAnswerToLifeAndStuff():
+	print(answer)
+	Int answer := 43
+
+calcAnswerToLifeAndStuff()

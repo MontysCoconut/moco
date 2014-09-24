@@ -1,0 +1,13 @@
+// Testing: Functioncall from different Module
+//
+// The print function calls the function sayHello() in the module
+// HelloSayer.monty
+//
+// Expected result: Monty says: Hello
+String montySays(String s):
+  print("Monty ")
+  return s
+
+print(sayHello())
+
+

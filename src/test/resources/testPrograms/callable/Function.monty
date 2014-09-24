@@ -1,0 +1,11 @@
+// Testing: FunctionDeclaration and FunctionCall
+//
+// The function must be called correctly and return the evaluated return
+// expression.
+//
+// Expected output: 4
+
+Int square(Int value):
+   return value * value
+
+print(square(2))

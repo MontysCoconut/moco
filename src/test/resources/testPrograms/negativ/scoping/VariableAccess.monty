@@ -1,0 +1,9 @@
+// Testing: Lexical scoping
+//
+// B must not be writable if it is not declared yet.
+//
+// Expected output: Error
+
+Int a := 3
+b := a
+Int b

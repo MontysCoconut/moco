@@ -1,0 +1,10 @@
+// Testing: The operator - on float.
+//
+// The result of an subtraction should be an float.
+//
+// Expected output: 3-7.275
+
+Float b := 3.5-0.5
+print(b)
+Float a := 2.725
+print(a-10.0)

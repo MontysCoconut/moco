@@ -1,0 +1,9 @@
+// Testing: CompoundAssignment
+//
+// Using the CompoundAssignment Mult
+//
+// Expected output: 10
+
+Int a := 5
+a *= 2
+print(a)

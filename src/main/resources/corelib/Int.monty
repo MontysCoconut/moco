@@ -1,0 +1,39 @@
+class Int:
+    + initializer(Int i):
+        pass
+
+    + Int operator-():
+        pass
+
+    + Int operator+(Int other):
+        pass
+
+    + Int operator-(Int other):
+        pass
+
+    + Int operator*(Int other):
+        pass
+
+    + Int operator/(Int other):
+        pass
+
+    + Int operator%(Int other):
+        pass
+
+    + Bool operator<(Int other):
+        pass
+
+    + Bool operator>(Int other):
+        pass
+
+    + Bool operator<=(Int other):
+        pass
+
+    + Bool operator>=(Int other):
+        pass
+
+    + Bool operator=(Int other):
+        pass
+
+    + Bool operator!=(Int other):
+        pass

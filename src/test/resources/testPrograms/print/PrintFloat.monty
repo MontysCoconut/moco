@@ -1,0 +1,6 @@
+// Testing: The print function with float.
+//
+// Expected output: 01.3
+
+print(0.0)
+print(1.3)

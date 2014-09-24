@@ -1,0 +1,6 @@
+// Testing: The print function with a string variable.
+//
+// Expected output: Hallo
+
+String var := "Hallo"
+print(var)

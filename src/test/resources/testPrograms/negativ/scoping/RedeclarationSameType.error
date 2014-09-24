@@ -1,0 +1,1 @@
+DeclarationVisitor caught error in VariableDeclaration at file: RedeclarationSameType.monty, line: 8, char: 0: greeting

@@ -1,0 +1,13 @@
+// Testing: Lexical scoping
+//
+// var must be declared & initialized before it can be used in function's decl.
+//
+// Expected output: Error
+
+Int function():
+    Int copy := var
+    return copy
+
+Int var := 42
+
+print(function())

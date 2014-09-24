@@ -1,0 +1,6 @@
+// Testing: The print function with int.
+//
+// Expected output: 042
+
+print(0)
+print(42)

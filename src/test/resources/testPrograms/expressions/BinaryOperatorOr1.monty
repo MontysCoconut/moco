@@ -1,0 +1,11 @@
+// Testing: The operator 'or' on bool.
+//
+// The result of an 'or' should be an bool.
+//
+// Expected output: 1101
+
+Bool b := true or false
+print(b)
+print(false or true)
+print(false or false)
+print(true or true)

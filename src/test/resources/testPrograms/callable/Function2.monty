@@ -1,0 +1,21 @@
+// Testing: Nested FunctionDeclaration, FunctionCall, multiplication
+//
+// The function must be called correctly and return the evaluated return
+// expression.
+//
+// Expected output: 16
+
+Int calc(Int value1, Int value2):
+
+  Int identity(Int x):
+    return x
+
+  Int two():
+    return 2
+
+  Int square(Int x):
+    return 2 * x
+
+  return identity(value1) * two() * square(value2)
+
+print(calc(2,2))

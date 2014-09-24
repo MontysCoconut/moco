@@ -1,0 +1,10 @@
+// Testing: CompoundAssignment
+//
+// Using the CompoundAssignment Mod with a slightly
+// more complicated right hand expression
+//
+// Expected output: 2
+
+Int a := 11
+a %= 2 * 4 - 5
+print(a)

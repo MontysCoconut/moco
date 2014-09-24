@@ -1,0 +1,27 @@
+// Testing: ConditionalExpression with functions with side effects.
+//
+// The function dontPrint() should never be called, function doPrint() two
+// times.
+//
+// Expected output: OkOkOk
+
+Bool functionTrue():
+    return true
+
+Bool functionFalse():
+    return false
+
+String dontPrint():
+    print("Nope")
+    return "Nope"
+
+String doPrint():
+    print("Ok")
+    return "Ok"
+
+output():
+    String var1 := doPrint() if functionTrue() else dontPrint()
+    String var2 := dontPrint() if functionFalse() else doPrint()
+    print(var1 if true else var2)
+
+output()

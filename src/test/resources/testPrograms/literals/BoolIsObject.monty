@@ -1,0 +1,17 @@
+// Testing: Bool as Object
+//
+// A bool must be an Object
+//
+// Expected output: Ok(Bool)Ok(Bool)
+
+Object b := true
+
+if b is Bool:
+    print("Ok(Bool)")
+else:
+    print("Nope(Bool)")
+
+if true is Object:
+    print("Ok(Bool)")
+else:
+    print("Nope(Bool)")

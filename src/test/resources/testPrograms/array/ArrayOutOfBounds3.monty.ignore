@@ -1,0 +1,8 @@
+// Testing: Arrays
+//
+// A read out of bounds must yield an error.
+//
+// Expected error
+
+Array a := [0, 1]
+print(a[42])

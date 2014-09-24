@@ -1,0 +1,16 @@
+// Testing: ClassDeclaration, default initializer / attr assignments
+//
+// The initializer must first execute the class attribute assignments and then
+// execute its own body.
+//
+// Expected output: HalloBernd
+
+class Ab:
+ + initializer():
+   print(self.attr)
+   self.attr := "Bernd"
+
+ + String attr := "Hallo"
+
+Ab b := Ab()
+print(b.attr)

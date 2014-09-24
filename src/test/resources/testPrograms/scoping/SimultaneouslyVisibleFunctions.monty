@@ -1,0 +1,14 @@
+// Testing: Lexical scoping / Simultaneous visibility
+//
+// The functions caller and callee must be callable before their declaration,
+// because of their simultaneous visibility.
+//
+// Expected output: reihenfolge ist egal
+
+caller()
+
+caller():
+    callee()
+
+callee():
+    print("reihenfolge ist egal")

@@ -1,0 +1,8 @@
+// Testing: Arrays
+//
+// A read of an empty array must yield an error.
+//
+// Expected error
+
+Array a := []
+print(a[0])

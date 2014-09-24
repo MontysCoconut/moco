@@ -1,0 +1,8 @@
+// Testing: Arrays
+//
+// A write out of bounds must yield an error.
+//
+// Expected error
+
+Array a := [0, 1]
+a[-1] := 42

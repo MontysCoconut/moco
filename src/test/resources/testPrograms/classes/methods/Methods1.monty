@@ -1,0 +1,29 @@
+// Testing: Methods of classes
+//
+// The methods (functions and procedures) of a class must be called correctly.
+//
+// Expected output: Stoehn Aechz Keuch
+
+class Laute:
+  + initializer():
+    pass
+
+  + printSpace():
+    print(" ")
+
+  + String stoehn():
+    return "Stoehn"
+
+  + String aechz():
+    return "Aechz"
+
+  + String keuch():
+    return "Keuch"
+
+Laute laut := Laute()
+
+print(laut.stoehn())
+laut.printSpace()
+print(laut.aechz())
+laut.printSpace()
+print(laut.keuch())

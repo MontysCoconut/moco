@@ -1,0 +1,11 @@
+// Testing: The unary operator '-" on Float.
+//
+// The expression should be negated.
+//
+// Expected output: -1.751.7512.34
+
+Float a := -1.75
+print(a)
+print(-a)
+Float b := -(-12.34)
+print(b)

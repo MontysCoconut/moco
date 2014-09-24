@@ -1,0 +1,10 @@
+// Testing: CompoundAssignment
+//
+// Using the CompoundAssignment Div with a slightly
+// more complicated right hand expression
+//
+// Expected output: 13
+
+Int a := 452
+a /= 3 + 2 * 15
+print(a)

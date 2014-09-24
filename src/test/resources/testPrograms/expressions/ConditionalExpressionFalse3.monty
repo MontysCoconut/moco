@@ -1,0 +1,9 @@
+// Testing: ConditionalExpression with complex expressions.
+//
+// The condition is false, so the else part should be returned.
+//
+// Expected output: 42
+
+Int a := 12
+Int b := 21
+print((a * 2) if false else (b * 2))

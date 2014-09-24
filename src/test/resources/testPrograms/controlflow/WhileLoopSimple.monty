@@ -1,0 +1,13 @@
+// Testing: WhileLoop with simple expression.
+//
+// The loop-body gets executed while the condition is true. The condition
+// should always load the variable for the evaluation of the expression.
+//
+// Expected output: 16
+
+Int counter := 1
+
+while counter < 15:
+    counter := counter * 2
+
+print(counter)

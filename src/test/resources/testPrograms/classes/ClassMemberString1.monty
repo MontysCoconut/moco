@@ -1,0 +1,15 @@
+// Testing: VariableDeclaration in ClassDeclaration.
+//
+// The string attribute is written and printed. The access via self must
+// work.
+//
+// Expected output: Hallo
+
+class Ab:
+    + initializer():
+        self.attr := "Hallo"
+        print(self.attr)
+
+    + String attr
+
+Ab b := Ab()

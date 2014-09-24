@@ -1,0 +1,10 @@
+// Testing: The monty baseclass Object.
+//
+// A class inheriting nothing must inherit Object.
+//
+// Expected output:
+
+class Ab:
+    pass
+
+Object a := Ab()

@@ -1,0 +1,11 @@
+// Testing: The operator 'and' on bool.
+//
+// The result of an 'and' should be an bool.
+//
+// Expected output: 1000
+
+Bool b := true and true
+print(b)
+print(true and false)
+print(false and true)
+print(false and false)

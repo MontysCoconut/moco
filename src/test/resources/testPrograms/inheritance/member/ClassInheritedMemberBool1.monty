@@ -1,0 +1,19 @@
+// Testing: VariableDeclaration in ClassDeclaration with single inheritance.
+//
+// The boolean inherited attribute is written and printed. The access via self
+// must work.
+//
+// Expected output: 1
+
+class Ab:
+    + initializer():
+        self.attr := true
+
+    + Bool attr
+
+class Ba inherits Ab:
+    + initializer():
+        parent(Ab).initializer()
+        print(self.attr)
+
+Ba b := Ba()

@@ -1,0 +1,9 @@
+// Testing: CompoundAssignment
+//
+// Using the CompoundAssignment Div
+//
+// Expected output: 4
+
+Int a := 8
+a /= 2
+print(a)

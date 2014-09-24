@@ -1,0 +1,6 @@
+// Testing: The print function with an int variable.
+//
+// Expected output: 42
+
+Int var := 42
+print(var)

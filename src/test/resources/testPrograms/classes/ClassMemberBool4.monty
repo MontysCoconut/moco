@@ -1,0 +1,16 @@
+// Testing: VariableDeclaration in ClassDeclaration.
+//
+// The boolean attribute is written and a copy printed. The access via self
+// must work.
+//
+// Expected output: 1
+
+class Ab:
+    + initializer():
+        self.attr := true
+        Bool copy := self.attr
+        print(copy)
+
+    + Bool attr
+
+Ab b := Ab()

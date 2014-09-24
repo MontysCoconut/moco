@@ -1,0 +1,11 @@
+// Testing: The operator '!=' on bool.
+//
+// The result of an '!=' should be an bool.
+//
+// Expected output: 0110
+
+Bool b := true != true
+print(b)
+print(true != false)
+print(false != true)
+print(false != false)

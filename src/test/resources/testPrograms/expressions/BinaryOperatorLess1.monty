@@ -1,0 +1,9 @@
+// Testing: The operator < on int.
+//
+// The result of a comparison should be a bool.
+//
+// Expected output: 10
+
+print(2<3)
+Int a := 3
+print(a<1)

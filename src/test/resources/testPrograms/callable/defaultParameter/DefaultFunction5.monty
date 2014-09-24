@@ -1,0 +1,32 @@
+// Testing: ProcedureDeclaration and FunctionCall
+//
+// The procedure must be called correctly and return the evaluated return
+// expression.
+//
+// Expected output: 400100200000001000012000123
+
+square(Int value := 2):
+   print(value * value)
+
+square()
+
+
+proc1(Int dummy1, Int dummy2, Int value1 := 1):
+  print(dummy1)
+  print(dummy2)
+  print(value1)
+
+proc1(0,0)
+proc1(0,0,2)
+
+proc2(Int dummy1, Int dummy2, Int value1 := 0, Int value2 := 0, Int value3 := 0):
+  print(dummy1)
+  print(dummy2)
+  print(value1)
+  print(value2)
+  print(value3)
+
+proc2(0,0)
+proc2(0,0,1)
+proc2(0,0,1,2)
+proc2(0,0,1,2,3)

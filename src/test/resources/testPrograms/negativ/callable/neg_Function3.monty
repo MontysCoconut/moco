@@ -1,0 +1,9 @@
+// Testing: FunctionDeclaration
+//
+// The function is missing a declaration type.
+//
+// Expected output: Error
+
+Int square(Int value):
+	String str := "I will cause a TypeMisMatch!"
+	return str

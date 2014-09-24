@@ -1,0 +1,50 @@
+// Testing: Overloading of initializers
+//
+// The correct overloaded initializer must be called.
+//
+// Expected output: :empty:i:f:s:b:ii:ff:ss:bb
+
+class Ab:
+    + String attr
+
+    + initializer():
+        self.attr := ":empty"
+        print(self.attr)
+
+    + initializer(Int x):
+        self.attr := ":i"
+        print(self.attr)
+    + initializer(Float x):
+        self.attr := ":f"
+        print(self.attr)
+    + initializer(String x):
+        self.attr := ":s"
+        print(self.attr)
+    + initializer(Bool x):
+        self.attr := ":b"
+        print(self.attr)
+
+    + initializer(Int x1, Int x2):
+        self.attr := ":ii"
+        print(self.attr)
+    + initializer(Float x1, Float x2):
+        self.attr := ":ff"
+        print(self.attr)
+    + initializer(String x1, String x2):
+        self.attr := ":ss"
+        print(self.attr)
+    + initializer(Bool x1, Bool x2):
+        self.attr := ":bb"
+        print(self.attr)
+
+Ab empty := Ab()
+
+Ab i := Ab(42)
+Ab f := Ab(1.3)
+Ab s := Ab("Hallo")
+Ab b := Ab(true)
+
+Ab ii := Ab(42, 24)
+Ab ff := Ab(1.3, 3.1)
+Ab ss := Ab("Hallo", "Welt")
+Ab bb := Ab(true, false)

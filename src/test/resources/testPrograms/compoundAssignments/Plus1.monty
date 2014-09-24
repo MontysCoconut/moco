@@ -1,0 +1,10 @@
+// Testing: CompoundAssignment
+//
+// Using the CompoundAssignment Plus with a slightly
+// more complicated right hand expression
+//
+// Expected output: 42
+
+Int a := 12
+a += 7 * 4 + (1 * 2)
+print(a)

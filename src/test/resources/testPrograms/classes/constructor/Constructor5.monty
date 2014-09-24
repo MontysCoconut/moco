@@ -1,0 +1,15 @@
+// Testing: ClassDeclaration, default initializer
+//
+// The default initializer must be created when no initializer is given and do
+// all class attribute assignments.
+//
+// Expected output: reifenschubser
+
+class MyClass:
+ + String baum := "schubser"
+ + String auto := "reifen"
+
+MyClass clazz := MyClass()
+
+print(clazz.auto)
+print(clazz.baum)

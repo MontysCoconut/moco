@@ -1,0 +1,30 @@
+if a:
+  p(1)
+
+if a:
+  p(1)
+else:
+  p(2)
+
+if a:
+  p(1)
+elif b:
+  p(2)
+else:
+  p(3)
+
+if a:
+  p(1)
+elif b:
+  p(2)
+elif c:
+  p(3)
+else:
+  p(4)
+
+if a:
+  p(1)
+elif b:
+  p(2)
+elif c:
+  p(3)

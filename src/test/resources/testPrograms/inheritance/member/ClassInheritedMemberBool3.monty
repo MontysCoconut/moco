@@ -1,0 +1,21 @@
+// Testing: VariableDeclaration in ClassDeclaration with single inheritance.
+//
+// A boolean inherited attribute and a local variable exist with the same
+// name. Both must be writable and readable.
+//
+// Expected output: 10
+
+class Ab:
+    + initializer():
+        self.attr := true
+
+    + Bool attr
+
+class Ba inherits Ab:
+    + initializer():
+        parent(Ab).initializer()
+        Bool attr := false
+        print(self.attr)
+        print(attr)
+
+Ba b := Ba()

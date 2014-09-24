@@ -1,0 +1,8 @@
+// Testing: UnaryExpression.
+//
+// The expression should be negated.
+//
+// Expected output: 10
+
+print(not false)
+print(not true)

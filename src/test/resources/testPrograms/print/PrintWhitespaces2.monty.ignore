@@ -1,0 +1,15 @@
+// Testing: Printing of Whitespaces
+//
+// We don't want whitespace in the output to be trimmed or changed in any way.
+// To that end we print a series of whitespace characters and test for them
+// in order to verify that they haven't been modified. In addition to ordinary
+// whitespace, we have inserted some whitespace characters via escape sequences
+// to cater for newlines and tabs.
+//
+// Expected output: <whitespaces that resemble the whitespace printed in the program>
+
+String str := " 			      		 "
+print(str)
+print("\n")
+print("\n")
+print("   		\t")

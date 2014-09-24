@@ -1,0 +1,8 @@
+// Testing: FunctionDeclaration
+//
+// The function is declared with the undefined type 'Boolean'.
+//
+// Expected output: Error
+
+Boolean square(Int value):
+   return value * value

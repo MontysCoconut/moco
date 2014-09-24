@@ -1,0 +1,26 @@
+// Testing: VariableDeclaration of type ClassDeclaration.
+//
+// The function buildPerson() returns a reference to a heap allocated Person.
+// The procedure stackDestroyer() would override the stack memory if objects
+// are allocated on the stack.
+//
+// Expected output: Peter
+
+class Person:
+    + initializer(String name):
+        self.name := name
+
+    + String name
+
+Person buildPerson():
+    Person person := Person("Peter")
+    return person
+
+stackDestroyer():
+    Person person1 := Person("Stack")
+    Person person2 := Person("Des")
+    Person person3 := Person("Troyer")
+
+Person person := buildPerson()
+stackDestroyer()
+print(person.name)

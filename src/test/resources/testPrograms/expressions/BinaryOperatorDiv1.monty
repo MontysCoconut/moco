@@ -1,0 +1,10 @@
+// Testing: The operator / on int.
+//
+// The result of a division should be an int.
+//
+// Expected output: 17
+
+Int b := 3/2
+print(b)
+Int a := 35
+print(a/5)

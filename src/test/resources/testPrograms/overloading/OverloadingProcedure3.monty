@@ -1,0 +1,26 @@
+// Testing: Overloading of procedures
+//
+// The correct overloaded procedure with user defined types must be called.
+//
+// Expected output: :A:B
+
+class Ab:
+    + Bool attr
+
+    + initializer():
+        self.attr := true
+
+class Ba:
+    + Bool attr
+
+    + initializer():
+        self.attr := true
+
+procedure(Ab a):
+    print(":A")
+
+procedure(Ba b):
+    print(":B")
+
+procedure(Ab())
+procedure(Ba())

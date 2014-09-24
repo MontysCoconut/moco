@@ -1,0 +1,38 @@
+// Testing: Overloading of procedures
+//
+// The correct overloaded procedure with predefined types must be called.
+//
+// Expected output: :No:i:s:f:b:ii:ss:ff:bb
+
+procedure():
+    print(":No")
+
+procedure(Int x):
+    print(":i")
+procedure(String x):
+    print(":s")
+procedure(Float x):
+    print(":f")
+procedure(Bool x):
+    print(":b")
+
+procedure(Int x1, Int x2):
+    print(":ii")
+procedure(String x1, String x2):
+    print(":ss")
+procedure(Float x1, Float x2):
+    print(":ff")
+procedure(Bool x1, Bool x2):
+    print(":bb")
+
+procedure()
+
+procedure(42)
+procedure("Hallo")
+procedure(1.3)
+procedure(true)
+
+procedure(42, 42)
+procedure("Hallo", "Welt")
+procedure(1.3, 3.1)
+procedure(true, false)

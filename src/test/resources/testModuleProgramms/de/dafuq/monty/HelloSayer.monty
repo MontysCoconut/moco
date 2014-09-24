@@ -1,0 +1,11 @@
+// Testing: Functioncall from different Module
+//
+// The function sayHello is called in Main.monty and it calls
+// the function montySays() of module Main.monty
+//
+// Expected result: see Main.monty
+
+String sayHello():
+  return "Hello"
+
+print(montySays("says: "))

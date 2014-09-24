@@ -1,0 +1,20 @@
+// Testing: VariableDeclaration in ClassDeclaration with single inheritance.
+//
+// The float attribute is written and a copy printed. The access via self
+// must work.
+//
+// Expected output: 1.3
+
+class Ab:
+    + initializer():
+        self.attr := 1.3
+
+    + Float attr
+
+class Ba inherits Ab:
+    + initializer():
+        parent(Ab).initializer()
+        Float copy := self.attr
+        print(copy)
+
+Ba b := Ba()

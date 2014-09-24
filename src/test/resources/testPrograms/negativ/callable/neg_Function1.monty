@@ -1,0 +1,10 @@
+// Testing: FunctionCall with wrong Paramaters
+//
+// The function is not called correctly in the print statement.
+//
+// Expected output: Error
+
+Int square(Int value):
+   return value * value
+
+print(square)

@@ -1,0 +1,10 @@
+// Testing: CompoundAssignment
+//
+// Using the CompoundAssignment Mult with a slightly
+// more complicated right hand expression
+//
+// Expected output: 33
+
+Int a := 5 + 2 * 3
+a *= 3
+print(a)

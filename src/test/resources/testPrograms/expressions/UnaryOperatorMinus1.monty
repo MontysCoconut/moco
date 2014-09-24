@@ -1,0 +1,11 @@
+// Testing: The unary operator '-" on Int.
+//
+// The expression should be negated.
+//
+// Expected output: -5510
+
+Int a := -5
+print(a)
+print(-a)
+Int b := -(-10)
+print(b)

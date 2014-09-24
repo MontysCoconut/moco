@@ -1,0 +1,9 @@
+// Testing: ConditionalExpression with variable accesses as expressions.
+//
+// The condition is true, so the first part should be returned.
+//
+// Expected output: Hallo
+
+String hallo := "Hallo"
+String welt := "Welt"
+print(hallo if 3 < 4 else welt)

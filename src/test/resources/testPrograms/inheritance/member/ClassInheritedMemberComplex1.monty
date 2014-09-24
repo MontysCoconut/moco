@@ -1,0 +1,25 @@
+// Testing: VariableDeclaration in ClassDeclaration with single inheritance.
+//
+// A complex expression of chained inherited attributes must be accessible and
+// readable.
+//
+// Expected output: Hallo Welt
+
+class Ab:
+    + String attr
+
+    + initializer():
+        self.attr := "Hallo Welt"
+
+class Ba inherits Ab:
+    + initializer():
+        parent(Ab).initializer()
+
+class Ca:
+    + Ba attr
+
+    + initializer():
+        self.attr := Ba()
+
+Ca inst := Ca()
+print(inst.attr.attr)

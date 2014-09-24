@@ -1,0 +1,12 @@
+// Testing: WhileLoop with BreakStatement.
+//
+// The control-flow enters the loop-body, the break leaves it immediately so
+// the print("Should not print") never gets called.
+//
+// Expected output: Ok
+
+while true:
+    break
+    print("Should not print")
+
+print("Ok")

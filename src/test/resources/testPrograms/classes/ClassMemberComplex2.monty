@@ -1,0 +1,20 @@
+// Testing: VariableDeclaration in ClassDeclaration.
+//
+// A complex expression of chained attributes must be accessible and readable.
+//
+// Expected output: Hallo Welt
+
+class Ab:
+    + String attr
+
+    + initializer():
+        self.attr := "Hallo Welt"
+
+class Ba:
+    + Ab attr
+
+    + initializer():
+        self.attr := Ab()
+
+Ba inst := Ba()
+print(inst.attr.attr)
