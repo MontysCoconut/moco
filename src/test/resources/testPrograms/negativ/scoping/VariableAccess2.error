@@ -1,1 +1,1 @@
-ResolveVisitor caught error in VariableAccess at file: VariableAccess2.monty, line: 8, char: 16: Identifier is not defined: var
+ResolveVisitor caught error in null: Identifier is not defined: var

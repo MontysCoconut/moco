@@ -52,17 +52,17 @@ import java.util.Arrays;
 /** This visitor must traverse the entire AST, set up scopes and define declarations.
  * <p>
  * For every node that opens a new scope this scope must be created and assigned:
- * 
+ *
  * <pre>
  * currentScope = node.setScope(new Scope(currentScope));
  * </pre>
- * 
+ *
  * For every other node the associated scope must be set:
- * 
+ *
  * <pre>
  * node.setScope(currentScope);
  * </pre>
- * 
+ *
  * Every declaration must be defined using the currentScope. */
 public class DeclarationVisitor extends BaseVisitor {
 

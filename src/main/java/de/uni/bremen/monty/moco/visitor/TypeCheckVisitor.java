@@ -50,7 +50,7 @@ import de.uni.bremen.monty.moco.ast.statement.ReturnStatement;
 import de.uni.bremen.monty.moco.exception.*;
 
 /** This visitor must traverse the entire AST and perform type-safety checks.
- * 
+ *
  * This visitor does neither resolve nor set a type. It just checks. */
 public class TypeCheckVisitor extends BaseVisitor {
 

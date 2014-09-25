@@ -38,36 +38,16 @@
  */
 package de.uni.bremen.monty.moco.visitor;
 
-import java.util.ArrayList;
-import java.util.List;
-
-import de.uni.bremen.monty.moco.ast.ASTNode;
-import de.uni.bremen.monty.moco.ast.ClassScope;
-import de.uni.bremen.monty.moco.ast.CoreClasses;
-import de.uni.bremen.monty.moco.ast.ResolvableIdentifier;
-import de.uni.bremen.monty.moco.ast.Scope;
-import de.uni.bremen.monty.moco.ast.declaration.ClassDeclaration;
-import de.uni.bremen.monty.moco.ast.declaration.Declaration;
-import de.uni.bremen.monty.moco.ast.declaration.FunctionDeclaration;
-import de.uni.bremen.monty.moco.ast.declaration.ProcedureDeclaration;
-import de.uni.bremen.monty.moco.ast.declaration.TypeDeclaration;
-import de.uni.bremen.monty.moco.ast.declaration.VariableDeclaration;
-import de.uni.bremen.monty.moco.ast.expression.CastExpression;
-import de.uni.bremen.monty.moco.ast.expression.ConditionalExpression;
-import de.uni.bremen.monty.moco.ast.expression.Expression;
-import de.uni.bremen.monty.moco.ast.expression.FunctionCall;
-import de.uni.bremen.monty.moco.ast.expression.IsExpression;
-import de.uni.bremen.monty.moco.ast.expression.MemberAccess;
-import de.uni.bremen.monty.moco.ast.expression.ParentExpression;
-import de.uni.bremen.monty.moco.ast.expression.SelfExpression;
-import de.uni.bremen.monty.moco.ast.expression.VariableAccess;
-import de.uni.bremen.monty.moco.ast.expression.literal.ArrayLiteral;
-import de.uni.bremen.monty.moco.ast.expression.literal.BooleanLiteral;
-import de.uni.bremen.monty.moco.ast.expression.literal.CharacterLiteral;
-import de.uni.bremen.monty.moco.ast.expression.literal.FloatLiteral;
-import de.uni.bremen.monty.moco.ast.expression.literal.IntegerLiteral;
+import de.uni.bremen.monty.moco.ast.*;
+import de.uni.bremen.monty.moco.ast.declaration.*;
+import de.uni.bremen.monty.moco.ast.expression.*;
+import de.uni.bremen.monty.moco.ast.expression.literal.*;
 import de.uni.bremen.monty.moco.exception.UnknownIdentifierException;
 import de.uni.bremen.monty.moco.exception.UnknownTypeException;
+
+import java.util.List;
+import java.util.Arrays;
+import java.util.ArrayList;
 
 /** This visitor must traverse the entire AST and resolve variables and types. */
 public class ResolveVisitor extends VisitOnceVisitor {
@@ -146,13 +126,7 @@ public class ResolveVisitor extends VisitOnceVisitor {
 		super.visit(node);
 
 		Scope scope = node.getScope();
-		Declaration declaration;
-
-		try {
-			declaration = scope.resolve(node.getIdentifier());
-		} catch (UnknownIdentifierException e) {
-			throw new UnknownIdentifierException(node, node.getIdentifier());
-		}
+		Declaration declaration = scope.resolve(node.getIdentifier());
 
 		if (declaration instanceof VariableDeclaration) {
 			VariableDeclaration variable = (VariableDeclaration) declaration;
@@ -162,7 +136,7 @@ public class ResolveVisitor extends VisitOnceVisitor {
 			if (!(scope instanceof ClassScope) && findEnclosingClass(node) == CoreClasses.voidType()) {
 				if (node.getDeclaration() == null
 				        || node.getDeclaration().getPosition().getLineNumber() > node.getPosition().getLineNumber()) {
-					throw new UnknownIdentifierException(node, node.getIdentifier());
+					throw new UnknownIdentifierException(node.getIdentifier());
 				}
 			}
 		} else if (declaration instanceof TypeDeclaration) {
@@ -259,13 +233,7 @@ public class ResolveVisitor extends VisitOnceVisitor {
 	@Override
 	public void visit(FunctionDeclaration node) {
 		Scope scope = node.getScope();
-		TypeDeclaration returnType;
-		try {
-			returnType = scope.resolveType(node.getReturnTypeIdentifier());
-		} catch (UnknownTypeException e) {
-			throw new UnknownTypeException(node, node.getReturnTypeIdentifier());
-		}
-		node.setReturnType(returnType);
+		node.setReturnType(scope.resolveType(node.getReturnTypeIdentifier()));
 		super.visit(node);
 	}
 
@@ -297,13 +265,7 @@ public class ResolveVisitor extends VisitOnceVisitor {
 			ProcedureDeclaration initializer = findMatchingInitializer(node, classDecl);
 			node.setDeclaration((initializer != null) ? initializer : classDecl.getDefaultInitializer());
 		} else {
-			ProcedureDeclaration procedure;
-			try {
-				procedure = findMatchingProcedure(node, scope.resolveProcedure(node.getIdentifier()));
-			} catch (UnknownIdentifierException e) {
-				throw new UnknownIdentifierException(node, node.getIdentifier());
-			}
-
+			ProcedureDeclaration procedure = findMatchingProcedure(node, scope.resolveProcedure(node.getIdentifier()));
 			node.setDeclaration(procedure);
 			if (procedure instanceof FunctionDeclaration) {
 				FunctionDeclaration function = (FunctionDeclaration) procedure;
@@ -316,7 +278,7 @@ public class ResolveVisitor extends VisitOnceVisitor {
 	}
 
 	/** Find an enclosing class of this node.
-	 * 
+	 *
 	 * If the search is not sucessfull this method returns CoreClasses.voidType(). */
 	private ClassDeclaration findEnclosingClass(ASTNode node) {
 		for (ASTNode parent = node; parent != null; parent = parent.getParentNode()) {
@@ -329,7 +291,7 @@ public class ResolveVisitor extends VisitOnceVisitor {
 
 	/** Searches the given class declaration in order to find a initializer declaration that matches the signature of the
 	 * given initializer node.
-	 * 
+	 *
 	 * @param node
 	 *            a function call node representing a initializer
 	 * @param classDeclaration
@@ -361,7 +323,7 @@ public class ResolveVisitor extends VisitOnceVisitor {
 	}
 
 	/** Searches the given list of procedures in order to find one that matches the signature of the given function call.
-	 * 
+	 *
 	 * @param node
 	 *            a function call node representing the function call
 	 * @param procedures
