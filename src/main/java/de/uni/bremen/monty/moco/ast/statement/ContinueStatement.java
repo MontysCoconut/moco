@@ -44,7 +44,7 @@ import de.uni.bremen.monty.moco.visitor.BaseVisitor;
 public class ContinueStatement extends BasicASTNode implements Statement {
 
 	/** Constructor
-	 *
+	 * 
 	 * @param position
 	 *            Position of this node */
 	public ContinueStatement(Position position) {

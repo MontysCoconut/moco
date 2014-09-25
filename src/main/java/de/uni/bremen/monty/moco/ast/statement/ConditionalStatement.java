@@ -49,7 +49,7 @@ public class ConditionalStatement extends BasicASTNode implements Statement {
 	private final Block elseBlock;
 
 	/** Constructor.
-	 *
+	 * 
 	 * @param position
 	 *            Position of this node
 	 * @param condition
@@ -66,21 +66,21 @@ public class ConditionalStatement extends BasicASTNode implements Statement {
 	}
 
 	/** get the condition
-	 *
+	 * 
 	 * @return the condition */
 	public Expression getCondition() {
 		return condition;
 	}
 
 	/** get the then block
-	 *
+	 * 
 	 * @return the then block */
 	public Block getThenBlock() {
 		return thenBlock;
 	}
 
 	/** get the else block
-	 *
+	 * 
 	 * @return the else block */
 	public Block getElseBlock() {
 		return elseBlock;

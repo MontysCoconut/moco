@@ -51,13 +51,13 @@ import static de.uni.bremen.monty.moco.codegeneration.types.LLVMTypeFactory.*;
 
 /** This Factory creates LLVMIdentifier. It has various Methods allowing you to create global or local Identifier, with a
  * given name or a generated name, resolvable or not, and even elementPointer and functionSignatures
- *
+ * 
  * LLVM use prefixes to differ local from global values. '@' is global '%' is local
- *
+ * 
  * Abstract on LLVM Name Policy for local values: If you don't care about the name of a value you can just use a number.
  * Like '%3' BUT this number must start with 0 for the first value in the scope and have to increment, without omitting
  * one. This counter is only valid in a local scope.
- *
+ * 
  * This is where the {@link #scope} comes into play. */
 public class LLVMIdentifierFactory {
 

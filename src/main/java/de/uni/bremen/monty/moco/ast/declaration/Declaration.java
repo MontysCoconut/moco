@@ -54,7 +54,7 @@ public abstract class Declaration extends BasicASTNode {
 	private AccessModifier access;
 
 	/** Constructor.
-	 *
+	 * 
 	 * @param position
 	 *            Position of this node
 	 * @param identifier
@@ -77,21 +77,21 @@ public abstract class Declaration extends BasicASTNode {
 	}
 
 	/** Get the mangled Identifier.
-	 *
+	 * 
 	 * @return mangled Identifier */
 	public Identifier getMangledIdentifier() {
 		return mangledIdentifier;
 	}
 
 	/** Set the mangled Identifier.
-	 *
+	 * 
 	 * @param mangledIdentifier */
 	public void setMangledIdentifier(Identifier mangledIdentifier) {
 		this.mangledIdentifier = mangledIdentifier;
 	}
 
 	/** Get the identifier.
-	 *
+	 * 
 	 * @return the identifier */
 	public Identifier getIdentifier() {
 		return identifier;

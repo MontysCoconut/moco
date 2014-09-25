@@ -51,7 +51,7 @@ public abstract class BasicASTNode implements ASTNode {
 	private Scope scope;
 
 	/** Constructor.
-	 *
+	 * 
 	 * @param position
 	 *            Position of this node */
 	public BasicASTNode(Position position) {
@@ -65,7 +65,7 @@ public abstract class BasicASTNode implements ASTNode {
 	}
 
 	/** Get parent node.
-	 *
+	 * 
 	 * @return the parent node */
 	@Override
 	public ASTNode getParentNode() {
@@ -73,7 +73,7 @@ public abstract class BasicASTNode implements ASTNode {
 	}
 
 	/** Set parent node.
-	 *
+	 * 
 	 * @param parentNode
 	 *            the parent node */
 	@Override
@@ -82,7 +82,7 @@ public abstract class BasicASTNode implements ASTNode {
 	}
 
 	/** Get the sourcecode position.
-	 *
+	 * 
 	 * @return the position */
 	@Override
 	public Position getPosition() {
@@ -90,7 +90,7 @@ public abstract class BasicASTNode implements ASTNode {
 	}
 
 	/** Set the associated scope.
-	 *
+	 * 
 	 * @param scope
 	 *            the associated scope */
 	@Override
@@ -99,7 +99,7 @@ public abstract class BasicASTNode implements ASTNode {
 	}
 
 	/** Get the accociated scope.
-	 *
+	 * 
 	 * @return the scope */
 	@Override
 	public Scope getScope() {

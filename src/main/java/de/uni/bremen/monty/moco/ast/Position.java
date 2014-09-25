@@ -56,7 +56,7 @@ public class Position {
 	}
 
 	/** Constructor.
-	 *
+	 * 
 	 * @param fileName
 	 *            the source file name
 	 * @param lineNumber
@@ -74,21 +74,21 @@ public class Position {
 	}
 
 	/** Get the source file name.
-	 *
+	 * 
 	 * @return the source file name */
 	public String getFileName() {
 		return fileName;
 	}
 
 	/** Get the source file line number.
-	 *
+	 * 
 	 * @return the souce file line number */
 	public int getLineNumber() {
 		return lineNumber;
 	}
 
 	/** Get the source file char number.
-	 *
+	 * 
 	 * @return the source file char number */
 	public int getCharNumber() {
 		return charNumber;

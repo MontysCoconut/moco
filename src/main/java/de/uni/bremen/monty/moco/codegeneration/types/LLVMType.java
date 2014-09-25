@@ -40,14 +40,14 @@ package de.uni.bremen.monty.moco.codegeneration.types;
 
 /** An LLVMType represents a type for LLVM-IR. This can be a LLVMSimpleType like 'i64' or an composed Type like 'i8*'.
  * SubTypes like LLVMPointer or LLVMArrayType are designed that they can be composed freely.
- *
+ * 
  * If you want an Pointer to an Array with Pointers to boolean values you can write:
  * LLVMPointer<LLVMArrayType<LLVMPointer<LLVMBool>>> type = pointer(array(pointer(int1()),2)) using the factory Methods
  * in LLVMTypeFactory.
- *
+ * 
  * {@link #toString()} is overwritten in such a way, that it results in the String that represent this type in LLVM-IR
  * e.g. type.toString() == "[2 x i1*]*"
- *
+ * 
  * Only use {@link LLVMTypeFactory} to instantiate LLVMTypes. */
 public abstract class LLVMType {
 

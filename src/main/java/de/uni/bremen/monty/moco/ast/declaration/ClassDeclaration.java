@@ -72,7 +72,7 @@ public class ClassDeclaration extends TypeDeclaration {
 	private int lastAttributeIndex = 1;
 
 	/** Constructor.
-	 *
+	 * 
 	 * @param position
 	 *            Position of this node
 	 * @param identifier
@@ -89,21 +89,21 @@ public class ClassDeclaration extends TypeDeclaration {
 	}
 
 	/** Get the list of declarations and assignments.
-	 *
+	 * 
 	 * @return the block with declarations and assignments */
 	public Block getBlock() {
 		return block;
 	}
 
 	/** Get the list of identifiers of direct superclasses
-	 *
+	 * 
 	 * @return the identifier of superclasses */
 	public List<ResolvableIdentifier> getSuperClassIdentifiers() {
 		return superClassIdentifiers;
 	}
 
 	/** Get the list of direct superclasses this class inherits from.
-	 *
+	 * 
 	 * @return the superclasses */
 	public List<TypeDeclaration> getSuperClassDeclarations() {
 		return superClassDeclarations;
@@ -122,7 +122,7 @@ public class ClassDeclaration extends TypeDeclaration {
 	}
 
 	/** set the last attribute index.
-	 *
+	 * 
 	 * @param lastAttributeIndex
 	 *            the last attribute index */
 	public void setLastAttributeIndex(int lastAttributeIndex) {
@@ -130,28 +130,28 @@ public class ClassDeclaration extends TypeDeclaration {
 	}
 
 	/** get the last attribute index
-	 *
+	 * 
 	 * @return the last attribute index */
 	public int getLastAttributeIndex() {
 		return lastAttributeIndex;
 	}
 
 	/** Get the VMT.
-	 *
+	 * 
 	 * @return the VMT */
 	public List<ProcedureDeclaration> getVirtualMethodTable() {
 		return virtualMethodTable;
 	}
 
 	/** Get the default initializer.
-	 *
+	 * 
 	 * @return the default initializer */
 	public ProcedureDeclaration getDefaultInitializer() {
 		return this.defaultInitializer;
 	}
 
 	/** Set the default initializer.
-	 *
+	 * 
 	 * @param defaultInitializer
 	 *            the new default initializer */
 	public void setDefaultInitializer(ProcedureDeclaration defaultInitializer) {

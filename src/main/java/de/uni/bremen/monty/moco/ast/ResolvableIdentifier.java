@@ -44,7 +44,7 @@ package de.uni.bremen.monty.moco.ast;
 public class ResolvableIdentifier extends Identifier {
 
 	/** Constructor.
-	 *
+	 * 
 	 * @param symbol
 	 *            the name of the declaration */
 	public ResolvableIdentifier(String symbol) {

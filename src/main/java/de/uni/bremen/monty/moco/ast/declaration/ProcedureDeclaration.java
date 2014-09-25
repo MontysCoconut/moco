@@ -63,7 +63,7 @@ public class ProcedureDeclaration extends TypeDeclaration {
 	private int vmtIndex;
 
 	/** Constructor.
-	 *
+	 * 
 	 * @param position
 	 *            Position of this node
 	 * @param identifier
@@ -87,14 +87,14 @@ public class ProcedureDeclaration extends TypeDeclaration {
 	}
 
 	/** Get the body block.
-	 *
+	 * 
 	 * @return the body */
 	public Block getBody() {
 		return body;
 	}
 
 	/** Get the list of parameter.
-	 *
+	 * 
 	 * @return the paramter */
 	public List<VariableDeclaration> getParameter() {
 		return parameter;
@@ -106,7 +106,7 @@ public class ProcedureDeclaration extends TypeDeclaration {
 	}
 
 	/** get the declaration type
-	 *
+	 * 
 	 * @return the declaration type */
 	public DeclarationType getDeclarationType() {
 		return declarationType;
@@ -158,7 +158,7 @@ public class ProcedureDeclaration extends TypeDeclaration {
 
 	/** Check equality of two types taking into account the AST object hierachy.
 	 * <p>
-	 *
+	 * 
 	 * @param other
 	 *            the other TypeDeclaration to check against
 	 * @return if equal */

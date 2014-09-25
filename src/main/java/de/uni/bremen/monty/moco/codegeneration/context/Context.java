@@ -45,7 +45,7 @@ import java.util.List;
 
 /** An .ll File is composed by a Tree of Context. This Tree is realized in this class with a recursive Structure that is
  * created with the attribute {@link #innerContexts}
- *
+ * 
  * The leaves are lines holding a single Instruction represented as {@link StringData}. Those leaves can be composed
  * together in a Context. For e.g. a function in llvm is a context because it is a composition of statements. One could
  * further subdivide a function into multiple parts. All functions inside a .ll file are further composed into a
@@ -63,7 +63,7 @@ public class Context implements ContextData {
 	}
 
 	/** Adds an LLVM-Instruction as a Leaf to the Tree.
-	 *
+	 * 
 	 * @param data */
 	public void append(String data) {
 		data = StringUtils.repeat(" ", indentation * 4) + data;
@@ -72,7 +72,7 @@ public class Context implements ContextData {
 	}
 
 	/** Appends a Context to the Tree. This increases the depth of the Tree...
-	 *
+	 * 
 	 * @param c */
 	public void append(Context c) {
 		innerContexts.add(c);
@@ -80,7 +80,7 @@ public class Context implements ContextData {
 
 	/** Converts this into a List of instruction as a String. Each Instruction is a new Line in the String. This is done
 	 * by flattening the Tree by concatenating.
-	 *
+	 * 
 	 * @return All the children in a String */
 	public String getData() {
 		StringBuilder s = new StringBuilder();

@@ -47,7 +47,7 @@ public class Import extends BasicASTNode {
 	private ResolvableIdentifier identifier;
 
 	/** Constructor.
-	 *
+	 * 
 	 * @param position
 	 *            Position of this node */
 	public Import(Position position, ResolvableIdentifier identifier) {

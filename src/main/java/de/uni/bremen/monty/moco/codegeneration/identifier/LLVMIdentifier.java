@@ -43,12 +43,12 @@ import de.uni.bremen.monty.moco.codegeneration.types.LLVMType;
 /** LLVMIdentifier is the simple composition of an LLVMType and a name. In LLVM-IR you often have to write s.th. like
  * 'i64 %0' as a part of an instruction. This is an LLVMIdentifier. And if you use {@link #toString()} it gives you the
  * representation for LLVM-IR.
- *
+ * 
  * The Type can be composed, see {@link LLVMType}. And the name can be more complex too. e.g. ' getelementptr inbounds
  * (i8* %0, i32 0, i32 0) ' is currently modeled as a simple name for an identifier.
- *
+ * 
  * Instances should only be created with the {@link LLVMIdentifierFactory}.
- *
+ * 
  * @param <T>
  *            The Type that is encapsulated in the Identifier. If you have e.g. 'i64* %2' the Type will be
  *            LLVMIdentifier<LLVMPointer<LLVMInt64>> */
@@ -61,7 +61,7 @@ public class LLVMIdentifier<T extends LLVMType> {
 	private boolean resolvable;
 
 	/** Don't use this. Only {@link LLVMIdentifierFactory} should create instances.
-	 *
+	 * 
 	 * @param type
 	 * @param name
 	 * @param resolvable */
@@ -87,7 +87,7 @@ public class LLVMIdentifier<T extends LLVMType> {
 	}
 
 	/** Is it a value or a pointer to value
-	 *
+	 * 
 	 * @return true if its a pointer to a value */
 	public boolean needToBeResolved() {
 		return resolvable;

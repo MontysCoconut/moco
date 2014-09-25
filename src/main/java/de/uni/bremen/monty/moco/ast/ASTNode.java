@@ -56,11 +56,11 @@ public interface ASTNode {
 	 * <p>
 	 * This method is only called from within the BaseVisitor. Every actual subclass must implement this method with the
 	 * following body:
-	 *
+	 * 
 	 * <pre>
 	 * {@code visitor.visit(this);}
 	 * </pre>.
-	 *
+	 * 
 	 * @param visitor
 	 *            the visitor to visit this node */
 	void visit(BaseVisitor visitor);
@@ -69,7 +69,7 @@ public interface ASTNode {
 	 * <p>
 	 * Can be used from any visitor if the traversal order does not matter. The BaseVisitor uses this method by default. @
 	 * param visitor the visitor to viit this node
-	 *
+	 * 
 	 * @param visitor
 	 *            the visitor to visit this node */
 	void visitChildren(BaseVisitor visitor);

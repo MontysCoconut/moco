@@ -47,7 +47,7 @@ public class Identifier {
 	private final String symbol;
 
 	/** Constructor.
-	 *
+	 * 
 	 * @param symbol
 	 *            the name of the declaration */
 	public Identifier(String symbol) {
@@ -55,7 +55,7 @@ public class Identifier {
 	}
 
 	/** Get the name of the declaration.
-	 *
+	 * 
 	 * @return the name */
 	public String getSymbol() {
 		return symbol;

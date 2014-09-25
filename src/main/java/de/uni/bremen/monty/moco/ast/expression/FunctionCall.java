@@ -59,14 +59,14 @@ public class FunctionCall extends Expression implements Statement {
 	}
 
 	/** get the identifier.
-	 *
+	 * 
 	 * @return the identifier */
 	public ResolvableIdentifier getIdentifier() {
 		return identifier;
 	}
 
 	/** get the List of paramter
-	 *
+	 * 
 	 * @return the paramters */
 	public List<Expression> getArguments() {
 		return arguments;
@@ -98,7 +98,7 @@ public class FunctionCall extends Expression implements Statement {
 	}
 
 	/** Get mangled identifier
-	 *
+	 * 
 	 * @return the mangled identifier */
 	public Identifier getMangledIdentifier() {
 		return declaration.getMangledIdentifier();

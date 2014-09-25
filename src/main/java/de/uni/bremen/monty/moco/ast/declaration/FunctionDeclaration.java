@@ -53,7 +53,7 @@ public class FunctionDeclaration extends ProcedureDeclaration {
 	private TypeDeclaration returnType;
 
 	/** Constructor.
-	 *
+	 * 
 	 * @param position
 	 *            Position of this node
 	 * @param identifier
@@ -77,7 +77,7 @@ public class FunctionDeclaration extends ProcedureDeclaration {
 	}
 
 	/** Constructor
-	 *
+	 * 
 	 * @param position
 	 *            * Position of this node
 	 * @param identifier
@@ -96,7 +96,7 @@ public class FunctionDeclaration extends ProcedureDeclaration {
 	}
 
 	/** get the return returnType.
-	 *
+	 * 
 	 * @return the return returnType */
 	public ResolvableIdentifier getReturnTypeIdentifier() {
 		return returnTypeIdentifier;
@@ -115,14 +115,14 @@ public class FunctionDeclaration extends ProcedureDeclaration {
 	}
 
 	/** get the returnType.
-	 *
+	 * 
 	 * @return the returnType */
 	public TypeDeclaration getReturnType() {
 		return returnType;
 	}
 
 	/** set the returnType
-	 *
+	 * 
 	 * @param returnType */
 	public void setReturnType(TypeDeclaration returnType) {
 		this.returnType = returnType;
@@ -130,7 +130,7 @@ public class FunctionDeclaration extends ProcedureDeclaration {
 
 	/** Check equality of two types taking into account the AST object hierachy.
 	 * <p>
-	 *
+	 * 
 	 * @param other
 	 *            the other TypeDeclaration to check against
 	 * @return if equal */

@@ -55,7 +55,7 @@ public class ModuleDeclaration extends TypeDeclaration {
 	private final Block block;
 
 	/** Constructor.
-	 *
+	 * 
 	 * @param position
 	 *            Position of this node
 	 * @param identifier
@@ -71,14 +71,14 @@ public class ModuleDeclaration extends TypeDeclaration {
 	}
 
 	/** Get the body block.
-	 *
+	 * 
 	 * @return the block */
 	public Block getBlock() {
 		return block;
 	}
 
 	/** Get the list of imports.
-	 *
+	 * 
 	 * @return the imports */
 	public List<Import> getImports() {
 		return imports;

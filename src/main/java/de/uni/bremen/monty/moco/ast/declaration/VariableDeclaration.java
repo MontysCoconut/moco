@@ -73,7 +73,7 @@ public class VariableDeclaration extends Declaration {
 	}
 
 	/** get the declaration type
-	 *
+	 * 
 	 * @return the declaration type */
 	public DeclarationType getDeclarationType() {
 		return declarationType;
@@ -92,35 +92,35 @@ public class VariableDeclaration extends Declaration {
 	}
 
 	/** get the identifier of the type.
-	 *
+	 * 
 	 * @return the type identifier */
 	public ResolvableIdentifier getTypeIdentifier() {
 		return typeIdentifier;
 	}
 
 	/** get the type.
-	 *
+	 * 
 	 * @return the type */
 	public TypeDeclaration getType() {
 		return type;
 	}
 
 	/** set the type
-	 *
+	 * 
 	 * @param type */
 	public void setType(TypeDeclaration type) {
 		this.type = type;
 	}
 
 	/** get if this variable is global.
-	 *
+	 * 
 	 * @return if global */
 	public boolean getIsGlobal() {
 		return isGlobal;
 	}
 
 	/** set if this variable is global.
-	 *
+	 * 
 	 * @param isGlobal
 	 *            if global */
 	public void setIsGlobal(boolean isGlobal) {

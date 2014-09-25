@@ -49,7 +49,7 @@ public class CommentAppender {
 	private ASTNode currentNode;
 
 	/** Adds a comment
-	 *
+	 * 
 	 * @param string
 	 *            the llvm instruction
 	 * @return the llvm with comment */
@@ -69,7 +69,7 @@ public class CommentAppender {
 	}
 
 	/** Links the LLVM-Instructions to Monty-Nodes
-	 *
+	 * 
 	 * @param currentNode
 	 *            Node that is currently processed. */
 	public void setNode(ASTNode currentNode) {

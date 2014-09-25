@@ -45,7 +45,7 @@ import de.uni.bremen.monty.moco.ast.statement.Statement;
 import de.uni.bremen.monty.moco.visitor.BaseVisitor;
 
 /** This node represents a block.
- *
+ * 
  * A block contains declarations and statements. The declarations must be processed first. */
 public class Block extends BasicASTNode {
 
@@ -56,7 +56,7 @@ public class Block extends BasicASTNode {
 	private final List<Declaration> declarations;
 
 	/** Constructor.
-	 *
+	 * 
 	 * @param position
 	 *            Position of this node */
 	public Block(Position position) {
@@ -71,7 +71,7 @@ public class Block extends BasicASTNode {
 	}
 
 	/** Add a statement to this block.
-	 *
+	 * 
 	 * @param statement
 	 *            the statement to add */
 	public void addStatement(Statement statement) {
@@ -79,7 +79,7 @@ public class Block extends BasicASTNode {
 	}
 
 	/** Add a declaration to this block.
-	 *
+	 * 
 	 * @param declaration
 	 *            the declaration to add */
 	public void addDeclaration(Declaration declaration) {
@@ -87,14 +87,14 @@ public class Block extends BasicASTNode {
 	}
 
 	/** Get the statements of this block.
-	 *
+	 * 
 	 * @return the statements */
 	public List<Statement> getStatements() {
 		return statements;
 	}
 
 	/** Get the declarations of this block.
-	 *
+	 * 
 	 * @return the declarations */
 	public List<Declaration> getDeclarations() {
 		return declarations;

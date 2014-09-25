@@ -51,7 +51,7 @@ public class Assignment extends BasicASTNode implements Statement {
 	private final Expression right;
 
 	/** Constructor.
-	 *
+	 * 
 	 * @param position
 	 *            Position of this node
 	 * @param left
@@ -65,14 +65,14 @@ public class Assignment extends BasicASTNode implements Statement {
 	}
 
 	/** Get the left side.
-	 *
+	 * 
 	 * @return the left side */
 	public Expression getLeft() {
 		return left;
 	}
 
 	/** Get the right side.
-	 *
+	 * 
 	 * @return the right side */
 	public Expression getRight() {
 		return right;

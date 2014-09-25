@@ -51,7 +51,7 @@ public class ArrayLiteral extends Expression {
 	private List<Expression> entries;
 
 	/** Constructor.
-	 *
+	 * 
 	 * @param position
 	 *            Position of this node
 	 * @param entries */

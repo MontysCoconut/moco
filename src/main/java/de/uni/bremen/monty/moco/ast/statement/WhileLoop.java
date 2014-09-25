@@ -48,7 +48,7 @@ public class WhileLoop extends BasicASTNode implements Statement {
 	private final Block body;
 
 	/** Constructor.
-	 *
+	 * 
 	 * @param position
 	 *            Position of this node
 	 * @param condition
@@ -62,14 +62,14 @@ public class WhileLoop extends BasicASTNode implements Statement {
 	}
 
 	/** get the condition
-	 *
+	 * 
 	 * @return the condition */
 	public Expression getCondition() {
 		return condition;
 	}
 
 	/** get the body
-	 *
+	 * 
 	 * @return the body */
 	public Block getBody() {
 		return body;

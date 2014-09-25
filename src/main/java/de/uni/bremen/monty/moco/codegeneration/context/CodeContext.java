@@ -53,9 +53,9 @@ import de.uni.bremen.monty.moco.codegeneration.types.LLVMTypeFactory.LLVMBool;
 import de.uni.bremen.monty.moco.codegeneration.types.LLVMTypeFactory.LLVMIntType;
 
 /** The CodeContext provides methods representing LLVM-Instruction.
- *
+ * 
  * In LLVM-IR is e.g. the load instruction, so there is a load Method in CodeContext.
- *
+ * 
  * For convenience CodeContext extends from Context. From the perspective of it's users you have only one instance
  * knowing where to write (Context) and how/what to write (CodeContext). */
 public class CodeContext extends Context {
@@ -69,7 +69,7 @@ public class CodeContext extends Context {
 	// --------------Memory Access and Addressing Operations--------------------
 
 	/** Allocates space for a variable
-	 *
+	 * 
 	 * @param identifierOfLocalVar
 	 *            identifier of the local variable
 	 * @param llvmType
@@ -81,7 +81,7 @@ public class CodeContext extends Context {
 	}
 
 	/** Dereferences a pointer
-	 *
+	 * 
 	 * @param sourcePointer
 	 *            the pointer to dereferences
 	 * @param <T>
@@ -94,7 +94,7 @@ public class CodeContext extends Context {
 	}
 
 	/** Stores a value
-	 *
+	 * 
 	 * @param source
 	 *            the value
 	 * @param targetPointer
@@ -106,7 +106,7 @@ public class CodeContext extends Context {
 	}
 
 	/** Gets an element pointer
-	 *
+	 * 
 	 * @param varIdentifier
 	 *            the LLVMIdentifier
 	 * @param pointer
@@ -125,7 +125,7 @@ public class CodeContext extends Context {
 	// ---------------- Other Operations ---------------------------------------
 
 	/** Compares two Integers
-	 *
+	 * 
 	 * @param icmpOperand
 	 *            How to compare
 	 * @param arg1
@@ -141,7 +141,7 @@ public class CodeContext extends Context {
 	}
 
 	/** Compares two Integers
-	 *
+	 * 
 	 * @param fcmpOperand
 	 *            How to compare
 	 * @param arg1
@@ -157,10 +157,10 @@ public class CodeContext extends Context {
 	}
 
 	/** The phi instruction.
-	 *
+	 * 
 	 * This must be the first instruction in a basic block. identifier and label must be nonempty and of the same
 	 * length.
-	 *
+	 * 
 	 * @param type
 	 *            the result type
 	 * @param resolvable
@@ -215,7 +215,7 @@ public class CodeContext extends Context {
 	}
 
 	/** Calls a function
-	 *
+	 * 
 	 * @param signature
 	 *            Name and return type of the function
 	 * @param arguments
@@ -233,7 +233,7 @@ public class CodeContext extends Context {
 	}
 
 	/** Calls a Procedure
-	 *
+	 * 
 	 * @param signature
 	 *            Name and return type of the function
 	 * @param arguments
@@ -243,7 +243,7 @@ public class CodeContext extends Context {
 	}
 
 	/** Calls a Procedure
-	 *
+	 * 
 	 * @param signature
 	 *            Name and return type of the function
 	 * @param arguments
@@ -254,7 +254,7 @@ public class CodeContext extends Context {
 
 	/** Defines a function. Appends the function signature and opens a new scope. Instructions called after this will be
 	 * inside this new scope until {@link #close()} is used.
-	 *
+	 * 
 	 * @param fNAttr
 	 *            LLVM-Attributes like 'ssp'
 	 * @param functionSignature
@@ -270,10 +270,10 @@ public class CodeContext extends Context {
 	}
 
 	/** Appends a label
-	 *
+	 * 
 	 * A label starts a basic block. Because a basic block must end with a terminator instruction the last instruction
 	 * before this label must be a terminator instruction. `br` (branch instruction) is one of those.
-	 *
+	 * 
 	 * @param label
 	 *            name of the label */
 	public void label(String label) {
@@ -281,7 +281,7 @@ public class CodeContext extends Context {
 	}
 
 	/** Append a global variable.
-	 *
+	 * 
 	 * Dont use this method unless you know why, use global(Linkage, LLVMIdentifier<LLVMType>, boolean,
 	 * LLVMIdentifier<LLVMType>) or global(Linkage, LLVMIdentifier<LLVMType>, boolean) instead. */
 	public LLVMIdentifier<LLVMType> global(Linkage linkage, LLVMIdentifier<LLVMType> target, boolean isConstant,
@@ -292,7 +292,7 @@ public class CodeContext extends Context {
 	}
 
 	/** Append a global variable.
-	 *
+	 * 
 	 * initializer should be a StructConstant or an ArrayConstant. */
 	public LLVMIdentifier<LLVMType> global(Linkage linkage, LLVMIdentifier<LLVMType> target, boolean isConstant,
 	        LLVMIdentifier initializer) {
@@ -328,7 +328,7 @@ public class CodeContext extends Context {
 	}
 
 	/** Return instruction for functions
-	 *
+	 * 
 	 * @param llvmIdentifier
 	 *            Value to return */
 	public void ret(LLVMIdentifier<?> llvmIdentifier) {
@@ -336,7 +336,7 @@ public class CodeContext extends Context {
 	}
 
 	/** Declares a function. Declare means the implementation of the function is somewhere else.
-	 *
+	 * 
 	 * @param functionSignature
 	 *            Name and return type of the function */
 	public void declare(FunctionSignature<LLVMType> functionSignature) {
@@ -362,7 +362,7 @@ public class CodeContext extends Context {
 	}
 
 	/** Adds a type declaration Compares two Integers
-	 *
+	 * 
 	 * @param type
 	 *            name and structur of the new type */
 	public void type(LLVMStructType type, List<LLVMType> list) {
@@ -396,9 +396,9 @@ public class CodeContext extends Context {
 	}
 
 	/** The sext instruction.
-	 *
+	 * 
 	 * Casts an integer of small bitsize to an integer of larger bitsize.
-	 *
+	 * 
 	 * @param result
 	 *            variable for the result
 	 * @param toCast

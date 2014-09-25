@@ -57,11 +57,11 @@ import static de.uni.bremen.monty.moco.codegeneration.types.LLVMTypeFactory.*;
 
 /** This class should contain most of the logic for the CodeGeneration. Mainly methods are called from the
  * CodeGenerationVisitor and have a Parameter 'CodeContext c'. On this argument LLVM instructions can be executed.
- *
+ * 
  * It is an mapping layer between the CodeGenerationVisitor on one side and CodeContext on the other. The
  * CodeGenerationVisitor is mainly influenced by the Monty-AST and the CodeContext only know LLVM instructions. So the
  * CodeGenerator is the where most parts of the mapping between those two languages exists.
- *
+ * 
  * An simple task of mapping is e.g. map from monty-Types (TypeDeclaration) to LLVM-Types(LLVMType) */
 public class CodeGenerator {
 	private final Operations operations;
@@ -247,7 +247,7 @@ public class CodeGenerator {
 	}
 
 	/** Get the unique label prefix associated with the given node.
-	 *
+	 * 
 	 * This is a Map lookup so the error will be thrown if node does not exist as key */
 	public String getLabelPrefix(ASTNode node) {
 		return node2label.get(node);

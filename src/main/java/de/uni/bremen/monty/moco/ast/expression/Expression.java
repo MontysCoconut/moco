@@ -50,7 +50,7 @@ public abstract class Expression extends BasicASTNode {
 	private TypeDeclaration type;
 
 	/** Constructor.
-	 *
+	 * 
 	 * @param position
 	 *            Position of this node */
 	public Expression(Position position) {
@@ -58,7 +58,7 @@ public abstract class Expression extends BasicASTNode {
 	}
 
 	/** Set the type.
-	 *
+	 * 
 	 * @param type
 	 *            the new type */
 	public void setType(TypeDeclaration type) {
@@ -66,7 +66,7 @@ public abstract class Expression extends BasicASTNode {
 	}
 
 	/** Get the type.
-	 *
+	 * 
 	 * @return the type */
 	public TypeDeclaration getType() {
 		return type;

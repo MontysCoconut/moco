@@ -54,7 +54,7 @@ public class Package extends BasicASTNode {
 	private boolean nativePackage = false;
 
 	/** Constructor.
-	 *
+	 * 
 	 * @param name */
 	public Package(Identifier name) {
 		super(new Position());

@@ -62,26 +62,26 @@ enum Mangled {
 }
 
 /** The NameManglingVisitor uses the following pattern to mangle the names:
- *
+ * 
  * _ : '.';
- *
+ * 
  * $ : '$';
- *
- *
+ * 
+ * 
  * module : 'module'_name;
- *
+ * 
  * class : 'class'_name;
- *
+ * 
  * func : 'func'_name$type($type)*;
- *
+ * 
  * proc : 'proc'_name($type)*;
- *
+ * 
  * var : 'var'_name$type;
- *
+ * 
  * type : 'type'_module(_class)?((_block|_proc|_func)*(_proc|_func))?;
- *
+ * 
  * block : 'block'_(IF|TRY|WHILE|HANDLE|ELSE)_number;
- *
+ * 
  * mangled : packet_module(_class)?((_block|_proc|_func)*(_proc|_func|_var))?; * */
 public class NameManglingVisitor extends BaseVisitor {
 
@@ -229,7 +229,7 @@ public class NameManglingVisitor extends BaseVisitor {
 
 	/** If a TypeDeclaration is not mangled yet, it has to be in some other ModuleDeclaration. The other
 	 * ModuleDeclaration must be mangled first.
-	 *
+	 * 
 	 * @param node
 	 *            TypeDeclaration to mangle
 	 * @return mangled Identifier */
@@ -246,7 +246,7 @@ public class NameManglingVisitor extends BaseVisitor {
 	}
 
 	/** This function mangles the parameters of FunctionDeclaration and ProcedureDeclaration.
-	 *
+	 * 
 	 * @param node
 	 *            FunctionDeclaration or ProcedureDeclaration to mangle
 	 * @param procName
@@ -271,7 +271,7 @@ public class NameManglingVisitor extends BaseVisitor {
 	}
 
 	/** Builds the name with module, class and parentScopes.
-	 *
+	 * 
 	 * @return prefix of mangled name */
 	private String buildNameHelper() {
 		final StringBuilder wholeName = new StringBuilder();

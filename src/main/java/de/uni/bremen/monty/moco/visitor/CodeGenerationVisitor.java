@@ -69,7 +69,7 @@ import java.util.Stack;
 import static de.uni.bremen.monty.moco.codegeneration.types.LLVMTypeFactory.pointer;
 
 /** The CodeGenerationVisitor has the following tasks:
- *
+ * 
  * <p>
  * <ul>
  * <li>Process the AST</li>
@@ -87,20 +87,20 @@ public class CodeGenerationVisitor extends BaseVisitor {
 
 	/** Each Expression pushes it's evaluated value onto the Stack. The value is represented by a LLVMIdentifier where
 	 * the evaluated value is stored at runtime.
-	 *
+	 * 
 	 * Statements or complex Expressions can pop those values from the stack, which they use as parameters for further
 	 * calculation.
-	 *
+	 * 
 	 * e.g. a := 3 is an Assignment having a VariableAccess and IntLiteral as children. VariableAccess and IntLiteral
 	 * are expressions, thus pushing their values on the stack. An Assignment on the other hand is an Statement and
 	 * return nothing, so doesn't push sth. on the stack, but instead it needs two Arguments. Those are popped from the
 	 * Stack and yield the the evaluated VariableAccess and IntLiteral.
-	 *
+	 * 
 	 * Of course this only works, if the Assignment first process the children and afterwards popping from the stack. */
 	private Stack<LLVMIdentifier<LLVMType>> stack = new Stack<>();
 
 	/** Only Expressions push to a Stack. So this is a Stack of Stacks so every Statement has its own stack.
-	 *
+	 * 
 	 * e.g. the FunctionCall as a statement would leave behind a non-empty stack. */
 	private Stack<Stack<LLVMIdentifier<LLVMType>>> stackOfStacks = new Stack<>();
 

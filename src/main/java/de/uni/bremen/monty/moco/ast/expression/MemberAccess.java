@@ -53,14 +53,14 @@ public class MemberAccess extends Expression implements Statement {
 	}
 
 	/** get the left expression
-	 *
+	 * 
 	 * @return left */
 	public Expression getLeft() {
 		return left;
 	}
 
 	/** get the right expression
-	 *
+	 * 
 	 * @return right */
 	public Expression getRight() {
 		return right;

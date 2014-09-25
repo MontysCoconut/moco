@@ -48,7 +48,7 @@ import de.uni.bremen.monty.moco.exception.*;
  * To nest scopes or build a stack the parent scope is passed as an argument to the constructor. So you use it like
  * this:
  * <p>
- *
+ * 
  * <pre>
  * {@code
  * // create a new scope and nest the old one
@@ -70,7 +70,7 @@ public class Scope {
 	protected Map<Identifier, Declaration> members;
 
 	/** Constructor.
-	 *
+	 * 
 	 * @param parent
 	 *            the parent scope in nesting hierarchy */
 	public Scope(Scope parent) {
@@ -82,7 +82,7 @@ public class Scope {
 	/** Get the parent scope in nesting hierarchy.
 	 * <p>
 	 * This method acts as the 'pop()'-operation in the scope-stack analogy.
-	 *
+	 * 
 	 * @return the parent scope */
 	public Scope getParentScope() {
 		return parent;
@@ -92,7 +92,7 @@ public class Scope {
 	 * <p>
 	 * First the declarations of this scope are searched. If the not successful the search continues recursively in the
 	 * parent scope.
-	 *
+	 * 
 	 * @param identifier
 	 *            the identifier to resolve
 	 * @return the declaration */
@@ -109,7 +109,7 @@ public class Scope {
 	}
 
 	/** Resolve an identifier for a type declaration.
-	 *
+	 * 
 	 * @param identifier
 	 *            the identifier to resolve
 	 * @return the declaration */
@@ -126,7 +126,7 @@ public class Scope {
 	}
 
 	/** Resolve an identifier for list of overloaded procedures or functions.
-	 *
+	 * 
 	 * @param identifier
 	 *            the identifier to resolve
 	 * @return the list of procedure declarations */
@@ -149,10 +149,10 @@ public class Scope {
 	}
 
 	/** Associate an identifier with a declaration.
-	 *
+	 * 
 	 * This method uses define(Identifier, ProcedureDeclaration) if the given declaration is a procedure or function
 	 * declaration.
-	 *
+	 * 
 	 * @param identifier
 	 *            the identifier
 	 * @param declaration
@@ -173,7 +173,7 @@ public class Scope {
 	 * <p>
 	 * This differs from define(Identifier, Declaration) as this method uses the declaration's Identifier-attribute to
 	 * call define(Identifier, Declaration)
-	 *
+	 * 
 	 * @param declaration
 	 *            the declaration
 	 * @throws RedeclarationException
@@ -183,10 +183,10 @@ public class Scope {
 	}
 
 	/** Associate an identifier with a procedure or function declaration.
-	 *
+	 * 
 	 * This takes overloading into account and throws a RedeclarationException if the declaration is an instance of
 	 * invalid overloading.
-	 *
+	 * 
 	 * @param identifier
 	 *            the identifier
 	 * @param declaration

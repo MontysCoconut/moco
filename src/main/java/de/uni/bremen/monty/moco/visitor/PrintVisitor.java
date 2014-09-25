@@ -54,7 +54,7 @@ public class PrintVisitor extends BaseVisitor {
 	private int indentation;
 
 	/** Print the indented.
-	 *
+	 * 
 	 * @param string
 	 *            the string to print */
 	private void printIndent(String string) {

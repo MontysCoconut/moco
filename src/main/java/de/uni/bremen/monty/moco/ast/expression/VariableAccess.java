@@ -58,7 +58,7 @@ public class VariableAccess extends Expression {
 	}
 
 	/** Get the identifier of the variable to access.
-	 *
+	 * 
 	 * @return the identifier */
 	public ResolvableIdentifier getIdentifier() {
 		return identifier;
@@ -81,7 +81,7 @@ public class VariableAccess extends Expression {
 	}
 
 	/** Is this a L-value?
-	 *
+	 * 
 	 * @return if L-value */
 	public boolean getLValue() {
 		return lValue;
@@ -99,7 +99,7 @@ public class VariableAccess extends Expression {
 	}
 
 	/** Get mangled identifier
-	 *
+	 * 
 	 * @return the mangled identifier */
 	public Identifier getMangledIdentifier() {
 		return declaration.getMangledIdentifier();

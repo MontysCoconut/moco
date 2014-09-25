@@ -46,7 +46,7 @@ public class ReturnStatement extends BasicASTNode implements Statement {
 	private Expression parameter;
 
 	/** Constructor.
-	 *
+	 * 
 	 * @param position
 	 *            Position of this node
 	 * @param parameter
@@ -57,7 +57,7 @@ public class ReturnStatement extends BasicASTNode implements Statement {
 	}
 
 	/** get the paramter
-	 *
+	 * 
 	 * @return the paramter */
 	public Expression getParameter() {
 		return parameter;

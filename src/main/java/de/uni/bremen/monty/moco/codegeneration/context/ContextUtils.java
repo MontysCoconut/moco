@@ -43,7 +43,7 @@ import de.uni.bremen.monty.moco.ast.ASTNode;
 import java.util.Stack;
 
 /** Utility class for accessing different {@link Context}
- *
+ * 
  * Holds the {@link #baseContext} which is the Context that represent a whole .ll file. */
 public class ContextUtils {
 
@@ -57,7 +57,7 @@ public class ContextUtils {
 
 	/** each function should have it's own CodeContext. This is where those are stored. The first Context in the Stack is
 	 * the container of all functions in the .ll file and not the container for all statements in a function.
-	 *
+	 * 
 	 * A Stack is used because monty allows to have functions inside functions.(Despite having closures) LLVM doesn't
 	 * support that feature. So while processing a function you may find another function, which you have to process.
 	 * You start processing the new one, while saving the state of the old one in the stack */
@@ -77,7 +77,7 @@ public class ContextUtils {
 	}
 
 	/** Sets the current Node to the {@link #commentAppender}
-	 *
+	 * 
 	 * @param node
 	 *            ast node */
 	public void setNode(ASTNode node) {
@@ -86,7 +86,7 @@ public class ContextUtils {
 
 	/** Returns the active Context. That is the Context in which the next instruction for LLVM from an 'normal' monty
 	 * Statement should be saved.
-	 *
+	 * 
 	 * @return the active Context. */
 	public CodeContext active() {
 		return activeContexts.peek();
@@ -94,7 +94,7 @@ public class ContextUtils {
 
 	/** Returns the constant Context. That is the Context in which the constant LLVM-declarations should be located. Like
 	 * string literals.
-	 *
+	 * 
 	 * @return the constant Context. */
 	public CodeContext constant() {
 		return constantsContext;
@@ -102,7 +102,7 @@ public class ContextUtils {
 
 	/** Converts the {@link #baseContext} into a string. The baseContext represents a whole .ll File. So the data is the
 	 * content of a .ll file.
-	 *
+	 * 
 	 * @return the converted {@link #baseContext} */
 	public String getData() {
 		return baseContext.getData();

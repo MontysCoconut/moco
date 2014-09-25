@@ -55,21 +55,21 @@ public class ConditionalExpression extends Expression {
 	}
 
 	/** get the condition.
-	 *
+	 * 
 	 * @return the condition */
 	public Expression getCondition() {
 		return condition;
 	}
 
 	/** get the expression of the then part.
-	 *
+	 * 
 	 * @return the then expression */
 	public Expression getThenExpression() {
 		return thenExpression;
 	}
 
 	/** get the expression of the else part.
-	 *
+	 * 
 	 * @return the else expression */
 	public Expression getElseExpression() {
 		return elseExpression;

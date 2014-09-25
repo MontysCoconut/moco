@@ -47,7 +47,7 @@ public class BreakStatement extends BasicASTNode implements Statement {
 	private WhileLoop loop;
 
 	/** Constructor.
-	 *
+	 * 
 	 * @param position
 	 *            Position of this node */
 	public BreakStatement(Position position) {

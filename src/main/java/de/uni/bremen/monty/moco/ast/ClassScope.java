@@ -47,7 +47,7 @@ import java.util.ArrayList;
  * <p>
  * To nest scopes or build a stack the parent scope is passed as an argument to the construtor. So you use it like this
  * <p>
- *
+ * 
  * <pre>
  * {@code
  * // create a new scope and nest the old one
@@ -68,7 +68,7 @@ public class ClassScope extends Scope {
 	private List<ClassScope> parentClassesScopes;
 
 	/** Constructor.
-	 *
+	 * 
 	 * @param parent
 	 *            the parent scope in nesting hierachy */
 	public ClassScope(Scope parent) {
@@ -81,7 +81,7 @@ public class ClassScope extends Scope {
 	}
 
 	/** Resolve an identifier in inherited scopes.
-	 *
+	 * 
 	 * @param identifier
 	 *            the identifier
 	 * @return the declaration or null if nothing is found */
@@ -101,7 +101,7 @@ public class ClassScope extends Scope {
 	}
 
 	/** Resolve an identifier for list of overloaded procedures or functions in inherited scope.
-	 *
+	 * 
 	 * @param identifier
 	 *            the identifier to resolve
 	 * @return the list of procedure declarations */
@@ -120,7 +120,7 @@ public class ClassScope extends Scope {
 	/** Resolve an identifier for a declaration
 	 * <p>
 	 * It first searches its associations, the parent classes in inheritance hierachy and only then the parent scope.
-	 *
+	 * 
 	 * @param identifier
 	 *            the identifier to resolve
 	 * @return the declaration or null if nothing is found */
@@ -137,7 +137,7 @@ public class ClassScope extends Scope {
 	/** Resolve an identifier for list of overloaded procedures or functions.
 	 * <p>
 	 * It first searches its associations, the parent classes in inheritance hierachy and only then the parent scope.
-	 *
+	 * 
 	 * @param identifier
 	 *            the identifier to resolve
 	 * @return the list of procedure declarations */
