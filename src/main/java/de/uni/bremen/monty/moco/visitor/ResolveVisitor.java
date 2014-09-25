@@ -126,7 +126,13 @@ public class ResolveVisitor extends VisitOnceVisitor {
 		super.visit(node);
 
 		Scope scope = node.getScope();
-		Declaration declaration = scope.resolve(node.getIdentifier());
+		Declaration declaration;
+
+		try {
+		    declaration = scope.resolve(node.getIdentifier());
+		} catch (UnknownIdentifierException e) {
+		    throw new UnknownIdentifierException(node, node.getIdentifier());
+		}
 
 		if (declaration instanceof VariableDeclaration) {
 			VariableDeclaration variable = (VariableDeclaration) declaration;
@@ -136,7 +142,7 @@ public class ResolveVisitor extends VisitOnceVisitor {
 			if (!(scope instanceof ClassScope) && findEnclosingClass(node) == CoreClasses.voidType()) {
 				if (node.getDeclaration() == null
 				        || node.getDeclaration().getPosition().getLineNumber() > node.getPosition().getLineNumber()) {
-					throw new UnknownIdentifierException(node.getIdentifier());
+					throw new UnknownIdentifierException(node, node.getIdentifier());
 				}
 			}
 		} else if (declaration instanceof TypeDeclaration) {
@@ -233,7 +239,13 @@ public class ResolveVisitor extends VisitOnceVisitor {
 	@Override
 	public void visit(FunctionDeclaration node) {
 		Scope scope = node.getScope();
-		node.setReturnType(scope.resolveType(node.getReturnTypeIdentifier()));
+		TypeDeclaration returnType;
+		try {
+		    returnType = scope.resolveType(node.getReturnTypeIdentifier());
+		} catch (UnknownTypeException e) {
+		    throw new UnknownTypeException(node, node.getReturnTypeIdentifier());
+		}
+		node.setReturnType(returnType);
 		super.visit(node);
 	}
 
@@ -265,7 +277,12 @@ public class ResolveVisitor extends VisitOnceVisitor {
 			ProcedureDeclaration initializer = findMatchingInitializer(node, classDecl);
 			node.setDeclaration((initializer != null) ? initializer : classDecl.getDefaultInitializer());
 		} else {
-			ProcedureDeclaration procedure = findMatchingProcedure(node, scope.resolveProcedure(node.getIdentifier()));
+		    ProcedureDeclaration procedure;
+		    try {
+		        procedure = findMatchingProcedure(node, scope.resolveProcedure(node.getIdentifier()));
+		    } catch (UnknownIdentifierException e) {
+		        throw new UnknownIdentifierException(node, node.getIdentifier());
+		    }
 			node.setDeclaration(procedure);
 			if (procedure instanceof FunctionDeclaration) {
 				FunctionDeclaration function = (FunctionDeclaration) procedure;
