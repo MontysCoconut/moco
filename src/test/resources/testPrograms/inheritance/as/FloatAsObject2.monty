@@ -1,0 +1,12 @@
+// Testing: Float as Object
+//
+// A float object must be castable to an Float
+//
+// Expected output: 01.3
+
+Object z := 0.0 as Object
+Object f := 1.3 as Object
+
+print(z as Float)
+print(f as Float)
+

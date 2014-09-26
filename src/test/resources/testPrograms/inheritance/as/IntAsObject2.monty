@@ -1,0 +1,12 @@
+// Testing: Int as Object
+//
+// An int object must be castable to an Int
+//
+// Expected output: 042
+
+Object z := 0 as Object
+Object i := 42 as Object
+
+print(z as Int)
+print(i as Int)
+
