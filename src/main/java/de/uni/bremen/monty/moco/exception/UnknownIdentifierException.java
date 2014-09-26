@@ -43,10 +43,6 @@ import de.uni.bremen.monty.moco.ast.ResolvableIdentifier;
 
 public class UnknownIdentifierException extends MontyBaseException {
 
-	public UnknownIdentifierException(ResolvableIdentifier identifier) {
-		super("Identifier is not defined: " + identifier);
-	}
-
 	public UnknownIdentifierException(ASTNode node, ResolvableIdentifier identifier) {
 	    super(node, "Identifier is not defined: " + identifier);
 	}

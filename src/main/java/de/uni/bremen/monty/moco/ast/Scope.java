@@ -93,44 +93,50 @@ public class Scope {
 	 * First the declarations of this scope are searched. If the not successful the search continues recursively in the
 	 * parent scope.
 	 *
+	 * @param node
+	 *            the node in which the identifier occurred
 	 * @param identifier
 	 *            the identifier to resolve
 	 * @return the declaration */
-	public Declaration resolve(ResolvableIdentifier identifier) {
+	public Declaration resolve(ASTNode node, ResolvableIdentifier identifier) {
 		Declaration declaration = members.get(identifier);
 
 		if (declaration != null) {
 			return declaration;
 		}
 		if (parent != null) {
-			return parent.resolve(identifier);
+			return parent.resolve(node, identifier);
 		}
-		throw new UnknownIdentifierException(identifier);
+		throw new UnknownIdentifierException(node, identifier);
 	}
 
 	/** Resolve an identifier for a type declaration.
 	 *
+	 * @param node
+	 *            the node in which the identifier occurred
 	 * @param identifier
 	 *            the identifier to resolve
 	 * @return the declaration */
-	public TypeDeclaration resolveType(ResolvableIdentifier identifier) {
+	public TypeDeclaration resolveType(ASTNode node, ResolvableIdentifier identifier) {
 		try {
-			Declaration declaration = resolve(identifier);
+			Declaration declaration = resolve(node, identifier);
 			if (declaration instanceof TypeDeclaration) {
 				return (TypeDeclaration) declaration;
 			}
-			throw new UnknownTypeException(identifier);
+			throw new UnknownTypeException(node, identifier);
 		} catch (UnknownIdentifierException e) {
-			throw new UnknownTypeException(identifier);
+			throw new UnknownTypeException(node, identifier);
 		}
 	}
 
 	/** Resolve an identifier for list of overloaded procedures or functions.
 	 *
+	 * @param node
+	 *            the node in which the identifier occurred
 	 * @param identifier
 	 *            the identifier to resolve
 	 * @return the list of procedure declarations */
-	public List<ProcedureDeclaration> resolveProcedure(ResolvableIdentifier identifier) {
+	public List<ProcedureDeclaration> resolveProcedure(ASTNode node, ResolvableIdentifier identifier) {
 		List<ProcedureDeclaration> result = new ArrayList<ProcedureDeclaration>();
 
 		if (procedures.containsKey(identifier)) {
@@ -138,12 +144,12 @@ public class Scope {
 		}
 		if (parent != null) {
 			try {
-				result.addAll(parent.resolveProcedure(identifier));
+				result.addAll(parent.resolveProcedure(node, identifier));
 			} catch (UnknownIdentifierException e) {
 			}
 		}
 		if (result.isEmpty()) {
-			throw new UnknownIdentifierException(identifier);
+			throw new UnknownIdentifierException(node, identifier);
 		}
 		return result;
 	}

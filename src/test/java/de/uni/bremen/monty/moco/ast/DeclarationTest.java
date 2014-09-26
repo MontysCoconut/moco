@@ -676,7 +676,7 @@ public class DeclarationTest {
 
 		setParentVisitor.visit(aPackage);
 		declarationVisitor.visit(aPackage);
-		assertSame(classDeclaration, moduleDeclaration.getScope().resolve(new ResolvableIdentifier("classDeclaration")));
+		assertSame(classDeclaration, moduleDeclaration.getScope().resolve(null, new ResolvableIdentifier("classDeclaration")));
 	}
 
 	@Test(expected = InvalidPlaceToDeclareException.class)
@@ -718,7 +718,7 @@ public class DeclarationTest {
 
 		setParentVisitor.visit(aPackage);
 		declarationVisitor.visit(aPackage);
-		assertTrue(moduleDeclaration.getScope().resolveProcedure(new ResolvableIdentifier("moduleFunctionDeclaration")).contains(
+		assertTrue(moduleDeclaration.getScope().resolveProcedure(null, new ResolvableIdentifier("moduleFunctionDeclaration")).contains(
 		        moduleFunctionDeclaration));
 	}
 
@@ -730,7 +730,7 @@ public class DeclarationTest {
 
 		setParentVisitor.visit(aPackage);
 		declarationVisitor.visit(aPackage);
-		assertTrue(classDeclaration.getScope().resolveProcedure(new ResolvableIdentifier("classFunctionDeclaration")).contains(
+		assertTrue(classDeclaration.getScope().resolveProcedure(null, new ResolvableIdentifier("classFunctionDeclaration")).contains(
 		        classFunctionDeclaration));
 	}
 
@@ -742,7 +742,7 @@ public class DeclarationTest {
 
 		setParentVisitor.visit(aPackage);
 		declarationVisitor.visit(aPackage);
-		assertTrue(moduleFunctionDeclaration.getScope().resolveProcedure(
+		assertTrue(moduleFunctionDeclaration.getScope().resolveProcedure(null,
 		        new ResolvableIdentifier("moduleFunctionFunctionDeclaration")).contains(
 		        moduleFunctionFunctionDeclaration));
 	}
@@ -755,7 +755,7 @@ public class DeclarationTest {
 
 		setParentVisitor.visit(aPackage);
 		declarationVisitor.visit(aPackage);
-		assertTrue(moduleProcedureDeclaration.getScope().resolveProcedure(
+		assertTrue(moduleProcedureDeclaration.getScope().resolveProcedure(null,
 		        new ResolvableIdentifier("moduleProcedureFunctionDeclaration")).contains(
 		        moduleProcedureFunctionDeclaration));
 	}
@@ -769,7 +769,7 @@ public class DeclarationTest {
 
 		setParentVisitor.visit(aPackage);
 		declarationVisitor.visit(aPackage);
-		assertTrue(moduleDeclaration.getScope().resolveProcedure(new ResolvableIdentifier("moduleProcedureDeclaration")).contains(
+		assertTrue(moduleDeclaration.getScope().resolveProcedure(null, new ResolvableIdentifier("moduleProcedureDeclaration")).contains(
 		        moduleProcedureDeclaration));
 	}
 
@@ -781,7 +781,7 @@ public class DeclarationTest {
 
 		setParentVisitor.visit(aPackage);
 		declarationVisitor.visit(aPackage);
-		assertTrue(classDeclaration.getScope().resolveProcedure(new ResolvableIdentifier("classProcedureDeclaration")).contains(
+		assertTrue(classDeclaration.getScope().resolveProcedure(null, new ResolvableIdentifier("classProcedureDeclaration")).contains(
 		        classProcedureDeclaration));
 	}
 
@@ -793,7 +793,7 @@ public class DeclarationTest {
 
 		setParentVisitor.visit(aPackage);
 		declarationVisitor.visit(aPackage);
-		assertTrue(moduleFunctionDeclaration.getScope().resolveProcedure(
+		assertTrue(moduleFunctionDeclaration.getScope().resolveProcedure(null,
 		        new ResolvableIdentifier("moduleFunctionProcedureDeclaration")).contains(
 		        moduleFunctionProcedureDeclaration));
 	}
@@ -806,7 +806,7 @@ public class DeclarationTest {
 
 		setParentVisitor.visit(aPackage);
 		declarationVisitor.visit(aPackage);
-		assertTrue(moduleProcedureDeclaration.getScope().resolveProcedure(
+		assertTrue(moduleProcedureDeclaration.getScope().resolveProcedure(null,
 		        new ResolvableIdentifier("moduleProcedureProcedureDeclaration")).contains(
 		        moduleProcedureProcedureDeclaration));
 	}
@@ -822,7 +822,7 @@ public class DeclarationTest {
 		declarationVisitor.visit(aPackage);
 		assertSame(
 		        moduleVariableDeclaration,
-		        moduleDeclaration.getScope().resolve(new ResolvableIdentifier("moduleVariableDeclaration")));
+		        moduleDeclaration.getScope().resolve(null, new ResolvableIdentifier("moduleVariableDeclaration")));
 	}
 
 	@Test
@@ -835,7 +835,7 @@ public class DeclarationTest {
 		declarationVisitor.visit(aPackage);
 		assertSame(
 		        classVariableDeclaration,
-		        classDeclaration.getScope().resolve(new ResolvableIdentifier("classVariableDeclaration")));
+		        classDeclaration.getScope().resolve(null, new ResolvableIdentifier("classVariableDeclaration")));
 	}
 
 	@Test
@@ -850,13 +850,13 @@ public class DeclarationTest {
 
 		assertSame(
 		        moduleFunctionParamsVariable01,
-		        scope.resolve(new ResolvableIdentifier("moduleFunctionParamsVariable01")));
+		        scope.resolve(null, new ResolvableIdentifier("moduleFunctionParamsVariable01")));
 		assertSame(
 		        moduleFunctionParamsVariable02,
-		        scope.resolve(new ResolvableIdentifier("moduleFunctionParamsVariable02")));
+		        scope.resolve(null, new ResolvableIdentifier("moduleFunctionParamsVariable02")));
 		assertSame(
 		        moduleFunctionVariableDeclaration,
-		        scope.resolve(new ResolvableIdentifier("moduleFunctionVariableDeclaration")));
+		        scope.resolve(null, new ResolvableIdentifier("moduleFunctionVariableDeclaration")));
 	}
 
 	@Test
@@ -871,13 +871,13 @@ public class DeclarationTest {
 
 		assertSame(
 		        moduleProcedureParamsVariable01,
-		        scope.resolve(new ResolvableIdentifier("moduleProcedureParamsVariable01")));
+		        scope.resolve(null, new ResolvableIdentifier("moduleProcedureParamsVariable01")));
 		assertSame(
 		        moduleProcedureParamsVariable02,
-		        scope.resolve(new ResolvableIdentifier("moduleProcedureParamsVariable02")));
+		        scope.resolve(null, new ResolvableIdentifier("moduleProcedureParamsVariable02")));
 		assertSame(
 		        moduleProcedureVariableDeclaration,
-		        scope.resolve(new ResolvableIdentifier("moduleProcedureVariableDeclaration")));
+		        scope.resolve(null, new ResolvableIdentifier("moduleProcedureVariableDeclaration")));
 	}
 
 	@Test
@@ -891,8 +891,8 @@ public class DeclarationTest {
 		setParentVisitor.visit(aPackage);
 		declarationVisitor.visit(aPackage);
 		Scope scope = classFunctionDeclaration.getScope();
-		assertSame(classVariableDeclaration, scope.resolve(new ResolvableIdentifier("classVariableDeclaration")));
-		assertSame(moduleVariableDeclaration, scope.resolve(new ResolvableIdentifier("moduleVariableDeclaration")));
+		assertSame(classVariableDeclaration, scope.resolve(null, new ResolvableIdentifier("classVariableDeclaration")));
+		assertSame(moduleVariableDeclaration, scope.resolve(null, new ResolvableIdentifier("moduleVariableDeclaration")));
 	}
 
 	// REDECLARATION
@@ -941,10 +941,10 @@ public class DeclarationTest {
 		declarationVisitor.visit(aPackage);
 		assertSame(
 		        variableDeclaration,
-		        moduleFunctionDeclaration.getScope().resolve(new ResolvableIdentifier("moduleVariableDeclaration")));
+		        moduleFunctionDeclaration.getScope().resolve(null, new ResolvableIdentifier("moduleVariableDeclaration")));
 		assertNotSame(
 		        variableDeclaration,
-		        moduleDeclaration.getScope().resolve(new ResolvableIdentifier("moduleVariableDeclaration")));
+		        moduleDeclaration.getScope().resolve(null, new ResolvableIdentifier("moduleVariableDeclaration")));
 	}
 
 	@Test
@@ -963,9 +963,9 @@ public class DeclarationTest {
 		declarationVisitor.visit(aPackage);
 		assertSame(
 		        variableDeclaration,
-		        extendedClassDeclaration.getScope().resolve(new ResolvableIdentifier("classVariableDeclaration")));
+		        extendedClassDeclaration.getScope().resolve(null, new ResolvableIdentifier("classVariableDeclaration")));
 		assertNotSame(
 		        variableDeclaration,
-		        classDeclaration.getScope().resolve(new ResolvableIdentifier("classVariableDeclaration")));
+		        classDeclaration.getScope().resolve(null, new ResolvableIdentifier("classVariableDeclaration")));
 	}
 }
