@@ -38,10 +38,15 @@
  */
 package de.uni.bremen.monty.moco.ast;
 
+import java.util.Collections;
+import java.util.List;
+
 /** A ResolvableIdentifier is similar to the Identifier a name of a declaration.
  * <p>
  * During context-analysis this is resolved to a declaration using a scope. */
 public class ResolvableIdentifier extends Identifier {
+
+	private List<ResolvableIdentifier> genericTypes;
 
 	/** Constructor.
 	 *
@@ -49,9 +54,37 @@ public class ResolvableIdentifier extends Identifier {
 	 *            the name of the declaration */
 	public ResolvableIdentifier(String symbol) {
 		super(symbol);
+		genericTypes = Collections.emptyList();
+	}
+
+	public ResolvableIdentifier(String symbol, List<ResolvableIdentifier> genericTypes) {
+		super(symbol);
+		this.genericTypes = genericTypes;
 	}
 
 	public static ResolvableIdentifier convert(Identifier identifier) {
 		return new ResolvableIdentifier(identifier.getSymbol());
+	}
+
+	@Override
+	public boolean equals(Object o) {
+		if (this == o) return true;
+		if (!(o instanceof Identifier)) return false;
+
+		Identifier id = (Identifier) o;
+		if (id.getSymbol().equals(this.getSymbol())) {
+			return true;
+		}
+		return false;
+	}
+
+	@Override
+	public int hashCode() {
+		int result = super.hashCode();
+		return result;
+	}
+
+	public List<ResolvableIdentifier> getGenericTypes() {
+		return genericTypes;
 	}
 }

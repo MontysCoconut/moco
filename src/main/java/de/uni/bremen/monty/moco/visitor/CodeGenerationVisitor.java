@@ -38,9 +38,7 @@
  */
 package de.uni.bremen.monty.moco.visitor;
 
-import de.uni.bremen.monty.moco.ast.ASTNode;
-import de.uni.bremen.monty.moco.ast.Block;
-import de.uni.bremen.monty.moco.ast.CoreClasses;
+import de.uni.bremen.monty.moco.ast.*;
 import de.uni.bremen.monty.moco.ast.Package;
 import de.uni.bremen.monty.moco.ast.declaration.*;
 import de.uni.bremen.monty.moco.ast.expression.*;
@@ -52,9 +50,9 @@ import de.uni.bremen.monty.moco.codegeneration.context.CodeContext;
 import de.uni.bremen.monty.moco.codegeneration.context.ContextUtils;
 import de.uni.bremen.monty.moco.codegeneration.identifier.LLVMIdentifier;
 import de.uni.bremen.monty.moco.codegeneration.identifier.LLVMIdentifierFactory;
+import de.uni.bremen.monty.moco.codegeneration.types.LLVMPointer;
 import de.uni.bremen.monty.moco.codegeneration.types.LLVMStructType;
 import de.uni.bremen.monty.moco.codegeneration.types.LLVMType;
-import de.uni.bremen.monty.moco.codegeneration.types.LLVMPointer;
 import de.uni.bremen.monty.moco.codegeneration.types.TypeConverter;
 
 import java.util.ArrayList;
@@ -126,7 +124,8 @@ public class CodeGenerationVisitor extends BaseVisitor {
 		List<LLVMIdentifier<? extends LLVMType>> llvmParameter = new ArrayList<>();
 
 		if (node.isMethod() || node.isInitializer()) {
-			LLVMType selfType = codeGenerator.mapToLLVMType(node.getDefiningClass());
+			ClassDeclaration typeDeclaration = node.getDefiningClass();
+			LLVMType selfType = codeGenerator.mapToLLVMType(typeDeclaration);
 			LLVMIdentifier<LLVMType> selfReference = llvmIdentifierFactory.newLocal("self", selfType, false);
 			llvmParameter.add(selfReference);
 		}
@@ -205,12 +204,22 @@ public class CodeGenerationVisitor extends BaseVisitor {
 
 	@Override
 	public void visit(ClassDeclaration node) {
-		if (node != CoreClasses.voidType()) {
-			openNewFunctionScope();
-			codeGenerator.buildConstructor(contextUtils.active(), node);
-			closeFunctionContext();
+		onEnterChildrenEachNode(node);
+		if (node.getAbstractGenericTypes().isEmpty() || node instanceof ClassDeclarationVariation) {
+			if (node != CoreClasses.voidType()) {
+				openNewFunctionScope();
+				codeGenerator.buildConstructor(contextUtils.active(), node);
+				closeFunctionContext();
+			}
+			visitDoubleDispatched(node.getBlock());
+		} else {
+			for (ClassDeclarationVariation variation : node.getVariations()) {
+				node.setParentNode(variation);
+				visit(variation);
+				node.setParentNode(variation.getParentNode());
+			}
 		}
-		super.visit(node);
+		onExitChildrenEachNode(node);
 	}
 
 	@Override
@@ -263,7 +272,11 @@ public class CodeGenerationVisitor extends BaseVisitor {
 	@SuppressWarnings("unchecked")
 	@Override
 	public void visit(SelfExpression node) {
-		stack.push(codeGenerator.resolveLocalVarName("self", node.getType(), false));
+		TypeDeclaration type = node.getType();
+		if (type.getParentNode() instanceof ClassDeclarationVariation) {
+			type = (TypeDeclaration) type.getParentNode();
+		}
+		stack.push(codeGenerator.resolveLocalVarName("self", type, false));
 	}
 
 	@SuppressWarnings("unchecked")
@@ -455,7 +468,11 @@ public class CodeGenerationVisitor extends BaseVisitor {
 		Collections.reverse(arguments);
 
 		ProcedureDeclaration declaration = node.getDeclaration();
+
 		ClassDeclaration definingClass = declaration.getDefiningClass();
+		if (definingClass != null && definingClass.getParentNode() instanceof ClassDeclarationVariation) {
+			definingClass = (ClassDeclaration) definingClass.getParentNode();
+		}
 
 		List<ClassDeclaration> treatSpecial =
 		        Arrays.asList(

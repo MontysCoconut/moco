@@ -176,8 +176,8 @@ public class CodeGenerator {
 
 	private LLVMIdentifier<LLVMPointer<LLVMType>> getVMTPointer(CodeContext c,
 	        LLVMIdentifier<LLVMPointer<LLVMType>> selfReference, ClassDeclaration classDeclaration) {
-		LLVMPointer<LLVMType> vmtType =
-		        pointer((LLVMType) struct(nameMangler.mangleClass(classDeclaration) + "_vmt_type"));
+		String s = nameMangler.mangleClass(classDeclaration);
+		LLVMPointer<LLVMType> vmtType = pointer((LLVMType) struct(s + "_vmt_type"));
 		LLVMIdentifier<LLVMPointer<LLVMType>> vmtPointer = llvmIdentifierFactory.newLocal(vmtType, true);
 		c.getelementptr(
 		        (LLVMIdentifier<LLVMType>) (LLVMIdentifier<?>) vmtPointer,
@@ -190,7 +190,7 @@ public class CodeGenerator {
 	private LLVMIdentifier<LLVMPointer<LLVMFunctionType>> getFunctionPointer(CodeContext c,
 	        LLVMIdentifier<LLVMPointer<LLVMType>> selfReference, ProcedureDeclaration declaration) {
 		LLVMIdentifier<LLVMPointer<LLVMType>> vmtPointer =
-		        getVMTPointer(c, selfReference, (ClassDeclaration) declaration.getParentNode().getParentNode());
+		        getVMTPointer(c, selfReference, declaration.getDefiningClass());
 
 		LLVMPointer<LLVMFunctionType> functionType = mapToLLVMType(declaration);
 		LLVMIdentifier<LLVMPointer<LLVMFunctionType>> functionPointer = llvmIdentifierFactory.newLocal(functionType);

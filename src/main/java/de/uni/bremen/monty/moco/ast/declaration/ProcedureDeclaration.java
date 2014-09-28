@@ -38,10 +38,13 @@
  */
 package de.uni.bremen.monty.moco.ast.declaration;
 
-import java.util.List;
-
-import de.uni.bremen.monty.moco.ast.*;
+import de.uni.bremen.monty.moco.ast.ASTNode;
+import de.uni.bremen.monty.moco.ast.Block;
+import de.uni.bremen.monty.moco.ast.Identifier;
+import de.uni.bremen.monty.moco.ast.Position;
 import de.uni.bremen.monty.moco.visitor.BaseVisitor;
+
+import java.util.List;
 
 /** A ProcedureDeclaration represents the declaration of a procedure in the AST.
  * <p>
@@ -130,7 +133,13 @@ public class ProcedureDeclaration extends TypeDeclaration {
 
 	public ClassDeclaration getDefiningClass() {
 		if (isMethod() || isInitializer()) {
-			return (ClassDeclaration) getParentNode().getParentNode();
+			ASTNode parentNode = getParentNode().getParentNode();
+
+			if (parentNode.getParentNode() instanceof ClassDeclarationVariation) {
+				parentNode = parentNode.getParentNode();
+			}
+
+			return (ClassDeclaration) parentNode;
 		}
 		return null;
 	}

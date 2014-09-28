@@ -1,0 +1,26 @@
+class Xy<Type>:
+
+  - Type t
+
+  + initializer(Type t):
+    self.t := t
+
+  + Type get() :
+    return self.t
+
+class Yz:
+
+
+  + initializer():
+    Xy<Bool> x := Xy<Bool>(true)
+
+    while(x.get()):
+      print("Hallo ")
+      x := Xy<Bool>(false)
+
+    if(not x.get()):
+      print(x.get())
+
+    print(" Fail" if x.get() else " Welt")
+
+Yz()

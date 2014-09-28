@@ -40,6 +40,8 @@ package de.uni.bremen.monty.moco.ast;
 
 import de.uni.bremen.monty.moco.visitor.BaseVisitor;
 
+import java.util.BitSet;
+
 public interface ASTNode {
 
 	ASTNode getParentNode();
@@ -74,4 +76,5 @@ public interface ASTNode {
 	 *            the visitor to visit this node */
 	void visitChildren(BaseVisitor visitor);
 
+	BitSet getVisitedFlags();
 }

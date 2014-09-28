@@ -22,7 +22,7 @@ independentDeclaration
   ;
 
 classDeclaration
-  : 'abstract'? 'class' ClassIdentifier ('inherits' typeList)?
+  : 'abstract'? 'class' type ('inherits' typeList)?
     ':' EndOfLine
     Indent
         (memberDeclaration+ | 'pass' EndOfLine)
@@ -87,9 +87,9 @@ statement
   : whileStatement                                                  #whileStm
   | ifStatement                                                     #ifStm
   | tryStatement                                                    #tryStm
+  | independentDeclaration                                          #independentDeclStm
   | assignment                                                      #assignStm
   | compoundAssignment                                              #compoundAssign
-  | independentDeclaration                                          #independentDeclStm
   | command='return' expression? EndOfLine                          #returnStm
   | command='raise' expression? EndOfLine                           #raiseStm
   | command='skip' EndOfLine                                        #skipStm
@@ -131,7 +131,7 @@ compoundSymbol
   ;
 
 functionCall
-  : (ClassIdentifier | Identifier) '(' expressionList? ')'
+  : (type | Identifier) '(' expressionList? ')'
   ;
 
 expressionList
@@ -139,9 +139,9 @@ expressionList
   ;
 
 expression
-  : primary
+  : functionCall
+  | primary
   | ifExprThen=expression 'if' ifExpCondition=expression 'else' ifExprElse=expression
-  | functionCall
   | left=expression accessOperator right=expression
   | <assoc=right> (plusMinusOperator | notOperator) singleExpression=expression
   | <assoc=right> left=expression powerOperator right=expression

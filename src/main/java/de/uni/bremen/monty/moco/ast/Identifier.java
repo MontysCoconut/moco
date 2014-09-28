@@ -38,9 +38,6 @@
  */
 package de.uni.bremen.monty.moco.ast;
 
-/** An Identifier is the user defined name of a declaration.
- * <p>
- * During context-analysis the identifier with an associated declaration is stored in a scope. */
 public class Identifier {
 
 	/** The name of the declaration. */
@@ -49,16 +46,9 @@ public class Identifier {
 	/** Constructor.
 	 *
 	 * @param symbol
-	 *            the name of the declaration */
+	 *            the name of the declaration **/
 	public Identifier(String symbol) {
 		this.symbol = symbol;
-	}
-
-	/** Get the name of the declaration.
-	 *
-	 * @return the name */
-	public String getSymbol() {
-		return symbol;
 	}
 
 	@Override
@@ -77,6 +67,13 @@ public class Identifier {
 		return false;
 	}
 
+	/** Get the name of the declaration.
+	 *
+	 * @return the name */
+	public String getSymbol() {
+		return symbol;
+	}
+
 	@Override
 	public int hashCode() {
 		return symbol.hashCode();
@@ -84,10 +81,6 @@ public class Identifier {
 
 	@Override
 	public String toString() {
-		return symbol;
-	}
-
-	public static Identifier convert(ResolvableIdentifier identifier) {
-		return new Identifier(identifier.getSymbol());
+		return getSymbol();
 	}
 }

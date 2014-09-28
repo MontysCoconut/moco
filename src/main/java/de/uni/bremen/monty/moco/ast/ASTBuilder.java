@@ -40,21 +40,21 @@ package de.uni.bremen.monty.moco.ast;
 
 import de.uni.bremen.monty.moco.antlr.MontyBaseVisitor;
 import de.uni.bremen.monty.moco.antlr.MontyParser;
-import de.uni.bremen.monty.moco.antlr.MontyParser.DefaultParameterContext;
-import de.uni.bremen.monty.moco.antlr.MontyParser.TypeContext;
 import de.uni.bremen.monty.moco.antlr.MontyParser.*;
 import de.uni.bremen.monty.moco.ast.declaration.*;
 import de.uni.bremen.monty.moco.ast.declaration.ProcedureDeclaration.DeclarationType;
 import de.uni.bremen.monty.moco.ast.expression.*;
 import de.uni.bremen.monty.moco.ast.expression.literal.*;
 import de.uni.bremen.monty.moco.ast.statement.*;
-
 import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.misc.NotNull;
 import org.antlr.v4.runtime.tree.TerminalNode;
 import org.apache.commons.io.FilenameUtils;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Stack;
 
 public class ASTBuilder extends MontyBaseVisitor<ASTNode> {
 	private final String fileName;
@@ -119,22 +119,38 @@ public class ASTBuilder extends MontyBaseVisitor<ASTNode> {
 
 	@Override
 	public ASTNode visitVariableDeclaration(@NotNull VariableDeclarationContext ctx) {
-		String typeName = ctx.type().ClassIdentifier().toString();
-		ResolvableIdentifier type = new ResolvableIdentifier(typeName);
+		ResolvableIdentifier type = convertResolvableIdentifier(ctx.type());
+
 		return new VariableDeclaration(position(ctx.getStart()), new Identifier(getText(ctx.Identifier())), type,
 		        currentVariableContext);
+	}
+
+	private ResolvableIdentifier convertResolvableIdentifier(TypeContext type) {
+		String typeName = type.ClassIdentifier().toString();
+		ArrayList<ResolvableIdentifier> genericTypes = new ArrayList<>();
+		if (type.typeList() != null) {
+			for (TypeContext typeContext : type.typeList().type()) {
+				genericTypes.add(convertResolvableIdentifier(typeContext));
+			}
+		}
+		return new ResolvableIdentifier(typeName, genericTypes);
+	}
+
+	private Identifier convertIdentifier(TypeContext type) {
+		String typeName = type.ClassIdentifier().toString();
+		return new Identifier(typeName);
 	}
 
 	@Override
 	public ASTNode visitFunctionCall(FunctionCallContext ctx) {
 		ArrayList<Expression> arguments = new ArrayList<>();
-		String identifier;
+		ResolvableIdentifier identifier;
 		if (ctx.Identifier() == null) {
-			identifier = ctx.ClassIdentifier().getText();
+			identifier = convertResolvableIdentifier(ctx.type());
 		} else {
-			identifier = ctx.Identifier().getText();
+			identifier = new ResolvableIdentifier(ctx.Identifier().getText());
 		}
-		FunctionCall func = new FunctionCall(position(ctx.getStart()), new ResolvableIdentifier(identifier), arguments);
+		FunctionCall func = new FunctionCall(position(ctx.getStart()), identifier, arguments);
 		if (ctx.expressionList() != null) {
 			for (ExpressionContext exprC : ctx.expressionList().expression()) {
 
@@ -185,7 +201,7 @@ public class ASTBuilder extends MontyBaseVisitor<ASTNode> {
 				block.addStatement(new ReturnStatement(new Position(), expression));
 				procDecl1 =
 				        new FunctionDeclaration(position(token), identifier, block, subParams, declarationTypeCopy,
-				                new ResolvableIdentifier(typeContext.ClassIdentifier().getText()));
+				                convertResolvableIdentifier(typeContext));
 			} else {
 				block.addStatement((Statement) expression);
 				block.addStatement(new ReturnStatement(new Position(), null));
@@ -232,8 +248,7 @@ public class ASTBuilder extends MontyBaseVisitor<ASTNode> {
 		if (functionDeclaration) {
 			procDecl2 =
 			        new FunctionDeclaration(position(token), identifier, (Block) visit(statementBlockContext),
-			                allVariableDeclarations, declarationTypeCopy, new ResolvableIdentifier(
-			                        typeContext.ClassIdentifier().getText()));
+			                allVariableDeclarations, declarationTypeCopy, convertResolvableIdentifier(typeContext));
 		} else {
 			procDecl2 =
 			        new ProcedureDeclaration(position(token), identifier, (Block) visit(statementBlockContext),
@@ -258,13 +273,24 @@ public class ASTBuilder extends MontyBaseVisitor<ASTNode> {
 	public ASTNode visitClassDeclaration(ClassDeclarationContext ctx) {
 		List<ResolvableIdentifier> superClasses = new ArrayList<>();
 		if (ctx.typeList() != null) {
-			for (TypeContext type : ctx.typeList().type()) {
-				superClasses.add(new ResolvableIdentifier(type.ClassIdentifier().getText()));
+			for (TypeContext typeContext : ctx.typeList().type()) {
+				superClasses.add(new ResolvableIdentifier(typeContext.ClassIdentifier().getText()));
 			}
 		}
+
+		ArrayList<AbstractGenericType> genericTypes = new ArrayList<>();
+
 		ClassDeclaration cl =
-		        new ClassDeclaration(position(ctx.getStart()), new Identifier(ctx.ClassIdentifier().getText()),
-		                superClasses, new Block(position(ctx.getStart())));
+		        new ClassDeclaration(position(ctx.getStart()), convertResolvableIdentifier(ctx.type()), superClasses,
+		                new Block(position(ctx.getStart())), genericTypes);
+
+		TypeContext type = ctx.type();
+		if (type.typeList() != null) {
+			for (TypeContext typeContext1 : type.typeList().type()) {
+				genericTypes.add(new AbstractGenericType(cl, position(typeContext1.getStart()),
+				        new ResolvableIdentifier(getText(typeContext1.ClassIdentifier()))));
+			}
+		}
 
 		currentBlocks.push(cl.getBlock());
 		for (MemberDeclarationContext member : ctx.memberDeclaration()) {

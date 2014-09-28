@@ -66,7 +66,7 @@ public class BaseVisitor {
 	 *
 	 * @param node
 	 *            the node to visit */
-	public final void visitDoubleDispatched(ASTNode node) {
+	public void visitDoubleDispatched(ASTNode node) {
 		try {
 			onEnterEachNode(node);
 			node.visit(this);
@@ -134,6 +134,16 @@ public class BaseVisitor {
 	 * @param node
 	 *            the node to visit */
 	public void visit(ClassDeclaration node) {
+		onEnterChildrenEachNode(node);
+		node.visitChildren(this);
+		onExitChildrenEachNode(node);
+	}
+
+	/** Visitor method to visit a AbstractGenericType.
+	 *
+	 * @param node
+	 *            the node to visit */
+	public void visit(AbstractGenericType node) {
 		onEnterChildrenEachNode(node);
 		node.visitChildren(this);
 		onExitChildrenEachNode(node);

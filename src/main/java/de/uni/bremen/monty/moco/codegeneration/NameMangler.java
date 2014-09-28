@@ -92,7 +92,8 @@ public class NameMangler {
 			if (escapeForLLVM(variableDeclaration.getIdentifier()).equals("self")) {
 			} else {
 				TypeDeclaration type = variableDeclaration.getType();
-				parameter += Mangled.TYPE + mangleClass((ClassDeclaration) type);
+				ClassDeclaration classDeclaration = getConcreteClass(node, type);
+				parameter += Mangled.TYPE + mangleClass(classDeclaration);
 			}
 		}
 
@@ -106,11 +107,20 @@ public class NameMangler {
 		return base + midTerm + parameter;
 	}
 
+	private ClassDeclaration getConcreteClass(ASTNode node, TypeDeclaration type) {
+		if (type instanceof AbstractGenericType) {
+			ClassDeclarationVariation variation =
+			        (ClassDeclarationVariation) ((AbstractGenericType) type).getDefinedIn().getParentNode();
+			type = variation.mapAbstractToConcrete((AbstractGenericType) type).getDecl();
+		}
+		return (ClassDeclaration) type;
+	}
+
 	public String mangleProcedure(ProcedureDeclaration node) {
 		if (node instanceof FunctionDeclaration) {
 			FunctionDeclaration functionDeclaration = (FunctionDeclaration) node;
 			String funcName = Mangled.FUNC + escapeForLLVM(node.getIdentifier());
-			funcName += Mangled.TYPE + mangleClass((ClassDeclaration) functionDeclaration.getReturnType());
+			funcName += Mangled.TYPE + mangleClass(getConcreteClass(node, functionDeclaration.getReturnType()));
 
 			return mangleProcedureDeclaration(node, funcName);
 
@@ -126,7 +136,7 @@ public class NameMangler {
 
 		String var =
 		        Mangled.VAR + escapeForLLVM(node.getIdentifier()) + Mangled.TYPE
-		                + mangleClass((ClassDeclaration) node.getType());
+		                + mangleClass(getConcreteClass(node, node.getType()));
 
 		return base + var;
 	}
@@ -151,6 +161,13 @@ public class NameMangler {
 		String base = mangleModule(module);
 
 		String className = Mangled.CLASS + escapeForLLVM(node.getIdentifier());
+		if (node instanceof ClassDeclarationVariation) {
+			className += Mangled.TYPE;
+			for (ConcreteGenericType concreteGenericType : ((ClassDeclarationVariation) node).getConcreteGenericTypes()) {
+				ClassDeclaration decl = concreteGenericType.getDecl();
+				className += Mangled.TYPE + mangleClass(decl);
+			}
+		}
 
 		return base + className;
 	}

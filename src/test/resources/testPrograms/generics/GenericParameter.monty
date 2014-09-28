@@ -1,0 +1,21 @@
+class Ab<Ba>:
+  - Ba b
+  + initializer(Ba v):
+    self.setB(v)
+    Ba var := self.getB()
+
+  + Ba getB():
+    return self.b
+
+  + setB(Ba b):
+    self.b := b
+
+
+Ab<String> x := Ab<String>("Monty!")
+String s := x.getB()
+print(s)
+
+Ab<String> copy(Ab<String> source):
+  return Ab<String>(source.b)
+
+print(copy(x).b)

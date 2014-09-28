@@ -1,0 +1,9 @@
+class Wrapper<Ty>:
+  + Ty content
+
+  + bla():
+    print(3)
+
+Wrapper<Int> x := Wrapper<Int>()
+x.content := 3
+print(x.content)

@@ -38,8 +38,12 @@
  */
 package de.uni.bremen.monty.moco.ast;
 
+import java.util.BitSet;
+
 /** Baseclass for every node in the AST. */
 public abstract class BasicASTNode implements ASTNode {
+
+	public static final int NUMBER_OF_VISITORS = 6;
 
 	/** Sourcecode position of this node. */
 	private final Position position;
@@ -49,6 +53,8 @@ public abstract class BasicASTNode implements ASTNode {
 
 	/** Associated scope. */
 	private Scope scope;
+
+	private BitSet visitedFlags = new BitSet(NUMBER_OF_VISITORS);
 
 	/** Constructor.
 	 *
@@ -95,6 +101,7 @@ public abstract class BasicASTNode implements ASTNode {
 	 *            the associated scope */
 	@Override
 	public void setScope(Scope scope) {
+
 		this.scope = scope;
 	}
 
@@ -106,4 +113,8 @@ public abstract class BasicASTNode implements ASTNode {
 		return scope;
 	}
 
+	@Override
+	public BitSet getVisitedFlags() {
+		return visitedFlags;
+	}
 }
