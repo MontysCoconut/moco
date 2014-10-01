@@ -10,10 +10,10 @@ import java.util.List;
 
 public class ClassDeclarationVariation extends ClassDeclaration {
 
-	private List<ConcreteGenericType> concreteGenericTypes;
+	private List<ClassDeclaration> concreteGenericTypes;
 
 	public ClassDeclarationVariation(ClassDeclaration classDecl, ResolvableIdentifier identifier,
-	        List<ConcreteGenericType> concreteGenericTypes) {
+	        List<ClassDeclaration> concreteGenericTypes) {
 		super(classDecl.getPosition(), identifier, classDecl.getSuperClassIdentifiers(), new Block(
 		        classDecl.getBlock().getPosition()), classDecl.getAbstractGenericTypes());
 		this.concreteGenericTypes = concreteGenericTypes;
@@ -64,13 +64,13 @@ public class ClassDeclarationVariation extends ClassDeclaration {
 
 	public TypeDeclaration mapGenericType(TypeDeclaration type) {
 		if (type instanceof AbstractGenericType) {
-			return mapAbstractToConcrete((AbstractGenericType) type).getDecl();
+			return mapAbstractToConcrete((AbstractGenericType) type);
 		} else {
 			return type;
 		}
 	}
 
-	public ConcreteGenericType mapAbstractToConcrete(AbstractGenericType type) {
+	public ClassDeclaration mapAbstractToConcrete(AbstractGenericType type) {
 		int index = getAbstractGenericTypes().indexOf(type);
 		if (index >= 0) {
 			return concreteGenericTypes.get(index);
@@ -79,7 +79,7 @@ public class ClassDeclarationVariation extends ClassDeclaration {
 		}
 	}
 
-	public List<ConcreteGenericType> getConcreteGenericTypes() {
+	public List<ClassDeclaration> getConcreteGenericTypes() {
 		return concreteGenericTypes;
 	}
 
@@ -89,7 +89,7 @@ public class ClassDeclarationVariation extends ClassDeclaration {
 			VariableDeclaration var;
 			TypeDeclaration abstractType = variableDeclaration.getType();
 			if (abstractType instanceof AbstractGenericType) {
-				ClassDeclaration type = mapAbstractToConcrete((AbstractGenericType) abstractType).getDecl();
+				ClassDeclaration type = mapAbstractToConcrete((AbstractGenericType) abstractType);
 				var =
 				        new VariableDeclaration(variableDeclaration.getPosition(), variableDeclaration.getIdentifier(),
 				                type, variableDeclaration.getDeclarationType());

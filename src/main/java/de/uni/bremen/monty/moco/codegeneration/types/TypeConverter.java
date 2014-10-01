@@ -203,14 +203,15 @@ public class TypeConverter {
 				parent = parent.getParentNode();
 			}
 			ClassDeclarationVariation classVariation = (ClassDeclarationVariation) parent;
-			ConcreteGenericType concreteType = classVariation.mapAbstractToConcrete((AbstractGenericType) type);
+			ClassDeclaration concreteType = classVariation.mapAbstractToConcrete((AbstractGenericType) type);
 
-			T t = (T) mapToLLVMType(concreteType.getDecl());
+			T t = (T) mapToLLVMType(concreteType);
 			return t;
-		} else if (type instanceof ConcreteGenericType) {
-			ConcreteGenericType concreteType = (ConcreteGenericType) type;
-			return (T) mapToLLVMType(concreteType.getDecl());
 		}
+		// else if (type instanceof ConcreteGenericType) {
+		// ConcreteGenericType concreteType = (ConcreteGenericType) type;
+		// return (T) mapToLLVMType(concreteType.getDecl());
+		// }
 		if (type instanceof ClassDeclaration && !((ClassDeclaration) type).getAbstractGenericTypes().isEmpty()) {
 			ASTNode parent = type;
 			while (!(parent instanceof ClassDeclarationVariation)) {
