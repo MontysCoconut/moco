@@ -51,7 +51,7 @@ public class VariableDeclaration extends Declaration {
 
 	private ResolvableIdentifier typeIdentifier;
 	private TypeDeclaration type;
-	private DeclarationType declarationType;
+	private final DeclarationType declarationType;
 	private boolean isGlobal;
 	private Expression inferTypeFrom = null;
 
@@ -60,8 +60,10 @@ public class VariableDeclaration extends Declaration {
 
 	public VariableDeclaration(Position position, Identifier identifier, ResolvableIdentifier typeIdentifier,
 	        DeclarationType declarationType) {
-		this(position, identifier, typeIdentifier);
+		super(position, identifier);
+		this.typeIdentifier = typeIdentifier;
 		this.declarationType = declarationType;
+		attributeIndex = -1;
 	}
 
 	public VariableDeclaration(Position position, Identifier identifier, TypeDeclaration type,
@@ -82,11 +84,6 @@ public class VariableDeclaration extends Declaration {
 	public VariableDeclaration(Position position, Identifier identifier, Expression inferTypeFrom) {
 		this(position, identifier, (ResolvableIdentifier) null);
 		this.inferTypeFrom = inferTypeFrom;
-	}
-
-	/** set the declaration type */
-	public void setDeclarationType(DeclarationType type) {
-		this.declarationType = type;
 	}
 
 	/** get the declaration type
