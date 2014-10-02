@@ -351,11 +351,6 @@ public class ASTBuilder extends MontyBaseVisitor<ASTNode> {
 	@Override
 	public ASTNode visitWhileStatement(WhileStatementContext ctx) {
 		ASTNode expr = visit(ctx.expression());
-		if (!(expr instanceof Expression)) {
-
-			return null;
-		}
-
 		WhileLoop loop =
 		        new WhileLoop(position(ctx.getStart()), (Expression) expr, (Block) visit(ctx.statementBlock()));
 

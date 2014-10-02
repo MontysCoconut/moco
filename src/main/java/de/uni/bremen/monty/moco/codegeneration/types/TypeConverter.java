@@ -89,19 +89,6 @@ public class TypeConverter {
 		return pointer(struct(nameMangler.mangleClass(type)));
 	}
 
-	public TypeDeclaration mapToBoxedType(LLVMType type) {
-		if (type instanceof LLVMBool) {
-			return CoreClasses.boolType();
-		} else if (type instanceof LLVMInt) {
-			return CoreClasses.intType();
-		} else if (type instanceof LLVMDouble) {
-			return CoreClasses.floatType();
-		} else if (type instanceof LLVMInt8) {
-			return CoreClasses.charType();
-		}
-		return null;
-	}
-
 	private <T extends LLVMType> T convertType(TypeDeclaration type) {
 		if (type instanceof ProcedureDeclaration) {
 			LLVMPointer<LLVMFunctionType> llvmFunctionTypeLLVMPointer = convertType((ProcedureDeclaration) type);

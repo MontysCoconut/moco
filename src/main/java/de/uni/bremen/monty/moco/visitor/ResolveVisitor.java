@@ -146,10 +146,6 @@ public class ResolveVisitor extends VisitOnceVisitor {
 					throw new UnknownIdentifierException(node.getIdentifier());
 				}
 			}
-		} else if (declaration instanceof TypeDeclaration) {
-			TypeDeclaration type = (TypeDeclaration) declaration;
-			node.setDeclaration(declaration);
-			node.setType(type);
 		}
 	}
 

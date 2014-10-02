@@ -65,14 +65,7 @@ public abstract class Declaration extends BasicASTNode {
 		this.access = AccessModifier.PUBLIC;
 	}
 
-	public Declaration(Position position, Identifier identifier, AccessModifier access) {
-		super(position);
-		this.identifier = identifier;
-		this.access = access;
-	}
-
 	public void setAccessModifier(AccessModifier access) {
-
 		this.access = access;
 	}
 
