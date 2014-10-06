@@ -94,11 +94,6 @@ public class CodeGenerationVisitor extends BaseVisitor {
 	 * Of course this only works, if the Assignment first process the children and afterwards popping from the stack. */
 	private Stack<LLVMIdentifier<LLVMType>> stack = new Stack<>();
 
-	/** Only Expressions push to a Stack. So this is a Stack of Stacks so every Statement has its own stack.
-	 *
-	 * e.g. the FunctionCall as a statement would leave behind a non-empty stack. */
-	private Stack<Stack<LLVMIdentifier<LLVMType>>> stackOfStacks = new Stack<>();
-
 	public CodeGenerationVisitor() {
 		nameMangler = new NameMangler();
 		TypeConverter typeConverter = new TypeConverter(llvmIdentifierFactory, contextUtils.constant(), nameMangler);
@@ -187,10 +182,8 @@ public class CodeGenerationVisitor extends BaseVisitor {
 			visitDoubleDispatched(declaration);
 		}
 		for (Statement statement : node.getStatements()) {
-			stackOfStacks.push(stack);
-			stack = new Stack<>();
+			stack.clear();
 			visitDoubleDispatched(statement);
-			stack = stackOfStacks.pop();
 		}
 	}
 
