@@ -52,6 +52,10 @@ public class MontyFile extends File implements MontyResource {
 		super(uri);
 	}
 
+	public MontyFile(String pathname) {
+		super(pathname);
+	}
+
 	@Override
 	public MontyResource[] listSubPackages() {
 		File[] files = listFiles((FileFilter) DirectoryFileFilter.DIRECTORY);
@@ -78,10 +82,6 @@ public class MontyFile extends File implements MontyResource {
 		MontyResource[] montyResources = convertAllFiles(listFiles((FilenameFilter) new SuffixFileFilter(".monty")));
 		Arrays.sort(montyResources);
 		return montyResources;
-	}
-
-	public MontyFile(String pathname) {
-		super(pathname);
 	}
 
 }

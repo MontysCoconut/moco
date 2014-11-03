@@ -50,5 +50,5 @@ public interface MontyResource {
 
 	abstract public String getName();
 
-	abstract public MontyResource[] listSubModules() throws IOException;
+	abstract public MontyResource[] listSubModules();
 }
