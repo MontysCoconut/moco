@@ -71,6 +71,11 @@ public class MontyJar implements MontyResource {
 	}
 
 	@Override
+	public boolean isDirectory() {
+		return jarEntry.isDirectory();
+	}
+
+	@Override
 	public MontyResource[] listSubPackages() {
 		return getSubResources(true);
 	}

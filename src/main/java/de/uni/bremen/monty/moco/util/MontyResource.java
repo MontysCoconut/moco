@@ -44,6 +44,8 @@ import java.io.InputStream;
 
 public interface MontyResource {
 
+	abstract public boolean isDirectory();
+
 	abstract public MontyResource[] listSubPackages();
 
 	abstract public InputStream toInputStream() throws IOException;
