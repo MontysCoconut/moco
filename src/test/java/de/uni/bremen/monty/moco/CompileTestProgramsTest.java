@@ -74,7 +74,7 @@ public class CompileTestProgramsTest extends CompileFilesBaseTest {
 		final ByteArrayOutputStream outStream = setStdout();
 		final ByteArrayOutputStream errorStream = setStdErr(file);
 
-		Main.main(new String[] { "-k", file.getAbsolutePath(), "-e" });
+		Main.main(new String[] { "-e", file.getAbsolutePath() });
 
 		if (outputFileExists(file)) {
 			assertThat(getOutput(errorStream), is(isEmptyString()));
