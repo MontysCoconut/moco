@@ -1,0 +1,10 @@
+// Testing: Char as Object
+//
+// A char object must be castable to an Char
+//
+// Expected output: a
+
+Object c := 'a' as Object
+
+print(c as Char)
+

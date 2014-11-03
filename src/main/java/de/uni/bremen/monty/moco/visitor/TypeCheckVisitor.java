@@ -100,10 +100,11 @@ public class TypeCheckVisitor extends BaseVisitor {
 	@Override
 	public void visit(CastExpression node) {
 		super.visit(node);
-		if (!(node.getExpression().getType() instanceof ClassDeclaration)) {
+		TypeDeclaration expressionType = node.getExpression().getType();
+		if (!(expressionType instanceof ClassDeclaration)) {
 			throw new TypeMismatchException(node, "It is not possible to cast something different than a class.");
 		}
-		if (!node.getType().matchesType(node.getExpression().getType())) {
+		if (!(node.getType().matchesType(expressionType) || expressionType.matchesType(node.getType()))) {
 			throw new TypeMismatchException(node, "Impossible cast");
 		}
 	}
