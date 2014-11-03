@@ -1,0 +1,17 @@
+// Testing: String as Object
+//
+// A string must be an Object
+//
+// Expected output: Ok(String)Ok(String)
+
+Object s := "Hallo"
+
+if s is String:
+    print("Ok(String)")
+else:
+    print("Nope(String)")
+
+if "Welt" is Object:
+    print("Ok(String)")
+else:
+    print("Nope(String)")
