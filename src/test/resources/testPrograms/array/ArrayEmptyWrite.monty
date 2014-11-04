@@ -4,5 +4,5 @@
 //
 // Expected error
 
-Array a := [0, 1]
-print(a[-1])
+Array a := []
+a.set(0, 0)

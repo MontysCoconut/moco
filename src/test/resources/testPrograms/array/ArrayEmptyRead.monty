@@ -5,4 +5,4 @@
 // Expected error
 
 Array a := []
-print(a[0])
+print(a.get(0) as Int)
