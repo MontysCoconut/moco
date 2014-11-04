@@ -108,9 +108,7 @@ public class TypeConverter {
 	}
 
 	private void addType(TypeDeclaration typeDecl) {
-		if (typeDecl == CoreClasses.arrayType()) {
-			addArray(typeDecl);
-		} else if (typeDecl instanceof ClassDeclaration) {
+		if (typeDecl instanceof ClassDeclaration) {
 			addClass((ClassDeclaration) typeDecl);
 		}
 	}
@@ -188,14 +186,6 @@ public class TypeConverter {
 		        llvmVMTDataIdentifier,
 		        true,
 		        llvmIdentifierFactory.constant(llvmVMTType, llvmVMTDataInitializer));
-	}
-
-	private void addArray(TypeDeclaration typeDecl) {
-		// Temporary until object or generic
-		LLVMType llvmType = mapToLLVMType((TypeDeclaration) CoreClasses.intType());
-		List<LLVMType> list = Arrays.asList(int64(), array(llvmType, 0));
-		LLVMStructType type = struct(typeDecl.getMangledIdentifier().getSymbol());
-		constantContext.type(type, list);
 	}
 
 	public LLVMPointer<LLVMStructType> mapToLLVMType(ClassDeclaration type) {
