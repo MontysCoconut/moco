@@ -142,7 +142,6 @@ expression
   : primary
   | ifExprThen=expression 'if' ifExpCondition=expression 'else' ifExprElse=expression
   | functionCall
-  | array=expression Lbracket index=expression Rbracket
   | left=expression accessOperator right=expression
   | <assoc=right> (plusMinusOperator | notOperator) singleExpression=expression
   | <assoc=right> left=expression powerOperator right=expression
