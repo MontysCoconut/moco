@@ -121,38 +121,42 @@ public class ClassScope extends Scope {
 	 * <p>
 	 * It first searches its associations, the parent classes in inheritance hierachy and only then the parent scope.
 	 *
+	 * @param node
+	 *            the node in which the identifier occurred
 	 * @param identifier
 	 *            the identifier to resolve
 	 * @return the declaration or null if nothing is found */
 	@Override
-	public Declaration resolve(ResolvableIdentifier identifier) {
+	public Declaration resolve(ASTNode node, ResolvableIdentifier identifier) {
 		Declaration declaration = resolveMember(identifier);
 
 		if (declaration != null) {
 			return declaration;
 		}
-		return super.resolve(identifier);
+		return super.resolve(node, identifier);
 	}
 
 	/** Resolve an identifier for list of overloaded procedures or functions.
 	 * <p>
 	 * It first searches its associations, the parent classes in inheritance hierachy and only then the parent scope.
 	 *
+	 * @param node
+	 *            the node in which the identifier occurred
 	 * @param identifier
 	 *            the identifier to resolve
 	 * @return the list of procedure declarations */
 	@Override
-	public List<ProcedureDeclaration> resolveProcedure(ResolvableIdentifier identifier) {
+	public List<ProcedureDeclaration> resolveProcedure(ASTNode node, ResolvableIdentifier identifier) {
 		List<ProcedureDeclaration> result = new ArrayList<ProcedureDeclaration>();
 		result.addAll(resolveProcedureMember(identifier));
 		if (parent != null) {
 			try {
-				result.addAll(parent.resolveProcedure(identifier));
+				result.addAll(parent.resolveProcedure(node, identifier));
 			} catch (UnknownIdentifierException e) {
 			}
 		}
 		if (result.isEmpty()) {
-			throw new UnknownIdentifierException(identifier);
+			throw new UnknownIdentifierException(node, identifier);
 		}
 		return result;
 	}

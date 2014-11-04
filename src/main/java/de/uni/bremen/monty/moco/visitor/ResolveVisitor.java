@@ -63,7 +63,7 @@ public class ResolveVisitor extends VisitOnceVisitor {
 		ClassScope scope = (ClassScope) node.getScope();
 		List<TypeDeclaration> superClasses = node.getSuperClassDeclarations();
 		for (ResolvableIdentifier identifier : node.getSuperClassIdentifiers()) {
-			TypeDeclaration type = scope.resolveType(identifier);
+			TypeDeclaration type = scope.resolveType(node, identifier);
 			superClasses.add(type);
 			if (type instanceof ClassDeclaration) {
 				scope.addParentClassScope((ClassScope) type.getScope());
@@ -117,7 +117,7 @@ public class ResolveVisitor extends VisitOnceVisitor {
 	public void visit(VariableDeclaration node) {
 		super.visit(node);
 		Scope scope = node.getScope();
-		node.setType(scope.resolveType(node.getTypeIdentifier()));
+		node.setType(scope.resolveType(node, node.getTypeIdentifier()));
 	}
 
 	/** {@inheritDoc} */
@@ -126,7 +126,7 @@ public class ResolveVisitor extends VisitOnceVisitor {
 		super.visit(node);
 
 		Scope scope = node.getScope();
-		Declaration declaration = scope.resolve(node.getIdentifier());
+		Declaration declaration = scope.resolve(node, node.getIdentifier());
 
 		if (declaration instanceof VariableDeclaration) {
 			VariableDeclaration variable = (VariableDeclaration) declaration;
@@ -136,7 +136,7 @@ public class ResolveVisitor extends VisitOnceVisitor {
 			if (!(scope instanceof ClassScope) && findEnclosingClass(node) == CoreClasses.voidType()) {
 				if (node.getDeclaration() == null
 				        || node.getDeclaration().getPosition().getLineNumber() > node.getPosition().getLineNumber()) {
-					throw new UnknownIdentifierException(node.getIdentifier());
+					throw new UnknownIdentifierException(node, node.getIdentifier());
 				}
 			}
 		} else if (declaration instanceof TypeDeclaration) {
@@ -157,7 +157,7 @@ public class ResolveVisitor extends VisitOnceVisitor {
 	@Override
 	public void visit(ParentExpression node) {
 		super.visit(node);
-		node.setType(node.getScope().resolveType(node.getParentIdentifier()));
+		node.setType(node.getScope().resolveType(node, node.getParentIdentifier()));
 		node.setSelfType(findEnclosingClass(node));
 	}
 
@@ -165,14 +165,14 @@ public class ResolveVisitor extends VisitOnceVisitor {
 	@Override
 	public void visit(CastExpression node) {
 		super.visit(node);
-		node.setType(node.getScope().resolveType(node.getCastIdentifier()));
+		node.setType(node.getScope().resolveType(node, node.getCastIdentifier()));
 	}
 
 	/** {@inheritDoc} */
 	@Override
 	public void visit(IsExpression node) {
 		super.visit(node);
-		node.setToType(node.getScope().resolveType(node.getIsIdentifier()));
+		node.setToType(node.getScope().resolveType(node, node.getIsIdentifier()));
 		node.setType(CoreClasses.boolType());
 	}
 
@@ -233,7 +233,7 @@ public class ResolveVisitor extends VisitOnceVisitor {
 	@Override
 	public void visit(FunctionDeclaration node) {
 		Scope scope = node.getScope();
-		node.setReturnType(scope.resolveType(node.getReturnTypeIdentifier()));
+		node.setReturnType(scope.resolveType(node, node.getReturnTypeIdentifier()));
 		super.visit(node);
 	}
 
@@ -255,7 +255,7 @@ public class ResolveVisitor extends VisitOnceVisitor {
 		TypeDeclaration declaration = null;
 
 		try {
-			declaration = scope.resolveType(node.getIdentifier());
+			declaration = scope.resolveType(node, node.getIdentifier());
 		} catch (UnknownTypeException ute) {
 		}
 
@@ -265,7 +265,7 @@ public class ResolveVisitor extends VisitOnceVisitor {
 			ProcedureDeclaration initializer = findMatchingInitializer(node, classDecl);
 			node.setDeclaration((initializer != null) ? initializer : classDecl.getDefaultInitializer());
 		} else {
-			ProcedureDeclaration procedure = findMatchingProcedure(node, scope.resolveProcedure(node.getIdentifier()));
+			ProcedureDeclaration procedure = findMatchingProcedure(node, scope.resolveProcedure(node, node.getIdentifier()));
 			node.setDeclaration(procedure);
 			if (procedure instanceof FunctionDeclaration) {
 				FunctionDeclaration function = (FunctionDeclaration) procedure;
