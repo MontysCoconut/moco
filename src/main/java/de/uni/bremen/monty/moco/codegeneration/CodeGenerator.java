@@ -105,7 +105,7 @@ public class CodeGenerator {
 		operations.setCharFormat(llvmIdentifierFactory.elementPointerTo(charFormatIdent));
 	}
 
-	private <T extends LLVMType> LLVMIdentifier<LLVMPointer<T>> castIfNeeded(CodeContext c,
+	public <T extends LLVMType> LLVMIdentifier<LLVMPointer<T>> castIfNeeded(CodeContext c,
 	        LLVMIdentifier<LLVMPointer<T>> variable, LLVMPointer<T> toType) {
 		if (!variable.getType().equals(toType)) {
 			LLVMIdentifier<LLVMPointer<T>> castedVariable =
@@ -116,7 +116,7 @@ public class CodeGenerator {
 		return variable;
 	}
 
-	private <T extends LLVMType> LLVMIdentifier<T> castIfNeeded(CodeContext c, LLVMIdentifier<T> variable, T toType) {
+	public <T extends LLVMType> LLVMIdentifier<T> castIfNeeded(CodeContext c, LLVMIdentifier<T> variable, T toType) {
 		if ((variable.getType() instanceof LLVMPointer) && (toType instanceof LLVMPointer)) {
 			return (LLVMIdentifier<T>) (LLVMIdentifier<?>) castIfNeeded(
 			        c,
@@ -126,7 +126,7 @@ public class CodeGenerator {
 		return variable;
 	}
 
-	private <T extends LLVMType> LLVMIdentifier<T> resolveIfNeeded(CodeContext c, LLVMIdentifier<T> addr) {
+	public <T extends LLVMType> LLVMIdentifier<T> resolveIfNeeded(CodeContext c, LLVMIdentifier<T> addr) {
 		if (addr.needToBeResolved()) {
 			LLVMIdentifier<LLVMPointer<T>> sourcePointer = llvmIdentifierFactory.pointerTo(addr);
 			LLVMIdentifier<T> targetPointer = llvmIdentifierFactory.newLocal(addr.getType(), false);
