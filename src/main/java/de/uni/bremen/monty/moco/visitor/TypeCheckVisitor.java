@@ -183,8 +183,8 @@ public class TypeCheckVisitor extends BaseVisitor {
 	public void visit(ArrayLiteral node) {
 		super.visit(node);
 		for (Expression entry : node.getEntries()) {
-			if (!entry.getType().matchesType(CoreClasses.intType())) {
-				throw new TypeMismatchException(node, "Array entries must be Int");
+			if (!entry.getType().matchesType(CoreClasses.objectType())) {
+				throw new TypeMismatchException(node, "Array entries must be Objects");
 			}
 		}
 	}
