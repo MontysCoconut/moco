@@ -6,3 +6,7 @@ jdk:
 before_install:
   - sudo apt-get update -qq
   - sudo apt-get install -y llvm
+
+script:
+  - mvn package
+  - java -jar target/moco-0.6.jar --help
