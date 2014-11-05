@@ -125,7 +125,7 @@ public class Params {
 		System.out.println("-ll\tgenerate only LLVM code");
 		System.out.println("-k\tkeep LLVM Code");
 		System.out.println("-e\tstop on first error");
-		System.exit(-1);
+		System.exit(0);
 	}
 
 	public void setLlFile(String llFile) {
