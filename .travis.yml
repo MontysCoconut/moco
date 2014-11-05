@@ -8,5 +8,7 @@ before_install:
   - sudo apt-get install -y llvm
 
 script:
+  - mvn compile
+  - git diff --exit-code > /dev/null
   - mvn package
   - java -jar target/moco-0.6.jar --help
