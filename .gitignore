@@ -1,48 +1,17 @@
 ###################
-# LATEX
-###################
-*.aux
-*.glo
-*.idx
-*.log
-*.toc
-*.ist
-*.acn
-*.acr
-*.alg
-*.bbl
-*.blg
-*.dvi
-*.glg
-*.gls
-*.ilg
-*.ind
-*.lof
-*.lot
-*.maf
-*.mtc
-*.mtc1
-*.out
-*.synctex.gz
-*.brf
-*.nav
-*.snm
-*.vrb
-
-###################
-# Java
+# Maven
 ###################
 src/site/markdown/index.md
-target/*
+dependency-reduced-pom.xml
+target/
+
+###################
+# Editor
+###################
 .classpath
 .project
 .settings/
 moco.iml
 .idea/*
-
-###################
-# Editor
-###################
 *.swp
 
-dependency-reduced-pom.xml
