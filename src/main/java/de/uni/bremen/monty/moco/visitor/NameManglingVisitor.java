@@ -289,7 +289,6 @@ public class NameManglingVisitor extends BaseVisitor {
 
 	private String escapeForLLVM(Identifier identifier) {
 		String string = identifier.getSymbol();
-		string = string.replaceAll("\\[\\]", "_array_access");
 		string = string.replaceAll("%", "_rem");
 		string = string.replaceAll("\\*", "_mult");
 		string = string.replaceAll("/", "_div");
