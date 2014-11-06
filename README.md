@@ -1,72 +1,135 @@
-[![Build Status](https://travis-ci.org/MontysCoconut/moco.svg?branch=master)](https://travis-ci.org/MontysCoconut/moco)
 
-Allgemeines
------------
+Moco [![Build Status](https://travis-ci.org/MontysCoconut/moco.svg?branch=master)](https://travis-ci.org/MontysCoconut/moco)
+====
 
-Dieses Projekt setzt Java in der Version 7 ein. Stellt sicher, dass ihr keine
-Features von Java 8 verwendet. Die Referenz ob das Projekt baut und die Tests
-laufen sind die Maven-Runs.
+`moco` is a [Monty](http://www.informatik.uni-bremen.de/monty/) to
+[LLVM](http://llvm.org/) compiler built using
+[Java](https://www.java.com/en/), [ANTLR4](http://www.antlr.org/) and
+[LLVM](http://llvm.org/).
 
-Es wird durch Maven automatisch ein Code-Formatter ausgeführt. Bitte
-kompiliert also vor dem commiten einmal mit Maven oder konfiguriert eure IDE,
-sodass diese den Code entsprechend formatiert.
+Please read the [language
+specification](http://www.informatik.uni-bremen.de/monty/?p=downloads) for
+details on the `Monty` programming language.
 
-Zu installierende Software:
+Installing Dependencies
+=======================
 
-- Java 7
-- Maven 3 http://maven.apache.org/
-- LLVM 3.4 http://llvm.org/
-- Graphviz http://www.graphviz.org/
+Linux (Ubuntu)
+--------------
 
-Bei Windows benötigt ihr extra noch:
+Install [LLVM](http://llvm.org/) and a JRE 7.
 
-- ein 32bit JDK
-- Visual C++ Redistributable Packages für Visual Studio 2013
-    http://www.microsoft.com/de-de/download/details.aspx?id=40784
+    sudo apt-get install llvm
+    sudo apt-get install default-jre
 
-Kompilation und Ausführen
--------------------------
+If you want to build `moco` yourself you'll need to install the following
+dependencies and a JDK 7.
 
-- `mvn package`
-    Generiert die nötigen ANTLR4 Dateien, kompiliert alle wichtigen Dateien,
-    führt die Tests aus und baut ein ausführbares JAR
-    (`target/moco-0.6.jar`).
-- `mvn package -Dmaven.test.skip=true`
-    Führt die Tests nicht aus.
-Habt ihr das JAR erstellt, könnt ihr die Main Klasse mit `java -jar
-target/moco-0.6.jar` starten.
+    sudo apt-get install git
+    sudo apt-get install maven
+    sudo apt-get install default-jdk
 
-Maven Reporting
----------------
+You can also install Graphviz to generate class diagrams. This is optional.
 
-Maven wurde eingerichtet Reports zu generieren.
+    sudo apt-get install graphviz
 
-`mvn site` erstellt die Dokumentation und generiert Reports unter
-[target/site/](project-reports.html). Besonders interessant:
+Mac OS X
+--------
 
- - [JavaDoc](apidocs/index.html)
- - [Code Coverage Analysis](cobertura/index.html)
+> **Note:** Please make sure you have [homebrew](http://brew.sh/) and a JRE 7
+installed.
 
-Außerdem gibt es Analysen auf dem Code. Bitte beachtet, dass euer Code nicht
-zu viele Einträge in folgenden Reports erzeugt:
+Install [LLVM](http://llvm.org/) using homebrew:
 
-- [Checkstyle](checkstyle.html)
-- [Findbugs](findbugs.html)
+    brew install llvm
 
-Entwicklungsumgebungen
-----------------------
+If you want to build `moco` yourself you'll need to install the following
+dependencies and a JDK 7.
 
-###Eclipse:
+    brew install git
+    brew install maven
 
-- Maven kann mit `mvn eclipse:eclipse` Eclipse Konfiguration generieren.
-    Ist dies erledigt kann man das Projekt einfach als existierendes Projekt
-    importieren.
-- Es wird ein Code Formatter verwendet. Unter
-    `src/main/resources/java-code-conv.xml` findet sich ein in Eclipse
-    importierbares Profil.
-- Alternativ:
-    - m2e in Eclipse installieren: http://download.eclipse.org/technology/m2e/releases
-    - File -> Import -> Maven -> Existing Maven Projects -> Browse... -> Auf Projekt Zeigen -> Next -> Finish -> OK
-    - Rechtsklick auf Projekt moco -> Maven -> Update Project Config...
-    - Ordner "target" -> generated-sources -> Rechtsklick auf "antlr4" -> Build Path -> Use as source Folder
-    - Run
+Please make sure to set the `JAVA_HOME` environment variable for `maven`.
+
+    export JAVA_HOME=$(/usr/libexec/java_home)
+
+You can also install Graphviz to generate class diagrams. This is optional.
+
+    brew install graphviz
+
+Windows
+-------
+
+To use [LLVM](http://llvm.org/) you'll need to download and install the
+following executables. In addition you'll need to download and extract the
+`llvm-3.4-tools-windows.7z` archive into the `bin\` directory of your LLVM
+installation. To run the executable .jar file you'll also need a JRE 7.
+
+
+- http://www.microsoft.com/de-DE/download/details.aspx?id=40784 (the **x86 and
+  the x64** version)
+- http://llvm.org/releases/3.4/LLVM-3.4-win32.exe
+- https://github.com/CRogers/LLVM-Windows-Binaries/releases/download/v3.4/llvm-3.4-tools-windows.7z
+
+If you want to build `moco` yourself you'll need to install the following
+dependencies and a JDK 7. These examples use the
+[chocolatey](https://chocolatey.org/) package manager.
+
+    choco install maven
+    choco install java.jdk
+    choco install git.commandline
+
+You can also install Graphviz to generate class diagrams. This is optional.
+
+    choco install graphviz
+
+Building
+========
+
+> **Note:** Instead of building your own version you can always get a
+precompiled .jar file at the
+[releases](https://github.com/MontysCoconut/moco/releases) page.
+
+For building your own version based on the most recent commit clone the git
+repository:
+
+    git clone https://github.com/MontysCoconut/moco.git
+
+After that you can change into the directory and build the executable
+.jar file. Now you can find the executable jar in the `target/` directory.
+
+    cd moco
+    mvn package
+
+If you want to generate the class documentation make sure to have
+[graphviz](http://www.graphviz.org/) installed and run the following command.
+After that you can find the generated HTML-files in the `target/site`
+directory.
+
+    mvn site
+
+Usage
+=====
+
+To use `moco` you'll either need to compile your own version or fetch a
+precompiled .jar file at the
+[releases](https://github.com/MontysCoconut/moco/releases) page.
+
+You can just pass `moco` a Monty-file and it will be compiled and executed.
+
+    ➤ cat hello.monty
+    print("Hello World!")
+    ➤ java -jar moco-0.6.jar hello.monty
+    Hello World!
+
+Please see the help text for information about the command-line switches.
+
+    moco [args] inputFile [-o outputFile]
+
+    execute monty File
+
+    -s    debug ANTLR parse Tree
+    -p    print AST without code generation
+    -ll   generate only LLVM code
+    -k    keep LLVM Code
+    -e    stop on first error
