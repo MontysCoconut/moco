@@ -381,12 +381,13 @@ public class CodeGenerationVisitor extends BaseVisitor {
 	public void visit(ArrayLiteral node) {
 		super.visit(node);
 
-		ClassDeclaration type = (ClassDeclaration) node.getType();
-		LLVMIdentifier<LLVMPointer<LLVMStructType>> array =
-		        codeGenerator.addArray(contextUtils.active(), node.getEntries().size(), type);
-		for (int i = node.getEntries().size() - 1; i >= 0; i--) {
-			codeGenerator.setArrayElement(contextUtils.active(), array, i, stack.pop());
+		List<LLVMIdentifier<?>> elements = new ArrayList<>(node.getEntries().size());
+		for (int i = 0; i < node.getEntries().size(); i++) {
+			elements.add(stack.pop());
 		}
+		Collections.reverse(elements);
+
+		LLVMIdentifier<? extends LLVMType> array = codeGenerator.buildArray(contextUtils.active(), elements);
 
 		stack.push((LLVMIdentifier) array);
 	}

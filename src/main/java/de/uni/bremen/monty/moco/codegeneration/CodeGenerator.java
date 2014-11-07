@@ -515,43 +515,43 @@ public class CodeGenerator {
 		return llvmIdentifierFactory.constant(int8(), value);
 	}
 
-	public LLVMIdentifier<LLVMPointer<LLVMStructType>> addArray(CodeContext c, int size, ClassDeclaration type) {
+	public LLVMIdentifier<LLVMPointer<LLVMStructType>> buildArray(CodeContext c, List<LLVMIdentifier<?>> elements) {
 
-		LLVMPointer<LLVMStructType> array = mapToLLVMType(type);
-		LLVMIdentifier<LLVMPointer<LLVMStructType>> var = llvmIdentifierFactory.newLocal(array, false);
+		LLVMType elementType = mapToLLVMType((TypeDeclaration) CoreClasses.objectType());
+		LLVMType lengthFieldType = int64();
+		LLVMArrayType rawArrayType = array(elementType, 0);
+		LLVMStructType arrayStructType = struct(Arrays.asList(lengthFieldType, rawArrayType));
+		LLVMPointer<LLVMStructType> arrayPointerType = pointer(arrayStructType);
+		LLVMIdentifier<LLVMPointer<LLVMStructType>> arrayPointerVar =
+		        llvmIdentifierFactory.newLocal(arrayPointerType, false);
 
-		// Temporary until object or generic
-		LLVMType arrayType = mapToLLVMType((TypeDeclaration) CoreClasses.intType());
-		List<LLVMType> mallocList = Arrays.asList(int64(), array(arrayType, size));
-		malloc(c, var, pointer((LLVMType) struct(mallocList)));
+		LLVMArrayType rawArrayMallocType = array(elementType, elements.size());
+		LLVMType arrayStructMallocType = struct(Arrays.asList(lengthFieldType, rawArrayMallocType));
+		LLVMPointer<LLVMType> arrayPointerMallocType = pointer(arrayStructMallocType);
+		malloc(c, arrayPointerVar, arrayPointerMallocType);
 
-		LLVMIdentifier<LLVMType> arraySize =
-		        (LLVMIdentifier<LLVMType>) (LLVMIdentifier<?>) llvmIdentifierFactory.constant(int64(), size);
-		LLVMIdentifier<LLVMPointer<LLVMType>> sizeField = llvmIdentifierFactory.newLocal(pointer(arraySize.getType()));
+		LLVMIdentifier<LLVMType> arraySize = llvmIdentifierFactory.constant(lengthFieldType, elements.size());
+		LLVMIdentifier<LLVMPointer<LLVMType>> sizeField = llvmIdentifierFactory.newLocal(pointer(lengthFieldType));
 		c.getelementptr(
 		        sizeField,
-		        var,
+		        arrayPointerVar,
 		        llvmIdentifierFactory.constant(int32(), 0),
 		        llvmIdentifierFactory.constant(int32(), 0));
 		c.store(arraySize, sizeField);
 
-		return var;
-	}
+		for (int index = 0; index < elements.size(); index++) {
+			LLVMIdentifier<LLVMPointer<LLVMType>> element = llvmIdentifierFactory.newLocal(pointer(elementType));
 
-	public void setArrayElement(CodeContext c, LLVMIdentifier<LLVMPointer<LLVMStructType>> array, int index,
-	        LLVMIdentifier<LLVMType> value) {
+			c.getelementptr(
+			        element,
+			        arrayPointerVar,
+			        llvmIdentifierFactory.constant(int32(), 0),
+			        llvmIdentifierFactory.constant(int32(), 1),
+			        llvmIdentifierFactory.constant(int32(), index));
+			c.store(castIfNeeded(c, (LLVMIdentifier<LLVMType>) elements.get(index), elementType), element);
+		}
 
-		// Temporary until object or generic
-		LLVMType internalType = mapToLLVMType((TypeDeclaration) CoreClasses.intType());
-		LLVMIdentifier<LLVMPointer<LLVMType>> element = llvmIdentifierFactory.newLocal(pointer(internalType));
-
-		c.getelementptr(
-		        element,
-		        array,
-		        llvmIdentifierFactory.constant(int32(), 0),
-		        llvmIdentifierFactory.constant(int32(), 1),
-		        llvmIdentifierFactory.constant(int32(), index));
-		c.store(value, element);
+		return arrayPointerVar;
 	}
 
 	public LLVMIdentifier<LLVMType> boxType(CodeContext c, LLVMIdentifier<LLVMType> toBox, TypeDeclaration type) {
