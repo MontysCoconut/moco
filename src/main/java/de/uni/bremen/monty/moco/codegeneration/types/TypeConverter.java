@@ -63,7 +63,6 @@ public class TypeConverter {
 	}
 
 	private void initPreDefinedTypes() {
-		typeMap.put(CoreClasses.stringType(), pointer(int8()));
 		typeMap.put(CoreClasses.voidType(), voidType());
 	}
 

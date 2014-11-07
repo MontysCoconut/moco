@@ -1,0 +1,3 @@
+class String:
+    + initializer(String s):
+        pass

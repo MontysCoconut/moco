@@ -86,7 +86,7 @@ public class Operations {
 		        "(i8*, ...)*");
 	}
 
-	@Native("M.Print.P.print$M.std.C.String")
+	@Native("M.Print.P.print$M.String.C.String")
 	public void printString(CodeContext c, LLVMIdentifier<LLVMType> addr) {
 		LLVMType type = addr.getType();
 		LLVMIdentifier<LLVMTypeFactory.LLVMInt32> signature = llvmIdentifierFactory.newGlobal("printf", int32());

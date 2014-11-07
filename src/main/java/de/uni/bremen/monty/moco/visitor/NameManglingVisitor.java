@@ -126,7 +126,6 @@ public class NameManglingVisitor extends BaseVisitor {
 		final String prefix =
 		        nameManglingPrefixes.get(Mangled.MODULE) + "std" + nameManglingPrefixes.get(Mangled.CLASS);
 
-		CoreClasses.stringType().setMangledIdentifier(new Identifier(prefix + "String"));
 		CoreClasses.arrayType().setMangledIdentifier(new Identifier(prefix + "Array"));
 	}
 
