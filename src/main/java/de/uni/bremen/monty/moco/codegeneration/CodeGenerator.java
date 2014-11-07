@@ -161,6 +161,10 @@ public class CodeGenerator {
 				unboxedArguments.add(unboxType(c, (LLVMIdentifier<LLVMType>) llvmIdentifier, int8()));
 			} else if (llvmIdentifier.getType().equals(mapToLLVMType(CoreClasses.stringType()))) {
 				unboxedArguments.add(unboxType(c, (LLVMIdentifier<LLVMType>) llvmIdentifier, pointer(int8())));
+			} else if (llvmIdentifier.getType().equals(mapToLLVMType(CoreClasses.arrayType()))) {
+				LLVMType llvmType = mapToLLVMType((TypeDeclaration) CoreClasses.objectType());
+				LLVMType array = pointer(struct(Arrays.asList(int64(), array(llvmType, 0))));
+				unboxedArguments.add(unboxType(c, (LLVMIdentifier<LLVMType>) llvmIdentifier, array));
 			} else {
 				unboxedArguments.add(llvmIdentifier);
 			}

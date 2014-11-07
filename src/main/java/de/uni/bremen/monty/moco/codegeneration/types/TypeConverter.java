@@ -156,6 +156,10 @@ public class TypeConverter {
 			llvmClassTypeDeclarations.add(LLVMTypeFactory.int8());
 		} else if (classDecl == CoreClasses.stringType()) {
 			llvmClassTypeDeclarations.add(LLVMTypeFactory.pointer(LLVMTypeFactory.int8()));
+		} else if (classDecl == CoreClasses.arrayType()) {
+			LLVMType llvmType = mapToLLVMType((TypeDeclaration) CoreClasses.objectType());
+			LLVMType array = struct(Arrays.asList(LLVMTypeFactory.int64(), LLVMTypeFactory.array(llvmType, 0)));
+			llvmClassTypeDeclarations.add(LLVMTypeFactory.pointer(array));
 		}
 
 		for (ClassDeclaration classDeclaration : recursiveSuperClassDeclarations) {
