@@ -1,2 +1,0 @@
-Int operator[](Array array, Int index):
-  pass
