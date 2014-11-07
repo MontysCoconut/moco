@@ -315,7 +315,19 @@ public class Operations {
 	@Native("M.Array.C.Array.F.get$M.Object.C.Object$M.Int.C.Int")
 	public LLVMIdentifier<LLVMType> arrayAccess(CodeContext c, LLVMIdentifier<LLVMPointer> arrayPointer,
 	        LLVMIdentifier<LLVMInt> index) {
-		return (LLVMIdentifier<LLVMType>) (LLVMIdentifier<?>) llvmIdentifierFactory.constantNull((LLVMPointer<LLVMType>) codeGenerator.mapToLLVMType(CoreClasses.objectType()));
+		LLVMIdentifier<LLVMPointer<LLVMStructType>> arrayStructPointer =
+		        (LLVMIdentifier<LLVMPointer<LLVMStructType>>) (LLVMIdentifier<?>) arrayPointer;
+
+		codeGenerator.checkArrayBounds(c, arrayStructPointer, index);
+		LLVMIdentifier<LLVMType> result =
+		        llvmIdentifierFactory.newLocal(codeGenerator.mapToLLVMType(CoreClasses.objectType()));
+		c.getelementptr(
+		        result,
+		        arrayStructPointer,
+		        llvmIdentifierFactory.constant(int32(), 0),
+		        llvmIdentifierFactory.constant(int32(), 1),
+		        index);
+		return result;
 	}
 
 	@Native("M.Array.C.Array.P.set$M.Int.C.Int$M.Object.C.Object")
