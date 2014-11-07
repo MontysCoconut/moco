@@ -321,6 +321,22 @@ public class Operations {
 	@Native("M.Array.C.Array.P.set$M.Int.C.Int$M.Object.C.Object")
 	public void arraySet(CodeContext c, LLVMIdentifier<LLVMPointer> arrayPointer, LLVMIdentifier<LLVMInt> index,
 	        LLVMIdentifier<LLVMType> value) {
+
+		LLVMIdentifier<LLVMPointer<LLVMStructType>> arrayStructPointer =
+		        (LLVMIdentifier<LLVMPointer<LLVMStructType>>) (LLVMIdentifier<?>) arrayPointer;
+
+		codeGenerator.checkArrayBounds(c, arrayStructPointer, index);
+
+		LLVMType elementType = codeGenerator.mapToLLVMType((TypeDeclaration) CoreClasses.objectType());
+		LLVMIdentifier<LLVMPointer<LLVMType>> element = llvmIdentifierFactory.newLocal(pointer(elementType));
+
+		c.getelementptr(
+		        element,
+		        arrayStructPointer,
+		        llvmIdentifierFactory.constant(int32(), 0),
+		        llvmIdentifierFactory.constant(int32(), 1),
+		        index);
+		c.store(codeGenerator.castIfNeeded(c, value, elementType), element);
 	}
 
 	public void setStringFormat(LLVMIdentifier<LLVMPointer<LLVMInt8>> stringFormat) {
