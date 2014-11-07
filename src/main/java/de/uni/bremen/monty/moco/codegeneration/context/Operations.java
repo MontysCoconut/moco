@@ -300,7 +300,16 @@ public class Operations {
 
 	@Native("M.Array.C.Array.F.length$M.Int.C.Int")
 	public LLVMIdentifier<LLVMType> arrayLength(CodeContext c, LLVMIdentifier<LLVMPointer> arrayPointer) {
-		return (LLVMIdentifier<LLVMType>) (LLVMIdentifier<?>) llvmIdentifierFactory.constantNull((LLVMPointer<LLVMType>) codeGenerator.mapToLLVMType(CoreClasses.intType()));
+		LLVMIdentifier<LLVMPointer<LLVMStructType>> arrayStructPointer =
+		        (LLVMIdentifier<LLVMPointer<LLVMStructType>>) (LLVMIdentifier<?>) arrayPointer;
+
+		LLVMIdentifier<LLVMType> result = llvmIdentifierFactory.newLocal((LLVMType) int64());
+		c.getelementptr(
+		        result,
+		        arrayStructPointer,
+		        llvmIdentifierFactory.constant(int32(), 0),
+		        llvmIdentifierFactory.constant(int32(), 0));
+		return codeGenerator.resolveIfNeeded(c, result);
 	}
 
 	@Native("M.Array.C.Array.F.get$M.Object.C.Object$M.Int.C.Int")
