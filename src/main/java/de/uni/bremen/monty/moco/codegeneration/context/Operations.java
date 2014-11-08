@@ -86,27 +86,27 @@ public class Operations {
 		        "(i8*, ...)*");
 	}
 
-	@Native("M.Print.P.print$M.Char.C.Char")
+	@Native("M.System.P.print$M.Char.C.Char")
 	public void printChar(CodeContext c, LLVMIdentifier<LLVMType> addr) {
 		printHelper(c, addr, ".charFormat");
 	}
 
-	@Native("M.Print.P.print$M.String.C.String")
+	@Native("M.System.P.print$M.String.C.String")
 	public void printString(CodeContext c, LLVMIdentifier<LLVMType> addr) {
 		printHelper(c, addr, ".stringFormat");
 	}
 
-	@Native("M.Print.P.print$M.Int.C.Int")
+	@Native("M.System.P.print$M.Int.C.Int")
 	public void printInt(CodeContext c, LLVMIdentifier<LLVMType> addr) {
 		printHelper(c, addr, ".intFormat");
 	}
 
-	@Native("M.Print.P.print$M.Bool.C.Bool")
+	@Native("M.System.P.print$M.Bool.C.Bool")
 	public void printBool(CodeContext c, LLVMIdentifier<LLVMType> addr) {
 		printHelper(c, addr, ".intFormat");
 	}
 
-	@Native("M.Print.P.print$M.Float.C.Float")
+	@Native("M.System.P.print$M.Float.C.Float")
 	public void printFloat(CodeContext c, LLVMIdentifier<LLVMType> addr) {
 		printHelper(c, addr, ".floatFormat");
 	}
