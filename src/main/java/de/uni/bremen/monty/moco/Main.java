@@ -137,19 +137,30 @@ public class Main {
 		return everyThingIsAwesome;
 	}
 
-	private static void writeOutput(String llvmCode, String outputFile) throws FileNotFoundException {
-		PrintStream resultStream = new PrintStream(new FileOutputStream(outputFile));
+	private static File createOutputFile(String name) throws IOException {
+		if (name == null) {
+			File llvmCodeFile = File.createTempFile("monty", ".ll", null);
+			llvmCodeFile.deleteOnExit();
+			return llvmCodeFile;
+		}
+		return new File(name);
+	}
+
+	private static void writeOutput(String llvmCode, File outputFile) throws FileNotFoundException {
+		PrintStream resultStream = new PrintStream(outputFile);
 		resultStream.print(llvmCode);
 		resultStream.close();
 	}
 
-	private static void runCode(String llvmCode) throws IOException {
-		ProcessBuilder processBuilder = new ProcessBuilder("lli");
+	private static void runCode(File llvmCode) throws IOException {
+		ProcessBuilder processBuilder = new ProcessBuilder("lli", llvmCode.getAbsolutePath());
+		String readFromFile = System.getProperty("testrun.readFromFile");
+		if (readFromFile == null) {
+			processBuilder.redirectInput(ProcessBuilder.Redirect.INHERIT);
+		} else {
+			processBuilder.redirectInput(new File(readFromFile));
+		}
 		Process process = processBuilder.start();
-
-		PrintStream lliInput = new PrintStream(process.getOutputStream());
-		lliInput.print(llvmCode);
-		lliInput.close();
 
 		System.err.print(IOUtils.toString(process.getErrorStream()));
 		System.out.print(IOUtils.toString(process.getInputStream()));
@@ -162,15 +173,15 @@ public class Main {
 			return;
 		}
 
-		String inputFile = ns.get("file");
-		String outputFile = ns.get("outputFile");
+		String inputFileName = ns.get("file");
+		String outputFileName = ns.get("outputFile");
 		boolean generateOnly = ns.get("generateOnly");
 		boolean stopOnFirstError = ns.get("stopOnFirstError");
 		boolean printAST = ns.get("printAST");
 		boolean debugParseTree = ns.get("debugParseTree");
 
 		if (debugParseTree) {
-			debugParseTree(inputFile);
+			debugParseTree(inputFileName);
 			return;
 		}
 
@@ -178,7 +189,7 @@ public class Main {
 		StringBuffer output = writer.getBuffer();
 		IOUtils.copy(Main.class.getResourceAsStream("/std_llvm_include.ll"), writer);
 
-		Package ast = buildPackage(inputFile);
+		Package ast = buildPackage(inputFileName);
 		boolean everyThingIsAwesome = visitVisitors(ast, stopOnFirstError, output);
 
 		if (!everyThingIsAwesome) {
@@ -189,11 +200,12 @@ public class Main {
 		if (printAST) {
 			(new PrintVisitor()).visitDoubleDispatched(ast);
 		}
-		if (outputFile != null) {
-			writeOutput(llvmCode, outputFile);
-		}
+
+		File llvmOutputFile = createOutputFile(outputFileName);
+		writeOutput(llvmCode, llvmOutputFile);
+
 		if (!generateOnly) {
-			runCode(llvmCode);
+			runCode(llvmOutputFile);
 		}
 	}
 }
