@@ -111,6 +111,26 @@ public class Operations {
 		printHelper(c, addr, ".floatFormat");
 	}
 
+	@Native("M.System.P.println$M.Char.C.Char")
+	public void printlnChar(CodeContext c, LLVMIdentifier<LLVMType> addr) {
+	}
+
+	@Native("M.System.P.println$M.String.C.String")
+	public void printlnString(CodeContext c, LLVMIdentifier<LLVMType> addr) {
+	}
+
+	@Native("M.System.P.println$M.Int.C.Int")
+	public void printlnInt(CodeContext c, LLVMIdentifier<LLVMType> addr) {
+	}
+
+	@Native("M.System.P.println$M.Bool.C.Bool")
+	public void printlnBool(CodeContext c, LLVMIdentifier<LLVMType> addr) {
+	}
+
+	@Native("M.System.P.println$M.Float.C.Float")
+	public void printlnFloat(CodeContext c, LLVMIdentifier<LLVMType> addr) {
+	}
+
 	@Native("M.Int.C.Int.F.operator_plus$M.Int.C.Int$M.Int.C.Int")
 	public LLVMIdentifier<LLVMInt> add(CodeContext c, LLVMIdentifier<LLVMInt> arg1, LLVMIdentifier<LLVMInt> arg2) {
 		return c.binaryOperation("add", arg1, arg2, llvmIdentifierFactory.newLocal(arg1.getType(), false));

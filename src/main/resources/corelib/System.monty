@@ -12,3 +12,18 @@ print(Bool arg1):
 
 print(Char arg1):
   pass
+
+println(String arg1):
+  pass
+
+println(Int arg1):
+  pass
+
+println(Float arg1):
+  pass
+
+println(Bool arg1):
+  pass
+
+println(Char arg1):
+  pass
