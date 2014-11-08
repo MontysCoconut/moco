@@ -160,6 +160,11 @@ public class Operations {
 		        CoreClasses.stringType());
 	}
 
+	@Native("M.System.F.read$M.String.C.String$M.Int.C.Int")
+	public LLVMIdentifier<LLVMType> read(CodeContext c, LLVMIdentifier<LLVMType> num) {
+		return (LLVMIdentifier<LLVMType>) (LLVMIdentifier<?>) llvmIdentifierFactory.constantNull((LLVMPointer<LLVMType>) codeGenerator.mapToLLVMType(CoreClasses.stringType()));
+	}
+
 	@Native("M.Int.C.Int.F.operator_plus$M.Int.C.Int$M.Int.C.Int")
 	public LLVMIdentifier<LLVMInt> add(CodeContext c, LLVMIdentifier<LLVMInt> arg1, LLVMIdentifier<LLVMInt> arg2) {
 		return c.binaryOperation("add", arg1, arg2, llvmIdentifierFactory.newLocal(arg1.getType(), false));
