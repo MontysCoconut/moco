@@ -1,0 +1,6 @@
+// Testing: The println function with string.
+//
+// Expected output: \nHallo\n
+
+println("")
+println("Hallo")

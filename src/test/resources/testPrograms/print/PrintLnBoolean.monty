@@ -1,0 +1,6 @@
+// Testing: The println function with boolean.
+//
+// Expected output: 1\n0\n
+
+println(true)
+println(false)

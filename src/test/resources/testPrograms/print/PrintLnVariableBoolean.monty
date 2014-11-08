@@ -1,0 +1,6 @@
+// Testing: The println function with a boolean variable.
+//
+// Expected output: 1\n
+
+Bool var := true
+println(var)

@@ -1,0 +1,6 @@
+// Testing: The println function with an int variable.
+//
+// Expected output: 42\n
+
+Int var := 42
+println(var)

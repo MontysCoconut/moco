@@ -1,0 +1,8 @@
+// Testing: The println function with char.
+//
+// Expected output: H\nA\nH\nA\n
+
+println('H')
+println('A')
+println('H')
+println('A')
