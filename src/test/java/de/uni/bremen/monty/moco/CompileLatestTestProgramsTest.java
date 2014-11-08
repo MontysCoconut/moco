@@ -47,6 +47,7 @@ import org.junit.runners.Parameterized;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.PrintStream;
 import java.util.Arrays;
 import java.util.Collection;
@@ -79,6 +80,9 @@ public class CompileLatestTestProgramsTest extends CompileFilesBaseTest {
 		final ByteArrayOutputStream outStream = setStdout();
 		final ByteArrayOutputStream errorStream = setStdErr(file);
 
+		if (inputFileExists(file)) {
+			System.setProperty("testrun.readFromFile", changeFileExtension(file, ".input"));
+		}
 		Main.main(new String[] { "-e", file.getAbsolutePath() });
 
 		if (outputFileExists(file)) {
@@ -88,6 +92,7 @@ public class CompileLatestTestProgramsTest extends CompileFilesBaseTest {
 			assertThat(getOutput(errorStream), is(expectedErrorFromFile(file)));
 			assertThat(getOutput(outStream), is(isEmptyString()));
 		}
+		System.clearProperty("testrun.readFromFile");
 		System.setOut(bufferOut);
 		System.setErr(bufferErr);
 	}

@@ -90,7 +90,7 @@ public class IntegrationTestUtils {
 		return IntegrationTestUtils.getExpectedResultFromFile(outputFile);
 	}
 
-	private static String changeFileExtension(File file, String newExtension) {
+	protected static String changeFileExtension(File file, String newExtension) {
 		return file.getAbsolutePath().substring(0, file.getAbsolutePath().lastIndexOf('.')) + newExtension;
 	}
 
@@ -101,6 +101,11 @@ public class IntegrationTestUtils {
 
 	protected static boolean outputFileExists(File file) {
 		String outputFile = changeFileExtension(file, ".output");
+		return new File(outputFile).exists();
+	}
+
+	protected static boolean inputFileExists(File file) {
+		String outputFile = changeFileExtension(file, ".input");
 		return new File(outputFile).exists();
 	}
 }
