@@ -27,3 +27,6 @@ println(Bool arg1):
 
 println(Char arg1):
   pass
+
+String readln():
+    pass

@@ -146,6 +146,11 @@ public class Operations {
 		printlnHelper(c, addr, ".lineFloatFormat");
 	}
 
+	@Native("M.System.F.readln$M.String.C.String")
+	public LLVMIdentifier<LLVMType> readln(CodeContext c) {
+		return (LLVMIdentifier<LLVMType>) (LLVMIdentifier<?>) llvmIdentifierFactory.constantNull((LLVMPointer<LLVMType>) codeGenerator.mapToLLVMType(CoreClasses.stringType()));
+	}
+
 	@Native("M.Int.C.Int.F.operator_plus$M.Int.C.Int$M.Int.C.Int")
 	public LLVMIdentifier<LLVMInt> add(CodeContext c, LLVMIdentifier<LLVMInt> arg1, LLVMIdentifier<LLVMInt> arg2) {
 		return c.binaryOperation("add", arg1, arg2, llvmIdentifierFactory.newLocal(arg1.getType(), false));
