@@ -7,6 +7,10 @@ declare i32 @printf(i8* %format, ... ) nounwind
 @.floatFormat = private constant [3 x i8] c"%g\00";
 @.intFormat = private constant [3 x i8] c"%i\00";
 @.charFormat = private constant [3 x i8] c"%c\00";
+@.lineStringFormat = private constant [4 x i8] c"%s\0a\00";
+@.lineFloatFormat = private constant [4 x i8] c"%g\0a\00";
+@.lineIntFormat = private constant [4 x i8] c"%i\0a\00";
+@.lineCharFormat = private constant [4 x i8] c"%c\0a\00";
 
 ; Search the sourceCTData array of pointers to vmtData for the toVMTPtr
 ; pointer for class inheritance-test.

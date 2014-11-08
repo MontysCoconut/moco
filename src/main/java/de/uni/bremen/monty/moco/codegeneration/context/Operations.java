@@ -71,8 +71,8 @@ public class Operations {
 		this.llvmIdentifierFactory = llvmIdentifierFactory;
 	}
 
-	private void printHelper(CodeContext c, LLVMIdentifier<LLVMType> addr, String formatStringIdentifier) {
-		LLVMArrayType<LLVMInt8> stringType = array(int8(), 3);
+	private void printHelperBase(CodeContext c, LLVMIdentifier<LLVMType> addr, LLVMArrayType<LLVMInt8> stringType,
+	        String formatStringIdentifier) {
 		LLVMIdentifier<LLVMArrayType<LLVMInt8>> formatStringIdent =
 		        llvmIdentifierFactory.newGlobal(formatStringIdentifier, stringType);
 		LLVMIdentifier<LLVMPointer<LLVMInt8>> formatString = llvmIdentifierFactory.elementPointerTo(formatStringIdent);
@@ -84,6 +84,16 @@ public class Operations {
 		        llvmIdentifierFactory.newLocal(signature.getType(), false),
 		        Arrays.<LLVMIdentifier<?>> asList(formatString, addr),
 		        "(i8*, ...)*");
+	}
+
+	private void printHelper(CodeContext c, LLVMIdentifier<LLVMType> addr, String formatStringIdentifier) {
+		LLVMArrayType<LLVMInt8> stringType = array(int8(), 3);
+		printHelperBase(c, addr, stringType, formatStringIdentifier);
+	}
+
+	private void printlnHelper(CodeContext c, LLVMIdentifier<LLVMType> addr, String formatStringIdentifier) {
+		LLVMArrayType<LLVMInt8> stringType = array(int8(), 4);
+		printHelperBase(c, addr, stringType, formatStringIdentifier);
 	}
 
 	@Native("M.System.P.print$M.Char.C.Char")
@@ -113,22 +123,27 @@ public class Operations {
 
 	@Native("M.System.P.println$M.Char.C.Char")
 	public void printlnChar(CodeContext c, LLVMIdentifier<LLVMType> addr) {
+		printlnHelper(c, addr, ".lineCharFormat");
 	}
 
 	@Native("M.System.P.println$M.String.C.String")
 	public void printlnString(CodeContext c, LLVMIdentifier<LLVMType> addr) {
+		printlnHelper(c, addr, ".lineStringFormat");
 	}
 
 	@Native("M.System.P.println$M.Int.C.Int")
 	public void printlnInt(CodeContext c, LLVMIdentifier<LLVMType> addr) {
+		printlnHelper(c, addr, ".lineIntFormat");
 	}
 
 	@Native("M.System.P.println$M.Bool.C.Bool")
 	public void printlnBool(CodeContext c, LLVMIdentifier<LLVMType> addr) {
+		printlnHelper(c, addr, ".lineIntFormat");
 	}
 
 	@Native("M.System.P.println$M.Float.C.Float")
 	public void printlnFloat(CodeContext c, LLVMIdentifier<LLVMType> addr) {
+		printlnHelper(c, addr, ".lineFloatFormat");
 	}
 
 	@Native("M.Int.C.Int.F.operator_plus$M.Int.C.Int$M.Int.C.Int")
