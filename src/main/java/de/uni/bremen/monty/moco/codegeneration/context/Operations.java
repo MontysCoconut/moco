@@ -74,6 +74,23 @@ public class Operations {
 	public Operations(CodeGenerator codeGenerator, LLVMIdentifierFactory llvmIdentifierFactory) {
 		this.codeGenerator = codeGenerator;
 		this.llvmIdentifierFactory = llvmIdentifierFactory;
+		initFormatStrings();
+	}
+
+	private void initFormatStrings() {
+		LLVMArrayType<LLVMInt8> stringType = array(int8(), 3);
+		LLVMIdentifier<LLVMArrayType<LLVMInt8>> stringFormatIdent =
+		        llvmIdentifierFactory.newGlobal(".stringFormat", stringType);
+		stringFormat = llvmIdentifierFactory.elementPointerTo(stringFormatIdent);
+		LLVMIdentifier<LLVMArrayType<LLVMInt8>> intFormatIdent =
+		        llvmIdentifierFactory.newGlobal(".intFormat", stringType);
+		intFormat = llvmIdentifierFactory.elementPointerTo(intFormatIdent);
+		LLVMIdentifier<LLVMArrayType<LLVMInt8>> floatFormatIdent =
+		        llvmIdentifierFactory.newGlobal(".floatFormat", stringType);
+		floatFormat = llvmIdentifierFactory.elementPointerTo(floatFormatIdent);
+		LLVMIdentifier<LLVMArrayType<LLVMInt8>> charFormatIdent =
+		        llvmIdentifierFactory.newGlobal(".charFormat", stringType);
+		charFormat = llvmIdentifierFactory.elementPointerTo(charFormatIdent);
 	}
 
 	@Native("M.Print.P.print$M.Char.C.Char")
@@ -349,21 +366,5 @@ public class Operations {
 		        llvmIdentifierFactory.constant(int32(), 1),
 		        index);
 		c.store(codeGenerator.castIfNeeded(c, value, elementType), element);
-	}
-
-	public void setStringFormat(LLVMIdentifier<LLVMPointer<LLVMInt8>> stringFormat) {
-		this.stringFormat = stringFormat;
-	}
-
-	public void setIntFormat(LLVMIdentifier<LLVMPointer<LLVMInt8>> intFormat) {
-		this.intFormat = intFormat;
-	}
-
-	public void setFloatFormat(LLVMIdentifier<LLVMPointer<LLVMInt8>> floatFormat) {
-		this.floatFormat = floatFormat;
-	}
-
-	public void setCharFormat(LLVMIdentifier<LLVMPointer<LLVMInt8>> charformat) {
-		this.charFormat = charformat;
 	}
 }
