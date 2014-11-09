@@ -162,7 +162,16 @@ public class Operations {
 
 	@Native("M.System.F.read$M.String.C.String$M.Int.C.Int")
 	public LLVMIdentifier<LLVMType> read(CodeContext c, LLVMIdentifier<LLVMType> num) {
-		return (LLVMIdentifier<LLVMType>) (LLVMIdentifier<?>) llvmIdentifierFactory.constantNull((LLVMPointer<LLVMType>) codeGenerator.mapToLLVMType(CoreClasses.stringType()));
+		LLVMIdentifier<LLVMPointer<LLVMType>> readHelper =
+		        llvmIdentifierFactory.newGlobal("read_helper", pointer((LLVMType) int8()));
+		LLVMIdentifier<LLVMPointer<LLVMType>> resultPointer = llvmIdentifierFactory.newLocal(readHelper.getType());
+		c.call((LLVMIdentifier<LLVMType>) (LLVMIdentifier<?>) readHelper, resultPointer, num);
+		// XXX temporary solution until arrays are merged. the callNative method in codeGenerator must be modify to
+		// ensure correct boxing.
+		return codeGenerator.boxType(
+		        c,
+		        (LLVMIdentifier<LLVMType>) (LLVMIdentifier<?>) resultPointer,
+		        CoreClasses.stringType());
 	}
 
 	@Native("M.Int.C.Int.F.operator_plus$M.Int.C.Int$M.Int.C.Int")
