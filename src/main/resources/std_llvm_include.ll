@@ -6,6 +6,7 @@ declare void @free(i8* %ptr) nounwind
 
 declare %struct._IO_FILE* @_fdopen(i64, i8*) nounwind
 declare i32 @fgetc(%struct._IO_FILE*) nounwind
+declare i8* @fgets(i8*, i64, %struct._IO_FILE*) nounwind
 declare i32 @printf(i8* %format, ... ) nounwind
 
 @.stringFormat = private constant [3 x i8] c"%s\00";
@@ -23,6 +24,24 @@ declare i32 @printf(i8* %format, ... ) nounwind
                           i8*, i8*, i8*, i64, i32, [20 x i8] }
 %struct._IO_marker = type { %struct._IO_marker*, %struct._IO_FILE*, i32 }
 @.stdin_mode = private constant [2 x i8] c"r\00"
+
+; Read at most <num> bytes from stdin and return the string if success. exit(4) in case of failure.
+define i8* @read_helper(i64 %num) {
+    %nump = add i64 %num, 1
+    %str = call i8* @malloc(i64 %nump)
+    %stdin = call %struct._IO_FILE* @_fdopen(i64 0, i8* getelementptr inbounds ([2 x i8]* @.stdin_mode, i32 0, i32 0))
+    %res = call i8* @fgets(i8* %str, i64 %nump, %struct._IO_FILE* %stdin)
+    %cmp_null = icmp eq i8* %res, null
+    br i1 %cmp_null, label %fgets.error, label %fgets.success
+
+    fgets.error:
+        call void @free(i8* %str)
+        call void @exit(i32 4)
+        ret i8* null;
+
+    fgets.success:
+        ret i8* %str
+}
 
 ; Read a \n terminated string from stdin and return if success. exit(4) in
 ; case of failure.
