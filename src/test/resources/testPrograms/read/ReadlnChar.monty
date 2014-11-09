@@ -1,0 +1,9 @@
+// Testing: System.readln()
+//
+// A single line with the char 'C' must be read and printed including the
+// newline-char.
+//
+// Expected output: C
+
+String string := readln()
+print(string)
