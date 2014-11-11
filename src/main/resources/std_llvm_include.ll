@@ -1,6 +1,6 @@
 ; Begin of the standard declarations and definitions every Monty program needs.
 declare void @exit(i32 %status) noreturn
-declare i8* @malloc(i32 %size) nounwind
+declare i8* @malloc(i64 %size) nounwind
 declare i32 @printf(i8* %format, ... ) nounwind
 
 @.stringFormat = private constant [3 x i8] c"%s\00";
@@ -15,21 +15,21 @@ declare i32 @printf(i8* %format, ... ) nounwind
 ; Search the sourceCTData array of pointers to vmtData for the toVMTPtr
 ; pointer for class inheritance-test.
 define i1 @vmt_isa_class([0 x i8*]* %sourceCTData, i8* %toVMTPtr) {
-    %cnt = alloca i32
-    store i32 0, i32* %cnt
+    %cnt = alloca i64
+    store i64 0, i64* %cnt
     br label %loop.start
 
     loop.start:
-        %cnt_val = load i32* %cnt
-        %index = getelementptr [0 x i8*]* %sourceCTData, i32 0, i32 %cnt_val
+        %cnt_val = load i64* %cnt
+        %index = getelementptr [0 x i8*]* %sourceCTData, i32 0, i64 %cnt_val
         %ptr = load i8** %index
         ; If the end of the array is reached (null terminated) fail..
         %cmp_null = icmp eq i8* %ptr, null
         br i1 %cmp_null, label %loop.failure, label %loop.next
 
     loop.next:
-        %cnt_inr = add i32 %cnt_val, 1
-        store i32 %cnt_inr, i32* %cnt
+        %cnt_inr = add i64 %cnt_val, 1
+        store i64 %cnt_inr, i64* %cnt
         ; If the pointers are equal the class equals or inherits.
         %cmp = icmp eq i8* %toVMTPtr, %ptr
         br i1 %cmp, label %loop.success, label %loop.start
