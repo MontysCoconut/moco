@@ -9,7 +9,8 @@ Moco [![Build Status](https://travis-ci.org/MontysCoconut/moco.svg?branch=master
 
 Please read the [language
 specification](http://www.informatik.uni-bremen.de/monty/?p=downloads) for
-details on the `Monty` programming language.
+details on the `Monty` programming language and refer to the [feature
+overview](FEATURES.md) for a list of implemented features.
 
 Installing Dependencies
 =======================
