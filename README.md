@@ -109,6 +109,9 @@ directory.
 
     mvn site
 
+For some background information and a guide to submit merge requests please
+read [hacking](HACKING.md).
+
 Usage
 =====
 
