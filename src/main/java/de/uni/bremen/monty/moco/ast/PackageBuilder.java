@@ -76,7 +76,6 @@ public class PackageBuilder {
 		ModuleDeclaration module =
 		        new ModuleDeclaration(new Position(), new Identifier("CoreClasses"), block,
 		                Collections.<Import> emptyList());
-		block.addDeclaration(CoreClasses.stringType());
 		block.addDeclaration(CoreClasses.arrayType());
 		block.addDeclaration(CoreClasses.voidType());
 		corePackage.addModule(module);

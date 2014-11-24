@@ -217,6 +217,13 @@ public class ResolveVisitor extends VisitOnceVisitor {
 
 	/** {@inheritDoc} */
 	@Override
+	public void visit(StringLiteral node) {
+		node.setType(CoreClasses.stringType());
+		super.visit(node);
+	}
+
+	/** {@inheritDoc} */
+	@Override
 	public void visit(BooleanLiteral node) {
 		node.setType(CoreClasses.boolType());
 		super.visit(node);

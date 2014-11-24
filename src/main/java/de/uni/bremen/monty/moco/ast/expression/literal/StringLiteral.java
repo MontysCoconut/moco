@@ -45,7 +45,6 @@ import de.uni.bremen.monty.moco.visitor.BaseVisitor;
 public class StringLiteral extends LiteralExpression<String> {
 	public StringLiteral(Position position, String value) {
 		super(position, value.replaceAll("\"", ""));
-		setType(CoreClasses.stringType());
 	}
 
 	@Override

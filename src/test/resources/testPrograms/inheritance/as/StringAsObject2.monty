@@ -1,0 +1,11 @@
+// Testing: String as Object
+//
+// A string object must be castable to an String
+//
+// Expected output: HalloWelt
+
+Object z := "" as Object
+Object s := "HalloWelt" as Object
+
+print(z as String)
+print(s as String)

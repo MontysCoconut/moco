@@ -204,8 +204,7 @@ public class CodeGenerationVisitor extends BaseVisitor {
 	@Override
 	public void visit(ClassDeclaration node) {
 		// These are not boxed yet. So they cant inherit from object and cant have initializers.
-		List<ClassDeclaration> treatSpecial =
-		        Arrays.asList(CoreClasses.stringType(), CoreClasses.arrayType(), CoreClasses.voidType());
+		List<ClassDeclaration> treatSpecial = Arrays.asList(CoreClasses.arrayType(), CoreClasses.voidType());
 		if (!treatSpecial.contains(node)) {
 			openNewFunctionScope();
 			codeGenerator.buildConstructor(contextUtils.active(), node);
@@ -323,10 +322,12 @@ public class CodeGenerationVisitor extends BaseVisitor {
 	@Override
 	public void visit(StringLiteral node) {
 		super.visit(node);
-
 		LLVMIdentifier<? extends LLVMType> addr =
 		        codeGenerator.addConstantString(contextUtils.constant(), node.getValue());
-		stack.push((LLVMIdentifier<LLVMType>) addr);
+		// Boxing
+		CodeContext c = contextUtils.active();
+		LLVMIdentifier<LLVMType> box = codeGenerator.boxType(c, (LLVMIdentifier<LLVMType>) addr, node.getType());
+		stack.push(box);
 	}
 
 	@SuppressWarnings("unchecked")
@@ -451,7 +452,8 @@ public class CodeGenerationVisitor extends BaseVisitor {
 		                CoreClasses.intType(),
 		                CoreClasses.boolType(),
 		                CoreClasses.floatType(),
-		                CoreClasses.charType());
+		                CoreClasses.charType(),
+		                CoreClasses.stringType());
 		if (declaration.isInitializer() && treatSpecial.contains(definingClass)) {
 			// Instead of calling the initializer of this boxed type with a boxed value as arguments just push the
 			// argument on the stack and return.

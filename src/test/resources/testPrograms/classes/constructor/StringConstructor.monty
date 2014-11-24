@@ -1,0 +1,11 @@
+// Testing: String as Object
+//
+// A string-initializer call must work.
+//
+// Expected output: HalloWelt
+
+String z := String("")
+String s := String("HalloWelt")
+
+print(z)
+print(s)

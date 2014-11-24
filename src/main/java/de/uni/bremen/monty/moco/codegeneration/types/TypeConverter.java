@@ -63,7 +63,6 @@ public class TypeConverter {
 	}
 
 	private void initPreDefinedTypes() {
-		typeMap.put(CoreClasses.stringType(), pointer(int8()));
 		typeMap.put(CoreClasses.voidType(), voidType());
 	}
 
@@ -157,6 +156,8 @@ public class TypeConverter {
 			llvmClassTypeDeclarations.add(LLVMTypeFactory.double64());
 		} else if (classDecl == CoreClasses.charType()) {
 			llvmClassTypeDeclarations.add(LLVMTypeFactory.int8());
+		} else if (classDecl == CoreClasses.stringType()) {
+			llvmClassTypeDeclarations.add(LLVMTypeFactory.pointer(LLVMTypeFactory.int8()));
 		}
 
 		for (ClassDeclaration classDeclaration : recursiveSuperClassDeclarations) {

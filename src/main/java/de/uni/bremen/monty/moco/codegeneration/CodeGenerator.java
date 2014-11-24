@@ -159,6 +159,8 @@ public class CodeGenerator {
 				unboxedArguments.add(unboxType(c, (LLVMIdentifier<LLVMType>) llvmIdentifier, double64()));
 			} else if (llvmIdentifier.getType().equals(mapToLLVMType(CoreClasses.charType()))) {
 				unboxedArguments.add(unboxType(c, (LLVMIdentifier<LLVMType>) llvmIdentifier, int8()));
+			} else if (llvmIdentifier.getType().equals(mapToLLVMType(CoreClasses.stringType()))) {
+				unboxedArguments.add(unboxType(c, (LLVMIdentifier<LLVMType>) llvmIdentifier, pointer(int8())));
 			} else {
 				unboxedArguments.add(llvmIdentifier);
 			}
