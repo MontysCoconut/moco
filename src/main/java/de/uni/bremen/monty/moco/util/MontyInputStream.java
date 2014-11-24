@@ -36,49 +36,41 @@
  * You should have received a copy of the GNU General Public
  * License along with this library.
  */
-package de.uni.bremen.monty.moco.codegeneration;
 
-import de.uni.bremen.monty.moco.util.Params;
-import org.apache.commons.io.FilenameUtils;
-import org.apache.commons.io.IOUtils;
+package de.uni.bremen.monty.moco.util;
 
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.OutputStream;
+import java.io.InputStream;
 
-public class CodeWriter {
+public class MontyInputStream implements MontyResource {
 
-	private OutputStream llOutputStream;
+	private InputStream inputStream;
 
-	public CodeWriter(Params params) throws IOException {
-		llOutputStream = initLlvmOutput(params);
-		IOUtils.copy(getClass().getResourceAsStream("/std_llvm_include.ll"), llOutputStream);
+	public MontyInputStream(InputStream inputStream) {
+		this.inputStream = inputStream;
 	}
 
-	private OutputStream initLlvmOutput(Params params) throws FileNotFoundException {
-		OutputStream llOutputStream;
-		if (params.isGenerateOnlyLLVM()) {
-			if (params.getOutputFile() == null) {
-				llOutputStream = System.out;
-			} else {
-				llOutputStream = new FileOutputStream(params.getOutputFile());
-			}
-		} else {
-			String llFile;
-			if (params.getInputFile() != null) {
-				llFile = FilenameUtils.removeExtension(params.getInputFile()) + ".ll";
-			} else {
-				llFile = params.getInputFolder() + "/Main.ll";
-			}
-			llOutputStream = new FileOutputStream(llFile);
-			params.setLlFile(llFile);
-		}
-		return llOutputStream;
+	@Override
+	public boolean isDirectory() {
+		return false;
 	}
 
-	public void write(String data) throws IOException {
-		llOutputStream.write(data.getBytes());
-		llOutputStream.flush();
+	@Override
+	public String getName() {
+		return "(stdin)";
+	}
+
+	@Override
+	public MontyResource[] listSubPackages() {
+		return new MontyResource[0];
+	}
+
+	@Override
+	public InputStream toInputStream() {
+		return inputStream;
+	}
+
+	@Override
+	public MontyResource[] listSubModules() {
+		return new MontyResource[0];
 	}
 }

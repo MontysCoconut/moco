@@ -58,13 +58,7 @@ import de.uni.bremen.monty.moco.codegeneration.types.LLVMTypeFactory.LLVMIntType
  *
  * For convenience CodeContext extends from Context. From the perspective of it's users you have only one instance
  * knowing where to write (Context) and how/what to write (CodeContext). */
-public class CodeContext extends Context {
-
-	/** @param commentAppender
-	 *            the comment appender to be used */
-	public CodeContext(CommentAppender commentAppender) {
-		super(commentAppender);
-	}
+public class CodeContext extends CodeWriter {
 
 	// --------------Memory Access and Addressing Operations--------------------
 
@@ -76,7 +70,7 @@ public class CodeContext extends Context {
 	 *            type of the local variable
 	 * @return identifier of the local variable */
 	public <T extends LLVMType> LLVMIdentifier<T> alloca(LLVMIdentifier<T> identifierOfLocalVar, LLVMType llvmType) {
-		append(identifierOfLocalVar.getName() + " = alloca " + llvmType);
+		appendLine(identifierOfLocalVar.getName() + " = alloca " + llvmType);
 		return identifierOfLocalVar;
 	}
 
@@ -89,7 +83,7 @@ public class CodeContext extends Context {
 	 * @return Address of the dereferenced value */
 	public <T extends LLVMType> LLVMIdentifier<T> load(LLVMIdentifier<LLVMPointer<T>> sourcePointer,
 	        LLVMIdentifier<T> identifier) {
-		append(identifier.getName() + " = load " + sourcePointer);
+		appendLine(identifier.getName() + " = load " + sourcePointer);
 		return identifier;
 	}
 
@@ -102,7 +96,7 @@ public class CodeContext extends Context {
 	 * @param <T>
 	 *            the type of the value */
 	public <T extends LLVMType> void store(LLVMIdentifier<T> source, LLVMIdentifier<LLVMPointer<T>> targetPointer) {
-		append("store " + source + ", " + targetPointer);
+		appendLine("store " + source + ", " + targetPointer);
 	}
 
 	/** Gets an element pointer
@@ -117,7 +111,7 @@ public class CodeContext extends Context {
 	@SafeVarargs
 	public final void getelementptr(LLVMIdentifier<? extends LLVMType> varIdentifier,
 	        LLVMIdentifier<? extends LLVMType> pointer, LLVMIdentifier<? extends LLVMType>... offsets) {
-		append(varIdentifier.getName() + " = getelementptr inbounds " + pointer + ", "
+		appendLine(varIdentifier.getName() + " = getelementptr inbounds " + pointer + ", "
 
 		+ StringUtils.join(offsets, ','));
 	}
@@ -136,7 +130,7 @@ public class CodeContext extends Context {
 	public LLVMIdentifier<LLVMBool> icmp(IcmpOperand icmpOperand, LLVMIdentifier<?> arg1, LLVMIdentifier<?> arg2,
 	        LLVMIdentifier<LLVMBool> product) {
 
-		append(product.getName() + " = icmp " + icmpOperand.name() + " " + arg1 + "," + arg2.getName());
+		appendLine(product.getName() + " = icmp " + icmpOperand.name() + " " + arg1 + "," + arg2.getName());
 		return product;
 	}
 
@@ -152,7 +146,7 @@ public class CodeContext extends Context {
 	public LLVMIdentifier<LLVMBool> fcmp(FcmpOperand fcmpOperand, LLVMIdentifier<?> arg1, LLVMIdentifier<?> arg2,
 	        LLVMIdentifier<LLVMBool> product) {
 
-		append(product.getName() + " = fcmp " + fcmpOperand.name() + " " + arg1 + "," + arg2.getName());
+		appendLine(product.getName() + " = fcmp " + fcmpOperand.name() + " " + arg1 + "," + arg2.getName());
 		return product;
 	}
 
@@ -186,7 +180,7 @@ public class CodeContext extends Context {
 				sb.append(", ");
 			}
 		}
-		append(sb.toString());
+		appendLine(sb.toString());
 		return identifier;
 	}
 
@@ -227,8 +221,8 @@ public class CodeContext extends Context {
 	 * @return Identifier for result */
 	public <T extends LLVMType> LLVMIdentifier<T> call(LLVMIdentifier<LLVMType> signature,
 	        LLVMIdentifier<T> identifier, List<LLVMIdentifier<? extends LLVMType>> arguments, String overloadArgs) {
-		append(identifier.getName() + " = call " + signature.getType() + " " + overloadArgs + " " + signature.getName()
-		        + "(" + StringUtils.join(arguments, ',') + ")");
+		appendLine(identifier.getName() + " = call " + signature.getType() + " " + overloadArgs + " "
+		        + signature.getName() + "(" + StringUtils.join(arguments, ',') + ")");
 		return identifier;
 	}
 
@@ -249,7 +243,7 @@ public class CodeContext extends Context {
 	 * @param arguments
 	 *            List of Arguments */
 	public void callVoid(LLVMIdentifier<LLVMType> signature, List<LLVMIdentifier<?>> arguments) {
-		append("call " + signature + "(" + StringUtils.join(arguments, ',') + ")");
+		appendLine("call " + signature + "(" + StringUtils.join(arguments, ',') + ")");
 	}
 
 	/** Defines a function. Appends the function signature and opens a new scope. Instructions called after this will be
@@ -260,8 +254,8 @@ public class CodeContext extends Context {
 	 * @param functionSignature
 	 *            function Signature: name, return type and parameter */
 	public void define(List<LLVMFunctionAttribute> fNAttr, FunctionSignature<?> functionSignature) {
-		emptyLine();
-		append("define " + functionSignature + " " + StringUtils.join(fNAttr, ' ') + " {");
+		appendEmptyLine();
+		appendLine("define " + functionSignature + " " + StringUtils.join(fNAttr, ' ') + " {");
 		indent();
 	}
 
@@ -277,7 +271,7 @@ public class CodeContext extends Context {
 	 * @param label
 	 *            name of the label */
 	public void label(String label) {
-		append(label + ":");
+		appendLine(label + ":");
 	}
 
 	/** Append a global variable.
@@ -287,7 +281,7 @@ public class CodeContext extends Context {
 	public LLVMIdentifier<LLVMType> global(Linkage linkage, LLVMIdentifier<LLVMType> target, boolean isConstant,
 	        String initializer) {
 		String globalOrConstant = isConstant ? " constant " : " global ";
-		append(target.getName() + " = " + linkage + globalOrConstant + target.getType() + initializer);
+		appendLine(target.getName() + " = " + linkage + globalOrConstant + target.getType() + initializer);
 		return target;
 	}
 
@@ -332,7 +326,7 @@ public class CodeContext extends Context {
 	 * @param llvmIdentifier
 	 *            Value to return */
 	public void ret(LLVMIdentifier<?> llvmIdentifier) {
-		append("ret " + llvmIdentifier);
+		appendLine("ret " + llvmIdentifier);
 	}
 
 	/** Declares a function. Declare means the implementation of the function is somewhere else.
@@ -340,25 +334,24 @@ public class CodeContext extends Context {
 	 * @param functionSignature
 	 *            Name and return type of the function */
 	public void declare(FunctionSignature<LLVMType> functionSignature) {
-		append("declare " + functionSignature);
+		appendLine("declare " + functionSignature);
 	}
 
 	/** Closes the scope opened from a {@link #define(List, FunctionSignature)}. Last instruction for a function
 	 * definition */
 	public void close() {
 		dedent();
-		append("}");
-		emptyLine();
+		appendLine("}");
 	}
 
 	/** Unconditional branch. */
 	public void branch(String label) {
-		append("br label %" + label);
+		appendLine("br label %" + label);
 	}
 
 	/** Conditional branch. */
 	public void branch(LLVMIdentifier<LLVMBool> value, String trueLabel, String falseLabel) {
-		append("br " + value + ", label %" + trueLabel + ", label %" + falseLabel);
+		appendLine("br " + value + ", label %" + trueLabel + ", label %" + falseLabel);
 	}
 
 	/** Adds a type declaration Compares two Integers
@@ -374,25 +367,25 @@ public class CodeContext extends Context {
 			}
 		}
 
-		append(type + variableType + " }");
+		appendLine(type + variableType + " }");
 	}
 
 	@SuppressWarnings("unchecked")
 	public <T extends LLVMType> LLVMIdentifier<T> binaryOperation(String operator, LLVMIdentifier<?> arg1,
 	        LLVMIdentifier<?> arg2, LLVMIdentifier<?> product) {
-		append(product.getName() + " = " + operator + " " + arg1 + "," + arg2.getName());
+		appendLine(product.getName() + " = " + operator + " " + arg1 + "," + arg2.getName());
 		return (LLVMIdentifier<T>) product;
 	}
 
 	/** Converts a pointer to an integer */
 	public void ptrtoint(LLVMIdentifier<LLVMType> target, LLVMIdentifier<LLVMPointer<LLVMType>> source) {
-		append(target.getName() + " = ptrtoint " + source + " to " + target.getType());
+		appendLine(target.getName() + " = ptrtoint " + source + " to " + target.getType());
 	}
 
 	/** Casts a pointer to a pointer of a different type */
 	public <T extends LLVMType> void bitcast(LLVMIdentifier<LLVMPointer<T>> target,
 	        LLVMIdentifier<LLVMPointer<T>> source) {
-		append(target.getName() + " = bitcast " + source + " to " + target.getType());
+		appendLine(target.getName() + " = bitcast " + source + " to " + target.getType());
 	}
 
 	/** The sext instruction.
@@ -407,7 +400,7 @@ public class CodeContext extends Context {
 	 *            type to cast to */
 	public LLVMIdentifier<LLVMType> sext(LLVMIdentifier<LLVMType> toCast, LLVMIntType toType,
 	        LLVMIdentifier<LLVMType> result) {
-		append(result.getName() + " = sext " + toCast + " to " + toType);
+		appendLine(result.getName() + " = sext " + toCast + " to " + toType);
 		return result;
 	}
 

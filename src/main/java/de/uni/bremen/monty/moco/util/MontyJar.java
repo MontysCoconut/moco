@@ -45,6 +45,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.JarURLConnection;
 import java.net.URL;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
@@ -70,6 +71,11 @@ public class MontyJar implements MontyResource {
 	}
 
 	@Override
+	public boolean isDirectory() {
+		return jarEntry.isDirectory();
+	}
+
+	@Override
 	public MontyResource[] listSubPackages() {
 		return getSubResources(true);
 	}
@@ -85,7 +91,7 @@ public class MontyJar implements MontyResource {
 	}
 
 	@Override
-	public MontyResource[] listSubModules() throws IOException {
+	public MontyResource[] listSubModules() {
 		return getSubResources(false);
 	}
 

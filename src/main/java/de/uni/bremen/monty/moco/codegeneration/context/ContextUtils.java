@@ -38,22 +38,18 @@
  */
 package de.uni.bremen.monty.moco.codegeneration.context;
 
-import de.uni.bremen.monty.moco.ast.ASTNode;
-
 import java.util.Stack;
+import java.util.List;
+import java.util.ArrayList;
+import java.lang.StringBuffer;
 
 /** Utility class for accessing different {@link Context}
  *
  * Holds the {@link #baseContext} which is the Context that represent a whole .ll file. */
 public class ContextUtils {
 
-	private final CommentAppender commentAppender;
-
-	/** represents a whole .ll file */
-	private final CodeContext baseContext;
-
 	/** on top of each .ll file there is an area where all constant declaration should be located. */
-	private final CodeContext constantsContext;
+	private final CodeContext constantsContext = new CodeContext();
 
 	/** each function should have it's own CodeContext. This is where those are stored. The first Context in the Stack is
 	 * the container of all functions in the .ll file and not the container for all statements in a function.
@@ -61,27 +57,14 @@ public class ContextUtils {
 	 * A Stack is used because monty allows to have functions inside functions.(Despite having closures) LLVM doesn't
 	 * support that feature. So while processing a function you may find another function, which you have to process.
 	 * You start processing the new one, while saving the state of the old one in the stack */
-	private Stack<CodeContext> activeContexts;
+	private final Stack<CodeContext> activeContexts = new Stack<>();
+	private final List<CodeContext> everyContext = new ArrayList<>();
 
 	/** Creates a {@link #baseContext} and a {@link #constantsContext} and makes the constantContext part of the
 	 * baseContext. */
 	public ContextUtils() {
-		commentAppender = new CommentAppender();
-
-		baseContext = new CodeContext(commentAppender);
-		activeContexts = new Stack<>();
-		activeContexts.push(baseContext);
-
-		constantsContext = new CodeContext(commentAppender);
-		baseContext.append(constantsContext);
-	}
-
-	/** Sets the current Node to the {@link #commentAppender}
-	 *
-	 * @param node
-	 *            ast node */
-	public void setNode(ASTNode node) {
-		commentAppender.setNode(node);
+		activeContexts.push(constantsContext);
+		everyContext.add(constantsContext);
 	}
 
 	/** Returns the active Context. That is the Context in which the next instruction for LLVM from an 'normal' monty
@@ -104,16 +87,17 @@ public class ContextUtils {
 	 * content of a .ll file.
 	 *
 	 * @return the converted {@link #baseContext} */
-	public String getData() {
-		return baseContext.getData();
+	public void writeLLVMCode(StringBuffer sb) {
+		for (CodeContext context : everyContext) {
+			sb.append(context.getBuffer());
+		}
 	}
 
 	/** Adds a new Context to the {@link #activeContexts}. This should be used in the beginning of the processing of a
 	 * monty function. So that the llvm instructions of the monty statements stored into this new Context */
 	public void addNewContext() {
-		CodeContext context = new CodeContext(commentAppender);
-		activeContexts.push(context);
-		baseContext.append(context);
+		activeContexts.push(new CodeContext());
+		everyContext.add(activeContexts.peek());
 	}
 
 	/** Closes a Context opened with {@link #addNewContext()}. This should be done at the end of processing a function. */

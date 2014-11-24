@@ -40,38 +40,34 @@
 package de.uni.bremen.monty.moco.ast;
 
 import de.uni.bremen.monty.moco.ast.declaration.*;
-import de.uni.bremen.monty.moco.util.MontyFile;
-import de.uni.bremen.monty.moco.util.MontyJar;
-import de.uni.bremen.monty.moco.util.MontyResource;
-import de.uni.bremen.monty.moco.util.Params;
+import de.uni.bremen.monty.moco.util.*;
 
+import java.io.InputStream;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.Collections;
 
 public class PackageBuilder {
-	private final AntlrAdapter antlrAdapter;
-	private Params params;
+	private final AntlrAdapter antlrAdapter = new AntlrAdapter();
 
-	public PackageBuilder(Params params) {
-		this.params = params;
-		antlrAdapter = new AntlrAdapter();
+	public Package buildPackage(InputStream inputStream) {
+		return buildPackage(new MontyInputStream(inputStream));
 	}
 
-	public Package buildPackage() throws IOException {
+	public Package buildPackage(String inputFile) {
+		return buildPackage(new MontyFile(inputFile));
+	}
+
+	private Package buildPackage(MontyResource inputFile) {
 		Package basePackage = new Package(new Identifier(""));
-		String inputFile = params.getInputFile();
-		if (inputFile != null) {
-			basePackage.addSubPackage(createPackageFromSingleModule(inputFile));
-		} else {
-			basePackage.addSubPackage(createPackageFromSourceFolder(params));
-		}
 		addCoreLib(basePackage);
+		Package subPackage = (inputFile.isDirectory()) ? createPackage(inputFile) : createPackageFromFile(inputFile);
+		basePackage.addSubPackage(subPackage);
 		return basePackage;
 	}
 
-	private void addCoreLib(Package basePackage) throws IOException {
+	private void addCoreLib(Package basePackage) {
 		Package corePackage = createPackage(getCoreLibFolder());
 		corePackage.setNativePackage(true);
 		basePackage.addSubPackage(corePackage);
@@ -115,40 +111,36 @@ public class PackageBuilder {
 		}
 	}
 
-	private Package createPackageFromSourceFolder(Params params) throws IOException {
-		String baseFolder = params.getInputFolder();
-		MontyResource inputFolder = new MontyFile(baseFolder);
-		return createPackage(inputFolder);
-	}
-
-	private Package createPackageFromSingleModule(String inputFile) throws IOException {
-		MontyResource file = new MontyFile(inputFile);
-
+	private Package createPackageFromFile(MontyResource inputFile) {
 		Package mainPackage = new Package(new Identifier(""));
-		addModules(new MontyResource[] { file }, mainPackage);
+		addModules(new MontyResource[] { inputFile }, mainPackage);
 		return mainPackage;
 	}
 
-	private Package createPackage(MontyResource inputFolder) throws IOException {
+	private Package createPackage(MontyResource inputFolder) {
 		MontyResource[] montyFiles = inputFolder.listSubModules();
 		return createPackage(inputFolder, montyFiles);
 	}
 
-	private Package createPackage(MontyResource inputFolder, MontyResource[] montyFiles) throws IOException {
+	private Package createPackage(MontyResource inputFolder, MontyResource[] montyFiles) {
 		Package mainPackage = new Package(new Identifier(inputFolder.getName()));
 		addModules(montyFiles, mainPackage);
 		addSubPackages(inputFolder, mainPackage);
 		return mainPackage;
 	}
 
-	private void addModules(MontyResource[] montyFiles, Package aPackage) throws IOException {
+	private void addModules(MontyResource[] montyFiles, Package aPackage) {
 		for (MontyResource file : montyFiles) {
-			ModuleDeclaration module = antlrAdapter.parse(file.toInputStream(), file.getName());
-			aPackage.addModule(module);
+			try {
+				ModuleDeclaration module = antlrAdapter.parse(file.toInputStream(), file.getName());
+				aPackage.addModule(module);
+			} catch (IOException e) {
+				throw new RuntimeException(e);
+			}
 		}
 	}
 
-	private void addSubPackages(MontyResource inputFolder, Package mainPackage) throws IOException {
+	private void addSubPackages(MontyResource inputFolder, Package mainPackage) {
 		MontyResource[] subPackages = inputFolder.listSubPackages();
 		for (MontyResource subPackage : subPackages) {
 			mainPackage.addSubPackage(createPackage(subPackage));

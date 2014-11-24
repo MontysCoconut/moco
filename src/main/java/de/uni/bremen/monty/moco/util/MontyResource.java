@@ -44,11 +44,13 @@ import java.io.InputStream;
 
 public interface MontyResource {
 
+	abstract public boolean isDirectory();
+
 	abstract public MontyResource[] listSubPackages();
 
 	abstract public InputStream toInputStream() throws IOException;
 
 	abstract public String getName();
 
-	abstract public MontyResource[] listSubModules() throws IOException;
+	abstract public MontyResource[] listSubModules();
 }

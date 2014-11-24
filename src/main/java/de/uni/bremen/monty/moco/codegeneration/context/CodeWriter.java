@@ -38,15 +38,43 @@
  */
 package de.uni.bremen.monty.moco.codegeneration.context;
 
-class StringData implements ContextData {
-	private String data;
+import java.lang.StringBuffer;
+import org.apache.commons.lang3.StringUtils;
 
-	public StringData(String data) {
-		this.data = data;
+public class CodeWriter {
+
+	/** StringBuffer the CodeContext writes to. */
+	private StringBuffer stringBuffer = new StringBuffer();
+
+	/** Current level of indentation. */
+	private int indentation = 0;
+
+	/** Increment the current level of indentation. */
+	public void indent() {
+		indentation++;
 	}
 
-	@Override
-	public String getData() {
-		return data;
+	/** Decrement the current level of indentation. */
+	public void dedent() {
+		indentation--;
+	}
+
+	/** Write a line to this buffer.
+	 *
+	 * The line gets indented according to the level of indentation and is terminated by a newline. */
+	public void appendLine(String data) {
+		stringBuffer.append(StringUtils.repeat(" ", indentation * 4));
+		stringBuffer.append(data);
+		appendEmptyLine();
+	}
+
+	/** Write an empty line to this buffer. */
+	public void appendEmptyLine() {
+		stringBuffer.append("\n");
+	}
+
+	/** Return this buffer. */
+	public StringBuffer getBuffer() {
+		return stringBuffer;
 	}
 }

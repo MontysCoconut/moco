@@ -47,7 +47,6 @@ import de.uni.bremen.monty.moco.ast.expression.*;
 import de.uni.bremen.monty.moco.ast.expression.literal.*;
 import de.uni.bremen.monty.moco.ast.statement.*;
 import de.uni.bremen.monty.moco.codegeneration.CodeGenerator;
-import de.uni.bremen.monty.moco.codegeneration.CodeWriter;
 import de.uni.bremen.monty.moco.codegeneration.context.CodeContext;
 import de.uni.bremen.monty.moco.codegeneration.context.ContextUtils;
 import de.uni.bremen.monty.moco.codegeneration.identifier.LLVMIdentifier;
@@ -57,9 +56,7 @@ import de.uni.bremen.monty.moco.codegeneration.types.LLVMType;
 import de.uni.bremen.monty.moco.codegeneration.types.LLVMPointer;
 import de.uni.bremen.monty.moco.codegeneration.types.LLVMTypeFactory;
 import de.uni.bremen.monty.moco.codegeneration.types.TypeConverter;
-import de.uni.bremen.monty.moco.util.Params;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -83,7 +80,6 @@ public class CodeGenerationVisitor extends BaseVisitor {
 	private final LLVMIdentifierFactory llvmIdentifierFactory = new LLVMIdentifierFactory();
 	private ContextUtils contextUtils = new ContextUtils();
 	private final CodeGenerator codeGenerator;
-	private final CodeWriter codeWriter;
 
 	/** Each Expression pushes it's evaluated value onto the Stack. The value is represented by a LLVMIdentifier where
 	 * the evaluated value is stored at runtime.
@@ -104,10 +100,13 @@ public class CodeGenerationVisitor extends BaseVisitor {
 	 * e.g. the FunctionCall as a statement would leave behind a non-empty stack. */
 	private Stack<Stack<LLVMIdentifier<LLVMType>>> stackOfStacks = new Stack<>();
 
-	public CodeGenerationVisitor(Params params) throws IOException {
+	public CodeGenerationVisitor() {
 		TypeConverter typeConverter = new TypeConverter(llvmIdentifierFactory, contextUtils.constant());
-		this.codeWriter = new CodeWriter(params);
 		this.codeGenerator = new CodeGenerator(typeConverter, llvmIdentifierFactory);
+	}
+
+	public void writeLLVMCode(StringBuffer llvmOutput) {
+		contextUtils.writeLLVMCode(llvmOutput);
 	}
 
 	private void openNewFunctionScope() {
@@ -166,23 +165,8 @@ public class CodeGenerationVisitor extends BaseVisitor {
 		return false;
 	}
 
-	protected void writeData() throws IOException {
-		codeWriter.write(contextUtils.getData());
-	}
-
-	@Override
-	protected void onEnterEachNode(ASTNode node) {
-		contextUtils.setNode(node);
-	}
-
-	@Override
-	protected void onExitChildrenEachNode(ASTNode node) {
-		contextUtils.setNode(node);
-	}
-
 	@Override
 	public void visit(Package node) {
-		contextUtils.setNode(node);
 		if (node.getParentNode() == null) {
 			openNewFunctionScope();
 			codeGenerator.addMain(contextUtils.active());
@@ -191,12 +175,6 @@ public class CodeGenerationVisitor extends BaseVisitor {
 
 			codeGenerator.returnMain(contextUtils.active());
 			closeFunctionContext();
-
-			try {
-				writeData();
-			} catch (IOException e) {
-				throw new RuntimeException(e);
-			}
 		} else {
 			super.visit(node);
 		}

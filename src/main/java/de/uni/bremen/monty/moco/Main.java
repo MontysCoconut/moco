@@ -42,47 +42,82 @@ import de.uni.bremen.monty.moco.antlr.MontyParser;
 import de.uni.bremen.monty.moco.ast.AntlrAdapter;
 import de.uni.bremen.monty.moco.ast.Package;
 import de.uni.bremen.monty.moco.ast.PackageBuilder;
-import de.uni.bremen.monty.moco.util.Params;
-import de.uni.bremen.monty.moco.util.ParseTreePrinter;
+import de.uni.bremen.monty.moco.util.*;
 import de.uni.bremen.monty.moco.visitor.*;
-import org.antlr.v4.runtime.misc.TestRig;
+
 import org.apache.commons.io.IOUtils;
+
+import net.sourceforge.argparse4j.ArgumentParsers;
+import net.sourceforge.argparse4j.impl.Arguments;
+import net.sourceforge.argparse4j.inf.ArgumentParserException;
+import net.sourceforge.argparse4j.inf.ArgumentParser;
+import net.sourceforge.argparse4j.inf.Namespace;
 
 import java.io.*;
 
 public class Main {
 
-	public static void main(String[] args) throws IOException {
-		Params params = new Params(args);
-		new Main().start(params);
+	private static Namespace parseArgs(String[] args) {
+		ArgumentParser parser =
+		        ArgumentParsers.newArgumentParser("moco", false).description("The Monty to LLVM compiler.");
+
+		parser.addArgument("--help").action(Arguments.help()).help("Print this help and exit.");
+		parser.addArgument("-ll", "--generate-only").action(Arguments.storeTrue()).dest("generateOnly").help(
+		        "Only generate the LLVM output without running it.");
+		parser.addArgument("-e", "--stop-on-first-error").action(Arguments.storeTrue()).dest("stopOnFirstError").help(
+		        "Stop the compilation on the first encountered error.");
+		parser.addArgument("-p", "--print-ast").action(Arguments.storeTrue()).dest("printAST").help("Print the AST.");
+		parser.addArgument("-d", "--debug-parsetree").action(Arguments.storeTrue()).dest("debugParseTree").help(
+		        "Debug the parsetree without running anything.");
+		parser.addArgument("-o").metavar("<file>").dest("outputFile").help("Write output to <file>.");
+		parser.addArgument("file").nargs("?").help("Monty file to run.");
+
+		Namespace ns = null;
+		try {
+			ns = parser.parseArgs(args);
+		} catch (ArgumentParserException ape) {
+			parser.handleError(ape);
+		}
+		return ns;
 	}
 
-	private void start(Params params) throws IOException {
+	private static void debugParseTree(String inputFile) throws IOException {
+		AntlrAdapter antlrAdapter = new AntlrAdapter();
+		MontyParser parser = null;
 
-		String inputFile = params.getInputFile();
-
-		if (params.isDebugParseTree()) {
-			debugParseTree(params, inputFile);
-			return;
+		if (inputFile == null) {
+			parser = antlrAdapter.createParser(System.in);
+		} else {
+			File file = new File(inputFile);
+			parser = antlrAdapter.createParser(new FileInputStream(file));
 		}
 
-		PackageBuilder packageBuilder = new PackageBuilder(params);
-		Package mainPackage = packageBuilder.buildPackage();
-
-		visitVisitors(params, mainPackage);
+		ParseTreePrinter parseTreePrinter = new ParseTreePrinter(parser);
+		parser.addParseListener(parseTreePrinter);
+		parser.compilationUnit();
+		System.out.print(parseTreePrinter.toString());
 	}
 
-	private void visitVisitors(Params params, Package ast) throws IOException {
+	private static Package buildPackage(String inputFile) {
+		PackageBuilder packageBuilder = new PackageBuilder();
+		if (inputFile == null) {
+			return packageBuilder.buildPackage(System.in);
+		} else {
+			return packageBuilder.buildPackage(inputFile);
+		}
+	}
 
+	private static boolean visitVisitors(Package ast, boolean stopOnFirstError, StringBuffer output) {
+
+		CodeGenerationVisitor cgv = new CodeGenerationVisitor();
 		BaseVisitor[] visitors =
 		        new BaseVisitor[] { new SetParentVisitor(), new DeclarationVisitor(), new ResolveVisitor(),
-		                new TypeCheckVisitor(), new ControlFlowVisitor(), new NameManglingVisitor() };
+		                new TypeCheckVisitor(), new ControlFlowVisitor(), new NameManglingVisitor(), cgv };
 
 		boolean everyThingIsAwesome = true;
 
 		for (BaseVisitor visitor : visitors) {
-			visitor.setStopOnFirstError(params.isStopOnFirstError());
-			visitor.setStopOnFirstError(params.isStopOnFirstError());
+			visitor.setStopOnFirstError(stopOnFirstError);
 
 			try {
 				visitor.visitDoubleDispatched(ast);
@@ -98,55 +133,67 @@ public class Main {
 			}
 		}
 
-		if (params.usePrintVisitor()) {
+		cgv.writeLLVMCode(output);
+		return everyThingIsAwesome;
+	}
+
+	private static void writeOutput(String llvmCode, String outputFile) throws FileNotFoundException {
+		PrintStream resultStream = new PrintStream(new FileOutputStream(outputFile));
+		resultStream.print(llvmCode);
+		resultStream.close();
+	}
+
+	private static void runCode(String llvmCode) throws IOException {
+		ProcessBuilder processBuilder = new ProcessBuilder("lli");
+		Process process = processBuilder.start();
+
+		PrintStream lliInput = new PrintStream(process.getOutputStream());
+		lliInput.print(llvmCode);
+		lliInput.close();
+
+		System.err.print(IOUtils.toString(process.getErrorStream()));
+		System.out.print(IOUtils.toString(process.getInputStream()));
+	}
+
+	public static void main(String[] args) throws IOException {
+		Namespace ns = parseArgs(args);
+
+		if (ns == null) {
+			return;
+		}
+
+		String inputFile = ns.get("file");
+		String outputFile = ns.get("outputFile");
+		boolean generateOnly = ns.get("generateOnly");
+		boolean stopOnFirstError = ns.get("stopOnFirstError");
+		boolean printAST = ns.get("printAST");
+		boolean debugParseTree = ns.get("debugParseTree");
+
+		if (debugParseTree) {
+			debugParseTree(inputFile);
+			return;
+		}
+
+		StringWriter writer = new StringWriter();
+		StringBuffer output = writer.getBuffer();
+		IOUtils.copy(Main.class.getResourceAsStream("/std_llvm_include.ll"), writer);
+
+		Package ast = buildPackage(inputFile);
+		boolean everyThingIsAwesome = visitVisitors(ast, stopOnFirstError, output);
+
+		if (!everyThingIsAwesome) {
+			return;
+		}
+
+		String llvmCode = output.toString();
+		if (printAST) {
 			(new PrintVisitor()).visitDoubleDispatched(ast);
-		} else if (everyThingIsAwesome) {
-			(new CodeGenerationVisitor(params)).visitDoubleDispatched(ast);
-			generateCode(params);
 		}
-	}
-
-	private void debugParseTree(Params params, String inputFile) throws IOException {
-		AntlrAdapter antlrAdapter = new AntlrAdapter();
-
-		File file = new File(inputFile);
-		MontyParser parser = antlrAdapter.createParser(new FileInputStream(file));
-		ParseTreePrinter parseTreePrinter = new ParseTreePrinter(parser);
-		parser.addParseListener(parseTreePrinter);
-		parser.compilationUnit();
-		System.out.print(parseTreePrinter.toString());
-		try {
-			new TestRig(new String[] { "de.uni.bremen.monty.moco.antlr.Monty", "compilationUnit", "-gui",
-			        params.getInputFile() }).process();
-		} catch (Exception e) {
-			e.printStackTrace();
+		if (outputFile != null) {
+			writeOutput(llvmCode, outputFile);
 		}
-	}
-
-	private void generateCode(Params params) throws IOException {
-		PrintStream resultStream;
-		if (params.getOutputFile() == null) {
-			resultStream = System.out;
-		} else {
-			resultStream = new PrintStream(new FileOutputStream(params.getOutputFile()));
-		}
-
-		if (!params.isGenerateOnlyLLVM()) {
-			String llFile = params.getLlFile();
-			ProcessBuilder processBuilder = new ProcessBuilder("lli", llFile);
-			Process start = processBuilder.start();
-
-			String in = IOUtils.toString(start.getInputStream());
-			String err = IOUtils.toString(start.getErrorStream());
-
-			System.err.print(err);
-			resultStream.print(in);
-
-			if (!params.isKeepLLVMCode()) {
-				if (!new File(llFile).delete()) {
-					System.err.println("Warning: failed to delete file " + llFile);
-				}
-			}
+		if (!generateOnly) {
+			runCode(llvmCode);
 		}
 	}
 }
