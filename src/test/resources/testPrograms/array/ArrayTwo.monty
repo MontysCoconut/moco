@@ -5,9 +5,9 @@
 // Expected output: 011011
 
 Array a := [0, 1]
-print(a[0])
-print(a[1])
-a[0] := 10
-a[1] := 11
-print(a[0])
-print(a[1])
+print(a.get(0) as Int)
+print(a.get(1) as Int)
+a.set(0, 10)
+a.set(1, 11)
+print(a.get(0) as Int)
+print(a.get(1) as Int)

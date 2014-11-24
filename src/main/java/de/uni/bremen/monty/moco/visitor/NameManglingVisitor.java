@@ -102,7 +102,6 @@ public class NameManglingVisitor extends BaseVisitor {
 		parentScopes = new Stack<>();
 
 		initNameManglingPrefixes();
-		manglePredefinedTypes();
 	}
 
 	/** Initialize the mapping of prefixes. */
@@ -119,14 +118,6 @@ public class NameManglingVisitor extends BaseVisitor {
 		nameManglingPrefixes.put(Mangled.IF, "IF.");
 		nameManglingPrefixes.put(Mangled.ELSE, "ELSE.");
 		nameManglingPrefixes.put(Mangled.WHILE, "WHILE.");
-	}
-
-	/** This function mangles the base types. Current module for base types is "std". */
-	private void manglePredefinedTypes() {
-		final String prefix =
-		        nameManglingPrefixes.get(Mangled.MODULE) + "std" + nameManglingPrefixes.get(Mangled.CLASS);
-
-		CoreClasses.arrayType().setMangledIdentifier(new Identifier(prefix + "Array"));
 	}
 
 	@Override
@@ -289,7 +280,6 @@ public class NameManglingVisitor extends BaseVisitor {
 
 	private String escapeForLLVM(Identifier identifier) {
 		String string = identifier.getSymbol();
-		string = string.replaceAll("\\[\\]", "_array_access");
 		string = string.replaceAll("%", "_rem");
 		string = string.replaceAll("\\*", "_mult");
 		string = string.replaceAll("/", "_div");

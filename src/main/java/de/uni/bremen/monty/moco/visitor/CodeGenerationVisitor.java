@@ -203,9 +203,7 @@ public class CodeGenerationVisitor extends BaseVisitor {
 
 	@Override
 	public void visit(ClassDeclaration node) {
-		// These are not boxed yet. So they cant inherit from object and cant have initializers.
-		List<ClassDeclaration> treatSpecial = Arrays.asList(CoreClasses.arrayType(), CoreClasses.voidType());
-		if (!treatSpecial.contains(node)) {
+		if (node != CoreClasses.voidType()) {
 			openNewFunctionScope();
 			codeGenerator.buildConstructor(contextUtils.active(), node);
 			closeFunctionContext();
@@ -381,14 +379,18 @@ public class CodeGenerationVisitor extends BaseVisitor {
 	public void visit(ArrayLiteral node) {
 		super.visit(node);
 
-		ClassDeclaration type = (ClassDeclaration) node.getType();
-		LLVMIdentifier<LLVMPointer<LLVMStructType>> array =
-		        codeGenerator.addArray(contextUtils.active(), node.getEntries().size(), type);
-		for (int i = node.getEntries().size() - 1; i >= 0; i--) {
-			codeGenerator.setArrayElement(contextUtils.active(), array, i, stack.pop());
+		List<LLVMIdentifier<?>> elements = new ArrayList<>(node.getEntries().size());
+		for (int i = 0; i < node.getEntries().size(); i++) {
+			elements.add(stack.pop());
 		}
+		Collections.reverse(elements);
 
-		stack.push((LLVMIdentifier) array);
+		LLVMIdentifier<? extends LLVMType> array = codeGenerator.buildArray(contextUtils.active(), elements);
+
+		// Boxing
+		CodeContext c = contextUtils.active();
+		LLVMIdentifier<LLVMType> box = codeGenerator.boxType(c, (LLVMIdentifier<LLVMType>) array, node.getType());
+		stack.push(box);
 	}
 
 	@Override
@@ -453,7 +455,8 @@ public class CodeGenerationVisitor extends BaseVisitor {
 		                CoreClasses.boolType(),
 		                CoreClasses.floatType(),
 		                CoreClasses.charType(),
-		                CoreClasses.stringType());
+		                CoreClasses.stringType(),
+		                CoreClasses.arrayType());
 		if (declaration.isInitializer() && treatSpecial.contains(definingClass)) {
 			// Instead of calling the initializer of this boxed type with a boxed value as arguments just push the
 			// argument on the stack and return.

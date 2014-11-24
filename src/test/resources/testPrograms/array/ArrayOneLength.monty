@@ -1,0 +1,8 @@
+// Testing: Arrays
+//
+// The size of an array of size 1 must be correct.
+//
+// Expected output: 1
+
+Array a := [0]
+print(a.length())

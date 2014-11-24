@@ -1,0 +1,17 @@
+// Testing: Array as Object
+//
+// A array must be an Object
+//
+// Expected output: Ok(Array)Ok(Array)
+
+Object a := [42]
+
+if a is Array:
+    print("Ok(Array)")
+else:
+    print("Nope(Array)")
+
+if [24] is Object:
+    print("Ok(Array)")
+else:
+    print("Nope(Array)")

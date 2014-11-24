@@ -4,5 +4,5 @@
 //
 // Expected error
 
-Array a := []
-a[0] := 0
+Array a := [0, 1]
+print(a.get(-1) as Int)

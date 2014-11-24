@@ -5,4 +5,4 @@
 // Expected error
 
 Array a := [0, 1]
-a[-1] := 42
+a.set(42, 42)

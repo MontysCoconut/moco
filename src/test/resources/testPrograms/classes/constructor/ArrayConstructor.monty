@@ -1,0 +1,8 @@
+// Testing: Array as Object
+//
+// An array-initializer call must work.
+//
+// Expected output: 0
+
+Array a := Array([0])
+print(a.get(0) as Int)

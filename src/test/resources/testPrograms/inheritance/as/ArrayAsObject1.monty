@@ -1,0 +1,10 @@
+// Testing: Array as Object
+//
+// A array object must be castable to an Array
+//
+// Expected output: 10
+
+Object a := [1, 0]
+
+print((a as Array).get(0) as Int)
+print((a as Array).get(1) as Int)

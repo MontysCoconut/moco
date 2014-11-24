@@ -49,6 +49,7 @@ import static de.uni.bremen.monty.moco.codegeneration.types.LLVMTypeFactory.poin
 import java.util.Arrays;
 
 import de.uni.bremen.monty.moco.ast.CoreClasses;
+import de.uni.bremen.monty.moco.ast.declaration.TypeDeclaration;
 import de.uni.bremen.monty.moco.codegeneration.Native;
 import de.uni.bremen.monty.moco.codegeneration.CodeGenerator;
 import de.uni.bremen.monty.moco.codegeneration.context.CodeContext.FcmpOperand;
@@ -297,16 +298,29 @@ public class Operations {
 		return c.binaryOperation("srem", arg1, arg2, llvmIdentifierFactory.newLocal(arg1.getType(), false));
 	}
 
-	@Native("M.Array.F.operator_array_access$M.Int.C.Int$M.std.C.Array$M.Int.C.Int")
+	@Native("M.Array.C.Array.F.length$M.Int.C.Int")
+	public LLVMIdentifier<LLVMType> arrayLength(CodeContext c, LLVMIdentifier<LLVMPointer> arrayPointer) {
+		LLVMIdentifier<LLVMPointer<LLVMStructType>> arrayStructPointer =
+		        (LLVMIdentifier<LLVMPointer<LLVMStructType>>) (LLVMIdentifier<?>) arrayPointer;
+
+		LLVMIdentifier<LLVMType> result = llvmIdentifierFactory.newLocal((LLVMType) int64());
+		c.getelementptr(
+		        result,
+		        arrayStructPointer,
+		        llvmIdentifierFactory.constant(int32(), 0),
+		        llvmIdentifierFactory.constant(int32(), 0));
+		return codeGenerator.resolveIfNeeded(c, result);
+	}
+
+	@Native("M.Array.C.Array.F.get$M.Object.C.Object$M.Int.C.Int")
 	public LLVMIdentifier<LLVMType> arrayAccess(CodeContext c, LLVMIdentifier<LLVMPointer> arrayPointer,
 	        LLVMIdentifier<LLVMInt> index) {
-
 		LLVMIdentifier<LLVMPointer<LLVMStructType>> arrayStructPointer =
 		        (LLVMIdentifier<LLVMPointer<LLVMStructType>>) (LLVMIdentifier<?>) arrayPointer;
 
 		codeGenerator.checkArrayBounds(c, arrayStructPointer, index);
 		LLVMIdentifier<LLVMType> result =
-		        llvmIdentifierFactory.newLocal(codeGenerator.mapToLLVMType(CoreClasses.intType()));
+		        llvmIdentifierFactory.newLocal(codeGenerator.mapToLLVMType(CoreClasses.objectType()));
 		c.getelementptr(
 		        result,
 		        arrayStructPointer,
@@ -314,6 +328,27 @@ public class Operations {
 		        llvmIdentifierFactory.constant(int32(), 1),
 		        index);
 		return result;
+	}
+
+	@Native("M.Array.C.Array.P.set$M.Int.C.Int$M.Object.C.Object")
+	public void arraySet(CodeContext c, LLVMIdentifier<LLVMPointer> arrayPointer, LLVMIdentifier<LLVMInt> index,
+	        LLVMIdentifier<LLVMType> value) {
+
+		LLVMIdentifier<LLVMPointer<LLVMStructType>> arrayStructPointer =
+		        (LLVMIdentifier<LLVMPointer<LLVMStructType>>) (LLVMIdentifier<?>) arrayPointer;
+
+		codeGenerator.checkArrayBounds(c, arrayStructPointer, index);
+
+		LLVMType elementType = codeGenerator.mapToLLVMType((TypeDeclaration) CoreClasses.objectType());
+		LLVMIdentifier<LLVMPointer<LLVMType>> element = llvmIdentifierFactory.newLocal(pointer(elementType));
+
+		c.getelementptr(
+		        element,
+		        arrayStructPointer,
+		        llvmIdentifierFactory.constant(int32(), 0),
+		        llvmIdentifierFactory.constant(int32(), 1),
+		        index);
+		c.store(codeGenerator.castIfNeeded(c, value, elementType), element);
 	}
 
 	public void setStringFormat(LLVMIdentifier<LLVMPointer<LLVMInt8>> stringFormat) {

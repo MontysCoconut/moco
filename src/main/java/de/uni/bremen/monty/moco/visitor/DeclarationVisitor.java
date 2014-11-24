@@ -92,10 +92,7 @@ public class DeclarationVisitor extends BaseVisitor {
 		currentScope.define(node);
 		currentScope = new ClassScope(currentScope);
 
-		// These are not boxed yet. So they cant inherit from object and cant have initializers.
-		List<ClassDeclaration> treatSpecial = Arrays.asList(CoreClasses.arrayType(), CoreClasses.voidType());
-
-		if (!treatSpecial.contains(node)) {
+		if (node != CoreClasses.voidType()) {
 			if (node != CoreClasses.objectType() && node.getSuperClassIdentifiers().isEmpty()) {
 				node.getSuperClassIdentifiers().add(new ResolvableIdentifier("Object"));
 			}

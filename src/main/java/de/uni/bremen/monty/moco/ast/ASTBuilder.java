@@ -471,9 +471,6 @@ public class ASTBuilder extends MontyBaseVisitor<ASTNode> {
 		} else if (ctx.functionCall() != null) {
 
 			return visit(ctx.functionCall());
-		} else if (ctx.array != null) {
-			List<Expression> arguments = Arrays.asList((Expression) visit(ctx.array), (Expression) visit(ctx.index));
-			return new FunctionCall(position(ctx.getStart()), new ResolvableIdentifier("operator[]"), arguments);
 		} else if (ctx.accessOperator() != null) {
 
 			return visitMemberAccessExpr(ctx);

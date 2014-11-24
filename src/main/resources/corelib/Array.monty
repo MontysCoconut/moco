@@ -1,2 +1,12 @@
-Int operator[](Array array, Int index):
-  pass
+class Array:
+    + initializer(Array a):
+        pass
+
+    + Int length():
+        pass
+
+    + Object get(Int index):
+        pass
+
+    + set(Int index, Object element):
+        pass
