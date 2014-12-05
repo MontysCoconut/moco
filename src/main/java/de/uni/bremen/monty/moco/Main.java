@@ -60,11 +60,14 @@ public class Main {
 
 	private static Namespace parseArgs(String[] args) {
 		ArgumentParser parser =
-		        ArgumentParsers.newArgumentParser("moco", false).description("The Monty to LLVM compiler.");
+		        ArgumentParsers.newArgumentParser("moco", false).description("The Monty compiler.").epilog(
+		                "Without -S or -c the program is compiled and directly executed.");
 
 		parser.addArgument("--help").action(Arguments.help()).help("Print this help and exit.");
-		parser.addArgument("-ll", "--generate-only").action(Arguments.storeTrue()).dest("generateOnly").help(
-		        "Only generate the LLVM output without running it.");
+		parser.addArgument("-S", "--emit-assembly").action(Arguments.storeTrue()).dest("emitAssembly").help(
+		        "Emit the LLVM assembly and stop.");
+		parser.addArgument("-c", "--compile-only").action(Arguments.storeTrue()).dest("compileOnly").help(
+		        "Only compile the executable without running it.");
 		parser.addArgument("-e", "--stop-on-first-error").action(Arguments.storeTrue()).dest("stopOnFirstError").help(
 		        "Stop the compilation on the first encountered error.");
 		parser.addArgument("-p", "--print-ast").action(Arguments.storeTrue()).dest("printAST").help("Print the AST.");
@@ -138,13 +141,17 @@ public class Main {
 		return everyThingIsAwesome;
 	}
 
-	private static File createOutputFile(String name) throws IOException {
-		if (name == null) {
-			File llvmCodeFile = File.createTempFile("monty", ".ll", null);
-			llvmCodeFile.deleteOnExit();
-			return llvmCodeFile;
+	private static void writeAssembly(String outputFileName, String inputFileName, String llvmCode) throws IOException {
+		PrintStream assemblyStream = null;
+		if (outputFileName != null) {
+			assemblyStream = new PrintStream(outputFileName);
+		} else if (inputFileName != null) {
+			assemblyStream = new PrintStream(FilenameUtils.removeExtension(inputFileName) + ".ll");
+		} else {
+			assemblyStream = new PrintStream("output.ll");
 		}
-		return new File(name);
+		assemblyStream.print(llvmCode);
+		assemblyStream.close();
 	}
 
 	private static void writeOutput(String llvmCode, File outputFile) throws FileNotFoundException {
@@ -221,7 +228,8 @@ public class Main {
 
 		String inputFileName = ns.get("file");
 		String outputFileName = ns.get("outputFile");
-		boolean generateOnly = ns.get("generateOnly");
+		boolean emitAssembly = ns.get("emitAssembly");
+		boolean compileOnly = ns.get("compileOnly");
 		boolean stopOnFirstError = ns.get("stopOnFirstError");
 		boolean printAST = ns.get("printAST");
 		boolean debugParseTree = ns.get("debugParseTree");
@@ -243,7 +251,14 @@ public class Main {
 			(new PrintVisitor()).visitDoubleDispatched(ast);
 		}
 
-		File executable = buildExecutable(outputFileName, inputFileName, false, writer.toString());
-		runExecutable(executable);
+		if (emitAssembly) {
+			writeAssembly(outputFileName, inputFileName, writer.toString());
+			return;
+		}
+
+		File executable = buildExecutable(outputFileName, inputFileName, compileOnly, writer.toString());
+		if (!compileOnly) {
+			runExecutable(executable);
+		}
 	}
 }
