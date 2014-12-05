@@ -46,6 +46,7 @@ import de.uni.bremen.monty.moco.util.*;
 import de.uni.bremen.monty.moco.visitor.*;
 
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.io.FilenameUtils;
 
 import net.sourceforge.argparse4j.ArgumentParsers;
 import net.sourceforge.argparse4j.impl.Arguments;
@@ -162,6 +163,51 @@ public class Main {
 		}
 		Process process = processBuilder.start();
 
+		System.err.print(IOUtils.toString(process.getErrorStream()));
+		System.out.print(IOUtils.toString(process.getInputStream()));
+	}
+
+	private static File buildExecutable(String outputFileName, String inputFileName, boolean compileOnly,
+	        String llvmCode) throws IOException, InterruptedException {
+		File outputFile = null;
+		if (outputFileName != null) {
+			outputFile = new File(outputFileName);
+		} else if (inputFileName != null) {
+			outputFile = new File(FilenameUtils.removeExtension(inputFileName));
+		} else if (compileOnly) {
+			outputFile = File.createTempFile("output", null, null);
+			outputFile.deleteOnExit();
+		} else {
+			outputFile = new File("output");
+		}
+
+		ProcessBuilder llcProcessBuilder = new ProcessBuilder("llc");
+		Process llcProcess = llcProcessBuilder.start();
+		PrintStream llcInput = new PrintStream(llcProcess.getOutputStream());
+		llcInput.print(llvmCode);
+		llcInput.close();
+
+		ProcessBuilder ccProcessBuilder =
+		        new ProcessBuilder("cc", "-x", "assembler", "-o", outputFile.getAbsolutePath(), "-");
+		Process ccProcess = ccProcessBuilder.start();
+		IOUtils.copy(llcProcess.getInputStream(), ccProcess.getOutputStream());
+		ccProcess.getOutputStream().close();
+
+		System.err.print(IOUtils.toString(llcProcess.getErrorStream()));
+		System.err.print(IOUtils.toString(ccProcess.getErrorStream()));
+		return outputFile;
+	}
+
+	private static void runExecutable(File executable) throws IOException, InterruptedException {
+		ProcessBuilder processBuilder = new ProcessBuilder(executable.getAbsolutePath());
+
+		String readFromFile = System.getProperty("testrun.readFromFile");
+		if (readFromFile != null) {
+			processBuilder.redirectInput(new File(readFromFile));
+		} else {
+			processBuilder.redirectInput(ProcessBuilder.Redirect.INHERIT);
+		}
+		Process process = processBuilder.start();
 		System.err.print(IOUtils.toString(process.getErrorStream()));
 		System.out.print(IOUtils.toString(process.getInputStream()));
 	}
