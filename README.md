@@ -127,19 +127,21 @@ You can just pass `moco` a Monty-file and it will be compiled and executed.
     Hello World!
 
 Please see the help text for information about the command-line switches.
+    usage: moco [--help] [-S] [-c] [-e] [-p] [-d] [-o <file>] [file]
 
-    usage: moco [--help] [-ll] [-e] [-p] [-d] [-o <file>] [file]
-
-    The Monty to LLVM compiler.
+    The Monty compiler.
 
     positional arguments:
     file                   Monty file to run.
 
     optional arguments:
     --help                 Print this help and exit.
-    -ll, --generate-only   Only generate the LLVM output without running it.
+    -S, --emit-assembly    Emit the LLVM assembly and stop.
+    -c, --compile-only     Only compile the executable without running it.
     -e, --stop-on-first-error
                             Stop the compilation on the first encountered error.
     -p, --print-ast        Print the AST.
     -d, --debug-parsetree  Debug the parsetree without running anything.
     -o <file>              Write output to <file>.
+
+    Without -S or -c the program is compiled and directly executed.
