@@ -4,7 +4,7 @@ declare i8* @malloc(i64 %size) nounwind
 declare i8* @realloc(i8* %ptr, i64 %size) nounwind
 declare void @free(i8* %ptr) nounwind
 
-declare %struct._IO_FILE* @_fdopen(i64, i8*) nounwind
+declare %struct._IO_FILE* @fdopen(i64, i8*) nounwind
 declare i32 @fgetc(%struct._IO_FILE*) nounwind
 declare i8* @fgets(i8*, i64, %struct._IO_FILE*) nounwind
 declare i32 @printf(i8* %format, ... ) nounwind
@@ -29,7 +29,7 @@ declare i32 @printf(i8* %format, ... ) nounwind
 define i8* @read_helper(i64 %num) {
     %nump = add i64 %num, 1
     %str = call i8* @malloc(i64 %nump)
-    %stdin = call %struct._IO_FILE* @_fdopen(i64 0, i8* getelementptr inbounds ([2 x i8]* @.stdin_mode, i32 0, i32 0))
+    %stdin = call %struct._IO_FILE* @fdopen(i64 0, i8* getelementptr inbounds ([2 x i8]* @.stdin_mode, i32 0, i32 0))
     %res = call i8* @fgets(i8* %str, i64 %nump, %struct._IO_FILE* %stdin)
     %cmp_null = icmp eq i8* %res, null
     br i1 %cmp_null, label %fgets.error, label %fgets.success
@@ -53,7 +53,7 @@ define i8* @readln_helper() {
     %c = alloca i32
     %linen = alloca i8*
 
-    %stdin = call %struct._IO_FILE* @_fdopen(i64 0, i8* getelementptr inbounds ([2 x i8]* @.stdin_mode, i32 0, i32 0))
+    %stdin = call %struct._IO_FILE* @fdopen(i64 0, i8* getelementptr inbounds ([2 x i8]* @.stdin_mode, i32 0, i32 0))
 
     %malloc_ptr = call i8* @malloc(i64 100)
     store i8* %malloc_ptr, i8** %line
