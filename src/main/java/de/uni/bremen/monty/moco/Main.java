@@ -212,7 +212,7 @@ public class Main {
 		System.out.print(IOUtils.toString(process.getInputStream()));
 	}
 
-	public static void main(String[] args) throws IOException {
+	public static void main(String[] args) throws IOException, InterruptedException {
 		Namespace ns = parseArgs(args);
 
 		if (ns == null) {
@@ -232,26 +232,18 @@ public class Main {
 		}
 
 		StringWriter writer = new StringWriter();
-		StringBuffer output = writer.getBuffer();
 		IOUtils.copy(Main.class.getResourceAsStream("/std_llvm_include.ll"), writer);
 
 		Package ast = buildPackage(inputFileName);
-		boolean everyThingIsAwesome = visitVisitors(ast, stopOnFirstError, output);
-
-		if (!everyThingIsAwesome) {
+		if (!visitVisitors(ast, stopOnFirstError, writer.getBuffer())) {
 			return;
 		}
 
-		String llvmCode = output.toString();
 		if (printAST) {
 			(new PrintVisitor()).visitDoubleDispatched(ast);
 		}
 
-		File llvmOutputFile = createOutputFile(outputFileName);
-		writeOutput(llvmCode, llvmOutputFile);
-
-		if (!generateOnly) {
-			runCode(llvmOutputFile);
-		}
+		File executable = buildExecutable(outputFileName, inputFileName, false, writer.toString());
+		runExecutable(executable);
 	}
 }

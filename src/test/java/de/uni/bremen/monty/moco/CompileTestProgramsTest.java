@@ -69,7 +69,7 @@ public class CompileTestProgramsTest extends CompileFilesBaseTest {
 	}
 
 	@Test
-	public void compileProgramTest() throws IOException {
+	public void compileProgramTest() throws IOException, InterruptedException {
 		final PrintStream bufferOut = System.out;
 		final PrintStream bufferErr = System.err;
 		final ByteArrayOutputStream outStream = setStdout();
