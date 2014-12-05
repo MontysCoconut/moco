@@ -56,7 +56,7 @@ public class MontyInputStream implements MontyResource {
 
 	@Override
 	public String getName() {
-		return "(stdin)";
+		return "stdin";
 	}
 
 	@Override
