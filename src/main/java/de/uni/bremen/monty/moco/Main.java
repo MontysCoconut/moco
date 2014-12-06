@@ -188,7 +188,7 @@ public class Main {
 			outputFile = new File("output");
 		}
 
-		ProcessBuilder llcProcessBuilder = new ProcessBuilder("llc");
+		ProcessBuilder llcProcessBuilder = new ProcessBuilder("llc", "-O=2");
 		Process llcProcess = llcProcessBuilder.start();
 		PrintStream llcInput = new PrintStream(llcProcess.getOutputStream());
 		llcInput.print(llvmCode);
