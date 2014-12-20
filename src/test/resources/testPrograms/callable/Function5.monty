@@ -1,0 +1,16 @@
+// Testing: A recursive FunctionCall.
+//
+// The function must be called correctly and return the evaluated return
+// expression.
+//
+// Expected output: 1120
+
+
+Int factorial(Int n):
+    if n = 0:
+        return 1
+    return n * factorial(n - 1)
+
+print(factorial(0))
+print(factorial(5))
+
