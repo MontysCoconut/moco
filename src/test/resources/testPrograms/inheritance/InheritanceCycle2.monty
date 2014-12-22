@@ -1,0 +1,20 @@
+// Testing: Inheritance
+//
+// An error should be reported on a complex cyclic inheritance dependency.
+//
+// Expected error
+
+class ClassA inherits ClassE:
+    pass
+
+class ClassB inherits ClassA:
+    pass
+
+class ClassC inherits ClassB:
+    pass
+
+class ClassD inherits ClassC:
+    pass
+
+class ClassE inherits ClassD:
+    pass
