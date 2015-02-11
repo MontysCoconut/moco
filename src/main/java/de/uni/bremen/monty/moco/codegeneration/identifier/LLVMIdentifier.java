@@ -83,7 +83,7 @@ public class LLVMIdentifier<T extends LLVMType> {
 	 *          "i64* %foobar" */
 	@Override
 	public String toString() {
-		return type + " " + name;
+		return type + " " + getName();
 	}
 
 	/** Is it a value or a pointer to value
