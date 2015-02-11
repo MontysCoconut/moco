@@ -1,0 +1,9 @@
+// Testing: System.read()
+//
+// With some long input the read() function must cause an error if instructed
+// to read 0 bytes.
+//
+// Expected error
+
+String string := read(0)
+print(string)

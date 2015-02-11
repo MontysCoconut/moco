@@ -1,0 +1,9 @@
+// Testing: System.read()
+//
+// With some long input the read() function must only read as many bytes as
+// instructed.
+//
+// Expected output: Hello
+
+String string := read(5)
+print(string)

@@ -1,0 +1,6 @@
+// Testing: The println function with int.
+//
+// Expected output: 0\n42\n
+
+println(0)
+println(42)

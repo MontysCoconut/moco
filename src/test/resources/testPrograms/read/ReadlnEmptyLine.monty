@@ -1,0 +1,9 @@
+// Testing: System.readln()
+//
+// A single line with the no chars must be read and the read in newline-char
+// must be printed.
+//
+// Expected output:
+
+String string := readln()
+print(string)

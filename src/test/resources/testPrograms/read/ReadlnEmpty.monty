@@ -1,0 +1,8 @@
+// Testing: System.readln()
+//
+// With no input the readln() function must cause an error.
+//
+// Expected error
+
+String string := readln()
+print(string)

@@ -66,69 +66,112 @@ public class Operations {
 	private CodeGenerator codeGenerator;
 	private LLVMIdentifierFactory llvmIdentifierFactory;
 
-	private LLVMIdentifier<LLVMPointer<LLVMInt8>> stringFormat;
-	private LLVMIdentifier<LLVMPointer<LLVMInt8>> intFormat;
-	private LLVMIdentifier<LLVMPointer<LLVMInt8>> floatFormat;
-	private LLVMIdentifier<LLVMPointer<LLVMInt8>> charFormat;
-
 	public Operations(CodeGenerator codeGenerator, LLVMIdentifierFactory llvmIdentifierFactory) {
 		this.codeGenerator = codeGenerator;
 		this.llvmIdentifierFactory = llvmIdentifierFactory;
 	}
 
-	@Native("M.Print.P.print$M.Char.C.Char")
+	private void printHelperBase(CodeContext c, LLVMIdentifier<LLVMType> addr, LLVMArrayType<LLVMInt8> stringType,
+	        String formatStringIdentifier) {
+		LLVMIdentifier<LLVMArrayType<LLVMInt8>> formatStringIdent =
+		        llvmIdentifierFactory.newGlobal(formatStringIdentifier, stringType);
+		LLVMIdentifier<LLVMPointer<LLVMInt8>> formatString = llvmIdentifierFactory.elementPointerTo(formatStringIdent);
+
+		LLVMType type = addr.getType();
+		LLVMIdentifier<LLVMTypeFactory.LLVMInt32> signature = llvmIdentifierFactory.newGlobal("printf", int32());
+		c.call(
+		        (LLVMIdentifier<LLVMType>) (LLVMIdentifier<?>) signature,
+		        llvmIdentifierFactory.newLocal(signature.getType(), false),
+		        Arrays.<LLVMIdentifier<?>> asList(formatString, addr),
+		        "(i8*, ...)*");
+	}
+
+	private void printHelper(CodeContext c, LLVMIdentifier<LLVMType> addr, String formatStringIdentifier) {
+		LLVMArrayType<LLVMInt8> stringType = array(int8(), 3);
+		printHelperBase(c, addr, stringType, formatStringIdentifier);
+	}
+
+	private void printlnHelper(CodeContext c, LLVMIdentifier<LLVMType> addr, String formatStringIdentifier) {
+		LLVMArrayType<LLVMInt8> stringType = array(int8(), 4);
+		printHelperBase(c, addr, stringType, formatStringIdentifier);
+	}
+
+	@Native("M.System.P.print$M.Char.C.Char")
 	public void printChar(CodeContext c, LLVMIdentifier<LLVMType> addr) {
-		LLVMType type = addr.getType();
-		LLVMIdentifier<LLVMTypeFactory.LLVMInt32> signature = llvmIdentifierFactory.newGlobal("printf", int32());
-		c.call(
-		        (LLVMIdentifier<LLVMType>) (LLVMIdentifier<?>) signature,
-		        llvmIdentifierFactory.newLocal(signature.getType(), false),
-		        Arrays.<LLVMIdentifier<?>> asList(charFormat, addr),
-		        "(i8*, ...)*");
+		printHelper(c, addr, ".charFormat");
 	}
 
-	@Native("M.Print.P.print$M.String.C.String")
+	@Native("M.System.P.print$M.String.C.String")
 	public void printString(CodeContext c, LLVMIdentifier<LLVMType> addr) {
-		LLVMType type = addr.getType();
-		LLVMIdentifier<LLVMTypeFactory.LLVMInt32> signature = llvmIdentifierFactory.newGlobal("printf", int32());
-		c.call(
-		        (LLVMIdentifier<LLVMType>) (LLVMIdentifier<?>) signature,
-		        llvmIdentifierFactory.newLocal(signature.getType(), false),
-		        Arrays.<LLVMIdentifier<?>> asList(stringFormat, addr),
-		        "(i8*, ...)*");
+		printHelper(c, addr, ".stringFormat");
 	}
 
-	@Native("M.Print.P.print$M.Int.C.Int")
+	@Native("M.System.P.print$M.Int.C.Int")
 	public void printInt(CodeContext c, LLVMIdentifier<LLVMType> addr) {
-		LLVMType type = addr.getType();
-		LLVMIdentifier<LLVMTypeFactory.LLVMInt32> signature = llvmIdentifierFactory.newGlobal("printf", int32());
-		c.call(
-		        (LLVMIdentifier<LLVMType>) (LLVMIdentifier<?>) signature,
-		        llvmIdentifierFactory.newLocal(signature.getType(), false),
-		        Arrays.<LLVMIdentifier<?>> asList(intFormat, addr),
-		        "(i8*, ...)*");
+		printHelper(c, addr, ".intFormat");
 	}
 
-	@Native("M.Print.P.print$M.Bool.C.Bool")
+	@Native("M.System.P.print$M.Bool.C.Bool")
 	public void printBool(CodeContext c, LLVMIdentifier<LLVMType> addr) {
-		LLVMType type = addr.getType();
-		LLVMIdentifier<LLVMTypeFactory.LLVMInt32> signature = llvmIdentifierFactory.newGlobal("printf", int32());
-		c.call(
-		        (LLVMIdentifier<LLVMType>) (LLVMIdentifier<?>) signature,
-		        llvmIdentifierFactory.newLocal(signature.getType(), false),
-		        Arrays.<LLVMIdentifier<?>> asList(intFormat, addr),
-		        "(i8*, ...)*");
+		printHelper(c, addr, ".intFormat");
 	}
 
-	@Native("M.Print.P.print$M.Float.C.Float")
+	@Native("M.System.P.print$M.Float.C.Float")
 	public void printFloat(CodeContext c, LLVMIdentifier<LLVMType> addr) {
-		LLVMType type = addr.getType();
-		LLVMIdentifier<LLVMTypeFactory.LLVMInt32> signature = llvmIdentifierFactory.newGlobal("printf", int32());
-		c.call(
-		        (LLVMIdentifier<LLVMType>) (LLVMIdentifier<?>) signature,
-		        llvmIdentifierFactory.newLocal(signature.getType(), false),
-		        Arrays.<LLVMIdentifier<?>> asList(floatFormat, addr),
-		        "(i8*, ...)*");
+		printHelper(c, addr, ".floatFormat");
+	}
+
+	@Native("M.System.P.println$M.Char.C.Char")
+	public void printlnChar(CodeContext c, LLVMIdentifier<LLVMType> addr) {
+		printlnHelper(c, addr, ".lineCharFormat");
+	}
+
+	@Native("M.System.P.println$M.String.C.String")
+	public void printlnString(CodeContext c, LLVMIdentifier<LLVMType> addr) {
+		printlnHelper(c, addr, ".lineStringFormat");
+	}
+
+	@Native("M.System.P.println$M.Int.C.Int")
+	public void printlnInt(CodeContext c, LLVMIdentifier<LLVMType> addr) {
+		printlnHelper(c, addr, ".lineIntFormat");
+	}
+
+	@Native("M.System.P.println$M.Bool.C.Bool")
+	public void printlnBool(CodeContext c, LLVMIdentifier<LLVMType> addr) {
+		printlnHelper(c, addr, ".lineIntFormat");
+	}
+
+	@Native("M.System.P.println$M.Float.C.Float")
+	public void printlnFloat(CodeContext c, LLVMIdentifier<LLVMType> addr) {
+		printlnHelper(c, addr, ".lineFloatFormat");
+	}
+
+	@Native("M.System.F.readln$M.String.C.String")
+	public LLVMIdentifier<LLVMType> readln(CodeContext c) {
+		LLVMIdentifier<LLVMPointer<LLVMType>> readlnHelper =
+		        llvmIdentifierFactory.newGlobal("readln_helper", pointer((LLVMType) int8()));
+		LLVMIdentifier<LLVMPointer<LLVMType>> resultPointer = llvmIdentifierFactory.newLocal(readlnHelper.getType());
+		c.call((LLVMIdentifier<LLVMType>) (LLVMIdentifier<?>) readlnHelper, resultPointer);
+		// XXX temporary solution until arrays are merged. the callNative method in codeGenerator must be modify to
+		// ensure correct boxing.
+		return codeGenerator.boxType(
+		        c,
+		        (LLVMIdentifier<LLVMType>) (LLVMIdentifier<?>) resultPointer,
+		        CoreClasses.stringType());
+	}
+
+	@Native("M.System.F.read$M.String.C.String$M.Int.C.Int")
+	public LLVMIdentifier<LLVMType> read(CodeContext c, LLVMIdentifier<LLVMType> num) {
+		LLVMIdentifier<LLVMPointer<LLVMType>> readHelper =
+		        llvmIdentifierFactory.newGlobal("read_helper", pointer((LLVMType) int8()));
+		LLVMIdentifier<LLVMPointer<LLVMType>> resultPointer = llvmIdentifierFactory.newLocal(readHelper.getType());
+		c.call((LLVMIdentifier<LLVMType>) (LLVMIdentifier<?>) readHelper, resultPointer, num);
+		// XXX temporary solution until arrays are merged. the callNative method in codeGenerator must be modify to
+		// ensure correct boxing.
+		return codeGenerator.boxType(
+		        c,
+		        (LLVMIdentifier<LLVMType>) (LLVMIdentifier<?>) resultPointer,
+		        CoreClasses.stringType());
 	}
 
 	@Native("M.Int.C.Int.F.operator_plus$M.Int.C.Int$M.Int.C.Int")
@@ -349,21 +392,5 @@ public class Operations {
 		        llvmIdentifierFactory.constant(int32(), 1),
 		        index);
 		c.store(codeGenerator.castIfNeeded(c, value, elementType), element);
-	}
-
-	public void setStringFormat(LLVMIdentifier<LLVMPointer<LLVMInt8>> stringFormat) {
-		this.stringFormat = stringFormat;
-	}
-
-	public void setIntFormat(LLVMIdentifier<LLVMPointer<LLVMInt8>> intFormat) {
-		this.intFormat = intFormat;
-	}
-
-	public void setFloatFormat(LLVMIdentifier<LLVMPointer<LLVMInt8>> floatFormat) {
-		this.floatFormat = floatFormat;
-	}
-
-	public void setCharFormat(LLVMIdentifier<LLVMPointer<LLVMInt8>> charformat) {
-		this.charFormat = charformat;
 	}
 }

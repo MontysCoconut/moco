@@ -1,0 +1,6 @@
+// Testing: The println function with a string variable.
+//
+// Expected output: Hallo\n
+
+String var := "Hallo"
+println(var)

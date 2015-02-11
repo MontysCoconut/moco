@@ -86,23 +86,6 @@ public class CodeGenerator {
 		this.llvmIdentifierFactory = llvmIdentifierFactory;
 		operations = new Operations(this, llvmIdentifierFactory);
 		blackMagic = new BlackMagic(operations);
-		initFormatStrings();
-	}
-
-	public void initFormatStrings() {
-		LLVMArrayType<LLVMInt8> stringType = array(int8(), 3);
-		LLVMIdentifier<LLVMArrayType<LLVMInt8>> stringFormatIdent =
-		        llvmIdentifierFactory.newGlobal(".stringFormat", stringType);
-		operations.setStringFormat(llvmIdentifierFactory.elementPointerTo(stringFormatIdent));
-		LLVMIdentifier<LLVMArrayType<LLVMInt8>> intFormatIdent =
-		        llvmIdentifierFactory.newGlobal(".intFormat", stringType);
-		operations.setIntFormat(llvmIdentifierFactory.elementPointerTo(intFormatIdent));
-		LLVMIdentifier<LLVMArrayType<LLVMInt8>> floatFormatIdent =
-		        llvmIdentifierFactory.newGlobal(".floatFormat", stringType);
-		operations.setFloatFormat(llvmIdentifierFactory.elementPointerTo(floatFormatIdent));
-		LLVMIdentifier<LLVMArrayType<LLVMInt8>> charFormatIdent =
-		        llvmIdentifierFactory.newGlobal(".charFormat", stringType);
-		operations.setCharFormat(llvmIdentifierFactory.elementPointerTo(charFormatIdent));
 	}
 
 	public <T extends LLVMType> LLVMIdentifier<LLVMPointer<T>> castIfNeeded(CodeContext c,
@@ -365,7 +348,7 @@ public class CodeGenerator {
 		        sizePtr,
 		        llvmIdentifierFactory.constantNull(inputType),
 		        llvmIdentifierFactory.constant(int32(), 1));
-		LLVMIdentifier<LLVMType> sizeInt = llvmIdentifierFactory.newLocal((LLVMType) int32());
+		LLVMIdentifier<LLVMType> sizeInt = llvmIdentifierFactory.newLocal((LLVMType) int64());
 		c.ptrtoint(sizeInt, (LLVMIdentifier) sizePtr);
 
 		LLVMIdentifier<LLVMPointer<LLVMInt8>> s = llvmIdentifierFactory.newGlobal("malloc", pointer(int8()));

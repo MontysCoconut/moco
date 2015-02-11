@@ -1,0 +1,6 @@
+// Testing: The println function with a char variable.
+//
+// Expected output: M\n
+
+Char var := 'M'
+println(var)

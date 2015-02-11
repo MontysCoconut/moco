@@ -1,0 +1,9 @@
+// Testing: System.read()
+//
+// With some long input the read() function must read the first byte if
+// instructed to read one byte.
+//
+// Expected output: H
+
+String string := read(1)
+print(string)
