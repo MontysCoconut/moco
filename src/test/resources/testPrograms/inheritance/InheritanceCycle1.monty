@@ -1,0 +1,11 @@
+// Testing: Inheritance
+//
+// An error should be reported on a simple cyclic inheritance dependency.
+//
+// Expected error
+
+class ClassA inherits ClassB:
+    pass
+
+class ClassB inherits ClassA:
+    pass

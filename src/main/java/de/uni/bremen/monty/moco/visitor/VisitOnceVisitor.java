@@ -48,274 +48,209 @@ import de.uni.bremen.monty.moco.ast.expression.*;
 import de.uni.bremen.monty.moco.ast.expression.literal.*;
 import de.uni.bremen.monty.moco.ast.statement.*;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.HashSet;
+import java.util.Set;
 
 public class VisitOnceVisitor extends BaseVisitor {
 
-	private Map<ASTNode, Boolean> visited = new HashMap<>();
+	private Set<ASTNode> visited = new HashSet<>();
+
+	private boolean shouldVisit(ASTNode node) {
+		return visited.add(node);
+	}
 
 	@Override
 	public void visit(ModuleDeclaration node) {
 		if (shouldVisit(node)) {
-			return;
+			super.visit(node);
 		}
-		super.visit(node);
-		this.visited.put(node, true);
 	}
 
 	@Override
 	public void visit(ArrayLiteral node) {
 		if (shouldVisit(node)) {
-			return;
+			super.visit(node);
 		}
-		super.visit(node);
-		this.visited.put(node, true);
 	}
 
 	@Override
 	public void visit(Package node) {
 		if (shouldVisit(node)) {
-			return;
+			super.visit(node);
 		}
-		super.visit(node);
-		this.visited.put(node, true);
 	}
 
 	@Override
 	public void visit(ClassDeclaration node) {
 		if (shouldVisit(node)) {
-			return;
+			super.visit(node);
 		}
-		super.visit(node);
-		this.visited.put(node, true);
 	}
 
 	@Override
 	public void visit(FunctionDeclaration node) {
 		if (shouldVisit(node)) {
-			return;
+			super.visit(node);
 		}
-		super.visit(node);
-		this.visited.put(node, true);
 	}
 
 	@Override
 	public void visit(ProcedureDeclaration node) {
 		if (shouldVisit(node)) {
-			return;
+			super.visit(node);
 		}
-		super.visit(node);
-		this.visited.put(node, true);
 	}
 
 	@Override
 	public void visit(VariableDeclaration node) {
 		if (shouldVisit(node)) {
-			return;
+			super.visit(node);
 		}
-		super.visit(node);
-		this.visited.put(node, true);
 	}
 
 	@Override
 	public void visit(ConditionalExpression node) {
 		if (shouldVisit(node)) {
-			return;
+			super.visit(node);
 		}
-		super.visit(node);
-		this.visited.put(node, true);
 	}
 
 	@Override
 	public void visit(SelfExpression node) {
 		if (shouldVisit(node)) {
-			return;
+			super.visit(node);
 		}
-		super.visit(node);
-		this.visited.put(node, true);
 	}
 
 	@Override
 	public void visit(CastExpression node) {
 		if (shouldVisit(node)) {
-			return;
+			super.visit(node);
 		}
-		super.visit(node);
-		this.visited.put(node, true);
 	}
 
 	@Override
 	public void visit(IsExpression node) {
 		if (shouldVisit(node)) {
-			return;
+			super.visit(node);
 		}
-		super.visit(node);
-		this.visited.put(node, true);
 	}
 
 	public void visit(ParentExpression node) {
 		if (shouldVisit(node)) {
-			return;
+			super.visit(node);
 		}
-		super.visit(node);
-		this.visited.put(node, true);
 	}
 
 	@Override
 	public void visit(FunctionCall node) {
 		if (shouldVisit(node)) {
-			return;
+			super.visit(node);
 		}
-		super.visit(node);
-		this.visited.put(node, true);
 	}
 
 	@Override
 	public void visit(MemberAccess node) {
 		if (shouldVisit(node)) {
-			return;
+			super.visit(node);
 		}
-		super.visit(node);
-		this.visited.put(node, true);
 	}
 
 	@Override
 	public void visit(VariableAccess node) {
 		if (shouldVisit(node)) {
-			return;
+			super.visit(node);
 		}
-		super.visit(node);
-		this.visited.put(node, true);
 	}
 
 	@Override
 	public void visit(BooleanLiteral node) {
 		if (shouldVisit(node)) {
-			return;
+			super.visit(node);
 		}
-		super.visit(node);
-		this.visited.put(node, true);
 	}
 
 	@Override
 	public void visit(FloatLiteral node) {
 		if (shouldVisit(node)) {
-			return;
+			super.visit(node);
 		}
-		super.visit(node);
-		this.visited.put(node, true);
 	}
 
 	@Override
 	public void visit(IntegerLiteral node) {
 		if (shouldVisit(node)) {
-			return;
+			super.visit(node);
 		}
-		super.visit(node);
-		this.visited.put(node, true);
 	}
 
 	@Override
 	public void visit(StringLiteral node) {
 		if (shouldVisit(node)) {
-			return;
+			super.visit(node);
 		}
-		super.visit(node);
-		this.visited.put(node, true);
 	}
 
 	@Override
 	public void visit(Assignment node) {
 		if (shouldVisit(node)) {
-			return;
+			super.visit(node);
 		}
-		super.visit(node);
-		this.visited.put(node, true);
 	}
 
 	@Override
 	public void visit(BreakStatement node) {
 		if (shouldVisit(node)) {
-			return;
+			super.visit(node);
 		}
-		super.visit(node);
-		this.visited.put(node, true);
 	}
 
 	@Override
 	public void visit(SkipStatement node) {
 		if (shouldVisit(node)) {
-			return;
+			super.visit(node);
 		}
-		super.visit(node);
-		this.visited.put(node, true);
 	}
 
 	@Override
 	public void visit(ConditionalStatement node) {
 		if (shouldVisit(node)) {
-			return;
+			super.visit(node);
 		}
-		super.visit(node);
-		this.visited.put(node, true);
 	}
 
 	@Override
 	public void visit(ContinueStatement node) {
 		if (shouldVisit(node)) {
-			return;
+			super.visit(node);
 		}
-		super.visit(node);
-		this.visited.put(node, true);
 	}
 
 	@Override
 	public void visit(ReturnStatement node) {
 		if (shouldVisit(node)) {
-			return;
+			super.visit(node);
 		}
-		super.visit(node);
-		this.visited.put(node, true);
 	}
 
 	@Override
 	public void visit(WhileLoop node) {
 		if (shouldVisit(node)) {
-			return;
+			super.visit(node);
 		}
-		super.visit(node);
-		this.visited.put(node, true);
 	}
 
 	@Override
 	public void visit(Block node) {
 		if (shouldVisit(node)) {
-			return;
+			super.visit(node);
 		}
-		super.visit(node);
-		this.visited.put(node, true);
 	}
 
 	@Override
 	public void visit(Import node) {
 		if (shouldVisit(node)) {
-			return;
+			super.visit(node);
 		}
-		super.visit(node);
-		this.visited.put(node, true);
 	}
-
-	private boolean shouldVisit(ASTNode node) {
-		Boolean visited1 = this.visited.get(node);
-		if (visited1 != null) {
-			if (!visited1) {
-				throw new RuntimeException("Cyclic dependency detected.");
-			}
-			return true;
-		}
-		this.visited.put(node, false);
-		return false;
-	}
-
 }

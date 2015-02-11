@@ -92,7 +92,11 @@ public class ClassScope extends Scope {
 			return declaration;
 		}
 		for (ClassScope scope : parentClassesScopes) {
-			declaration = scope.resolveMember(identifier);
+			try {
+				declaration = scope.resolveMember(identifier);
+			} catch (StackOverflowError soe) {
+				throw new CyclicDependencyException("Cyclic dependency detected: " + identifier.getSymbol());
+			}
 			if (declaration != null) {
 				return declaration;
 			}
