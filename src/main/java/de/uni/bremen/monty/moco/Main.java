@@ -46,6 +46,7 @@ import de.uni.bremen.monty.moco.util.*;
 import de.uni.bremen.monty.moco.visitor.*;
 
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.io.FilenameUtils;
 
 import net.sourceforge.argparse4j.ArgumentParsers;
 import net.sourceforge.argparse4j.impl.Arguments;
@@ -59,11 +60,14 @@ public class Main {
 
 	private static Namespace parseArgs(String[] args) {
 		ArgumentParser parser =
-		        ArgumentParsers.newArgumentParser("moco", false).description("The Monty to LLVM compiler.");
+		        ArgumentParsers.newArgumentParser("moco", false).description("The Monty compiler.").epilog(
+		                "Without -S or -c the program is compiled and directly executed.");
 
 		parser.addArgument("--help").action(Arguments.help()).help("Print this help and exit.");
-		parser.addArgument("-ll", "--generate-only").action(Arguments.storeTrue()).dest("generateOnly").help(
-		        "Only generate the LLVM output without running it.");
+		parser.addArgument("-S", "--emit-assembly").action(Arguments.storeTrue()).dest("emitAssembly").help(
+		        "Emit the LLVM assembly and stop.");
+		parser.addArgument("-c", "--compile-only").action(Arguments.storeTrue()).dest("compileOnly").help(
+		        "Only compile the executable without running it.");
 		parser.addArgument("-e", "--stop-on-first-error").action(Arguments.storeTrue()).dest("stopOnFirstError").help(
 		        "Stop the compilation on the first encountered error.");
 		parser.addArgument("-p", "--print-ast").action(Arguments.storeTrue()).dest("printAST").help("Print the AST.");
@@ -137,13 +141,17 @@ public class Main {
 		return everyThingIsAwesome;
 	}
 
-	private static File createOutputFile(String name) throws IOException {
-		if (name == null) {
-			File llvmCodeFile = File.createTempFile("monty", ".ll", null);
-			llvmCodeFile.deleteOnExit();
-			return llvmCodeFile;
+	private static void writeAssembly(String outputFileName, String inputFileName, String llvmCode) throws IOException {
+		PrintStream assemblyStream = null;
+		if (outputFileName != null) {
+			assemblyStream = new PrintStream(outputFileName);
+		} else if (inputFileName != null) {
+			assemblyStream = new PrintStream(FilenameUtils.removeExtension(inputFileName) + ".ll");
+		} else {
+			assemblyStream = new PrintStream("output.ll");
 		}
-		return new File(name);
+		assemblyStream.print(llvmCode);
+		assemblyStream.close();
 	}
 
 	private static void writeOutput(String llvmCode, File outputFile) throws FileNotFoundException {
@@ -166,7 +174,52 @@ public class Main {
 		System.out.print(IOUtils.toString(process.getInputStream()));
 	}
 
-	public static void main(String[] args) throws IOException {
+	private static File buildExecutable(String outputFileName, String inputFileName, boolean compileOnly,
+	        String llvmCode) throws IOException, InterruptedException {
+		File outputFile = null;
+		if (outputFileName != null) {
+			outputFile = new File(outputFileName);
+		} else if (inputFileName != null) {
+			outputFile = new File(FilenameUtils.removeExtension(inputFileName));
+		} else if (compileOnly) {
+			outputFile = File.createTempFile("output", null, null);
+			outputFile.deleteOnExit();
+		} else {
+			outputFile = new File("output");
+		}
+
+		ProcessBuilder llcProcessBuilder = new ProcessBuilder("llc", "-O=2");
+		Process llcProcess = llcProcessBuilder.start();
+		PrintStream llcInput = new PrintStream(llcProcess.getOutputStream());
+		llcInput.print(llvmCode);
+		llcInput.close();
+
+		ProcessBuilder ccProcessBuilder =
+		        new ProcessBuilder("cc", "-x", "assembler", "-o", outputFile.getAbsolutePath(), "-");
+		Process ccProcess = ccProcessBuilder.start();
+		IOUtils.copy(llcProcess.getInputStream(), ccProcess.getOutputStream());
+		ccProcess.getOutputStream().close();
+
+		System.err.print(IOUtils.toString(llcProcess.getErrorStream()));
+		System.err.print(IOUtils.toString(ccProcess.getErrorStream()));
+		return outputFile;
+	}
+
+	private static void runExecutable(File executable) throws IOException, InterruptedException {
+		ProcessBuilder processBuilder = new ProcessBuilder(executable.getAbsolutePath());
+
+		String readFromFile = System.getProperty("testrun.readFromFile");
+		if (readFromFile != null) {
+			processBuilder.redirectInput(new File(readFromFile));
+		} else {
+			processBuilder.redirectInput(ProcessBuilder.Redirect.INHERIT);
+		}
+		Process process = processBuilder.start();
+		System.err.print(IOUtils.toString(process.getErrorStream()));
+		System.out.print(IOUtils.toString(process.getInputStream()));
+	}
+
+	public static void main(String[] args) throws IOException, InterruptedException {
 		Namespace ns = parseArgs(args);
 
 		if (ns == null) {
@@ -175,7 +228,8 @@ public class Main {
 
 		String inputFileName = ns.get("file");
 		String outputFileName = ns.get("outputFile");
-		boolean generateOnly = ns.get("generateOnly");
+		boolean emitAssembly = ns.get("emitAssembly");
+		boolean compileOnly = ns.get("compileOnly");
 		boolean stopOnFirstError = ns.get("stopOnFirstError");
 		boolean printAST = ns.get("printAST");
 		boolean debugParseTree = ns.get("debugParseTree");
@@ -186,26 +240,25 @@ public class Main {
 		}
 
 		StringWriter writer = new StringWriter();
-		StringBuffer output = writer.getBuffer();
 		IOUtils.copy(Main.class.getResourceAsStream("/std_llvm_include.ll"), writer);
 
 		Package ast = buildPackage(inputFileName);
-		boolean everyThingIsAwesome = visitVisitors(ast, stopOnFirstError, output);
-
-		if (!everyThingIsAwesome) {
+		if (!visitVisitors(ast, stopOnFirstError, writer.getBuffer())) {
 			return;
 		}
 
-		String llvmCode = output.toString();
 		if (printAST) {
 			(new PrintVisitor()).visitDoubleDispatched(ast);
 		}
 
-		File llvmOutputFile = createOutputFile(outputFileName);
-		writeOutput(llvmCode, llvmOutputFile);
+		if (emitAssembly) {
+			writeAssembly(outputFileName, inputFileName, writer.toString());
+			return;
+		}
 
-		if (!generateOnly) {
-			runCode(llvmOutputFile);
+		File executable = buildExecutable(outputFileName, inputFileName, compileOnly, writer.toString());
+		if (!compileOnly) {
+			runExecutable(executable);
 		}
 	}
 }
