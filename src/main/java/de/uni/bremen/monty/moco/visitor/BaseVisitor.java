@@ -252,6 +252,15 @@ public class BaseVisitor {
 	}
 
 	// Literal
+	/** Visitor method to visit a ZeroExpression.
+	 *
+	 * @param node
+	 *            the node to visit */
+	public void visit(ZeroExpression node) {
+		onEnterChildrenEachNode(node);
+		node.visitChildren(this);
+		onExitChildrenEachNode(node);
+	}
 
 	/** Visitor method to visit a BooleanLiteral.
 	 *

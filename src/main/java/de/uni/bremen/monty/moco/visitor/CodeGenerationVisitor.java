@@ -316,6 +316,12 @@ public class CodeGenerationVisitor extends BaseVisitor {
 		// If right is FunctionCall, everything is done in visit(FunctionCall)
 	}
 
+	@Override
+	public void visit(ZeroExpression node) {
+		super.visit(node);
+		stack.push(llvmIdentifierFactory.constantNull((LLVMPointer) codeGenerator.mapToLLVMType(node.getType())));
+	}
+
 	@SuppressWarnings("unchecked")
 	@Override
 	public void visit(StringLiteral node) {

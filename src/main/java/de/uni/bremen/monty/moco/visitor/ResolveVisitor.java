@@ -196,6 +196,14 @@ public class ResolveVisitor extends VisitOnceVisitor {
 
 	/** {@inheritDoc} */
 	@Override
+	public void visit(ZeroExpression node) {
+		Scope scope = node.getScope();
+		node.setType(scope.resolveType(node.getIdentifier()));
+		super.visit(node);
+	}
+
+	/** {@inheritDoc} */
+	@Override
 	public void visit(IntegerLiteral node) {
 		node.setType(CoreClasses.intType());
 		super.visit(node);
