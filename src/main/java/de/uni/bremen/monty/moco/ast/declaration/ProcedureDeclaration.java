@@ -48,7 +48,7 @@ import de.uni.bremen.monty.moco.visitor.BaseVisitor;
  * It can be used as a type. */
 public class ProcedureDeclaration extends TypeDeclaration {
 	public enum DeclarationType {
-		INITIALIZER, METHOD, UNBOUND
+		INITIALIZER, DEFAULT_INITIALIZER, METHOD, UNBOUND
 	}
 
 	/** The declarations and statements within this declaration. */
@@ -113,7 +113,11 @@ public class ProcedureDeclaration extends TypeDeclaration {
 	}
 
 	public boolean isInitializer() {
-		return declarationType == DeclarationType.INITIALIZER;
+		return declarationType == DeclarationType.INITIALIZER || declarationType == DeclarationType.DEFAULT_INITIALIZER;
+	}
+
+	public boolean isDefaultInitializer() {
+		return declarationType == DeclarationType.DEFAULT_INITIALIZER;
 	}
 
 	public boolean isMethod() {

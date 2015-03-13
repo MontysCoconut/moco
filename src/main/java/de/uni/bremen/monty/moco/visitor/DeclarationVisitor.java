@@ -173,7 +173,7 @@ public class DeclarationVisitor extends BaseVisitor {
 		ProcedureDeclaration initializer =
 		        new ProcedureDeclaration(node.getPosition(), new Identifier(node.getIdentifier().getSymbol()
 		                + "_definit"), new Block(node.getPosition()), new ArrayList<VariableDeclaration>(),
-		                ProcedureDeclaration.DeclarationType.INITIALIZER);
+		                ProcedureDeclaration.DeclarationType.DEFAULT_INITIALIZER);
 		initializer.setParentNode(node.getBlock());
 		Block initializerBlock = initializer.getBody();
 		initializerBlock.setParentNode(initializer);
