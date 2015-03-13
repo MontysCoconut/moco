@@ -41,6 +41,7 @@ package de.uni.bremen.monty.moco.visitor;
 import de.uni.bremen.monty.moco.ast.*;
 import de.uni.bremen.monty.moco.ast.statement.*;
 import de.uni.bremen.monty.moco.ast.expression.*;
+import de.uni.bremen.monty.moco.ast.expression.literal.*;
 import de.uni.bremen.monty.moco.ast.Package;
 import de.uni.bremen.monty.moco.ast.declaration.*;
 import de.uni.bremen.monty.moco.exception.InvalidPlaceToDeclareException;
@@ -189,6 +190,25 @@ public class DeclarationVisitor extends BaseVisitor {
 			call.setParentNode(defaultInitializerCall);
 			defaultInitializerCall.setParentNode(initializerBlock);
 			initializerBlock.addStatement(defaultInitializerCall);
+		}
+
+		for (Declaration declaration : node.getBlock().getDeclarations()) {
+			if (declaration instanceof VariableDeclaration) {
+				VariableDeclaration variable = (VariableDeclaration) declaration;
+				SelfExpression self = new SelfExpression(node.getPosition());
+				VariableAccess varAccess =
+				        new VariableAccess(node.getPosition(), ResolvableIdentifier.convert(variable.getIdentifier()));
+				MemberAccess access = new MemberAccess(node.getPosition(), self, varAccess);
+				ZeroExpression zero = new ZeroExpression(node.getPosition(), variable.getTypeIdentifier());
+				Assignment assignment = new Assignment(node.getPosition(), access, zero);
+
+				self.setParentNode(access);
+				varAccess.setParentNode(access);
+				access.setParentNode(assignment);
+				zero.setParentNode(assignment);
+				assignment.setParentNode(initializerBlock);
+				initializerBlock.addStatement(assignment);
+			}
 		}
 
 		for (Statement stm : node.getBlock().getStatements()) {
