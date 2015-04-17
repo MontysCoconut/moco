@@ -316,6 +316,12 @@ public class CodeGenerationVisitor extends BaseVisitor {
 		// If right is FunctionCall, everything is done in visit(FunctionCall)
 	}
 
+	@Override
+	public void visit(ZeroExpression node) {
+		super.visit(node);
+		stack.push(llvmIdentifierFactory.constantNull((LLVMPointer) codeGenerator.mapToLLVMType(node.getType())));
+	}
+
 	@SuppressWarnings("unchecked")
 	@Override
 	public void visit(StringLiteral node) {
@@ -472,11 +478,13 @@ public class CodeGenerationVisitor extends BaseVisitor {
 			} else if (declaration.isInitializer()) {
 				LLVMIdentifier<LLVMType> selfReference =
 				        codeGenerator.callConstructor(contextUtils.active(), definingClass);
-				codeGenerator.callVoid(
-				        contextUtils.active(),
-				        definingClass.getDefaultInitializer().getMangledIdentifier().getSymbol(),
-				        Arrays.<LLVMIdentifier<?>> asList(selfReference),
-				        Arrays.<TypeDeclaration> asList(definingClass));
+				if (!declaration.isDefaultInitializer()) {
+					codeGenerator.callVoid(
+					        contextUtils.active(),
+					        definingClass.getDefaultInitializer().getMangledIdentifier().getSymbol(),
+					        Arrays.<LLVMIdentifier<?>> asList(selfReference),
+					        Arrays.<TypeDeclaration> asList(definingClass));
+				}
 				arguments.add(0, selfReference);
 			}
 		}
