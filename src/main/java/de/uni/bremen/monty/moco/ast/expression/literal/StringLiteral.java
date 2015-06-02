@@ -41,10 +41,11 @@ package de.uni.bremen.monty.moco.ast.expression.literal;
 import de.uni.bremen.monty.moco.ast.CoreClasses;
 import de.uni.bremen.monty.moco.ast.Position;
 import de.uni.bremen.monty.moco.visitor.BaseVisitor;
+import org.apache.commons.lang3.StringUtils;
 
 public class StringLiteral extends LiteralExpression<String> {
 	public StringLiteral(Position position, String value) {
-		super(position, value.replaceAll("\"", ""));
+		super(position, prepareStrLiteral(value));
 	}
 
 	@Override
@@ -52,4 +53,41 @@ public class StringLiteral extends LiteralExpression<String> {
 		visitor.visit(this);
 	}
 
+	/** Removes leading and trailing quotes of string literals
+	 *
+	 * @param value
+	 *            the string to prepare
+	 * @return value without leading and trailing quotes */
+	protected static String prepareStrLiteral(String value) {
+		if ((value.startsWith("\"")) && (value.endsWith("\""))) {
+			value = value.substring(1, value.length() - 1);
+		}
+		return value;
+	}
+
+	/** @param value
+	 * @return */
+	public static int getStrLiteralLength(String value) {
+		// every backslash is followed by two numbers, but those three characters
+		// represent only one char in the IR string literal
+		return value.length() - (StringUtils.countMatches(value, "\\") * 2);
+	}
+
+	/** replaces escape sequences of string literals by the LLVM IR equivalents
+	 *
+	 * @param value
+	 *            the string which should be escaped
+	 * @return an escaped string */
+	public static String replaceEscapeSequences(String value) {
+		value = value.replace("\\t", "\\09"); // horizontal tab
+		value = value.replace("\\b", "\\08"); // backspace
+		value = value.replace("\\n", "\\0A"); // line feed
+		value = value.replace("\\r", "\\0D"); // carriage return
+		value = value.replace("\\f", "\\0C"); // formfeed
+		value = value.replace("\\'", "\\27"); // single quote
+		value = value.replace("\\\"", "\\22"); // double quote
+		value = value.replace("\\\\", "\\5C"); // backslash
+
+		return value;
+	}
 }

@@ -41,6 +41,7 @@ package de.uni.bremen.monty.moco.codegeneration;
 import de.uni.bremen.monty.moco.ast.ASTNode;
 import de.uni.bremen.monty.moco.ast.CoreClasses;
 import de.uni.bremen.monty.moco.ast.declaration.*;
+import de.uni.bremen.monty.moco.ast.expression.literal.StringLiteral;
 import de.uni.bremen.monty.moco.codegeneration.context.CodeContext;
 import de.uni.bremen.monty.moco.codegeneration.context.CodeContext.LLVMFunctionAttribute;
 import de.uni.bremen.monty.moco.codegeneration.context.CodeContext.Linkage;
@@ -156,7 +157,8 @@ public class CodeGenerator {
 	}
 
 	private LLVMIdentifier<LLVMArrayType<LLVMInt8>> addStringToDataField(CodeContext c, String value) {
-		int length = value.length() + 1;
+		value = StringLiteral.replaceEscapeSequences(value);
+		int length = StringLiteral.getStrLiteralLength(value) + 1;
 
 		LLVMArrayType<LLVMInt8> type = array(int8(), length);
 		LLVMIdentifier<LLVMArrayType<LLVMInt8>> identifier = llvmIdentifierFactory.newGlobal(type);

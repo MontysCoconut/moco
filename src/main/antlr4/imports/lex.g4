@@ -220,16 +220,15 @@ CharacterLiteral
   ;
 
 StringLiteral
-  : 'raw'? '"' (StringEscapeSequence | ~('\\' | '"'))* '"'
+  : 'raw'? '"' (StringEscapeSequence | ~('\\' | '"' | '\n' | '\r'))* '"'
   ;
 
 fragment CharacterEscapeSequence
   : '\\' ('b' | 't' | 'n' | 'f' | 'r' | '\'' | '\\')
   ;
 
-// hier müsste man noch das \n aus dem String rauskriegen
 fragment StringEscapeSequence
-  : '\\' ('b' | 't' | 'n' | 'f' | 'r' | '\"' | '\\' | '$' | (('\u000C')?('\r')? '\n' ))
+  : '\\' ('t' | 'b' | 'n' | 'r' | 'f' | '\'' | '\"' | '\\' )
   ;
 
 /* Toss out whitespaces. */
