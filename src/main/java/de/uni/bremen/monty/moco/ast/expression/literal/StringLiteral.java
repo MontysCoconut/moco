@@ -88,6 +88,9 @@ public class StringLiteral extends LiteralExpression<String> {
 		value = value.replace("\\\"", "\\22"); // double quote
 		value = value.replace("\\\\", "\\5C"); // backslash
 
+		value = value.replaceAll("\\\\u00(..)", "\\\\$1");
+		value = value.replaceAll("\\\\u(..)(..)", "\\\\$1\\\\$2");
+
 		return value;
 	}
 }

@@ -223,14 +223,13 @@ StringLiteral
   : 'raw'? '"' (StringEscapeSequence | ~('\\' | '"' | '\n' | '\r'))* '"'
   ;
 
-/*
-fragment CharacterEscapeSequence
-  : '\\' ('b' | 't' | 'n' | 'f' | 'r' | '\'' | '\\')
-  ;
-*/
-
 fragment StringEscapeSequence
-  : '\\' ('t' | 'b' | 'n' | 'r' | 'f' | '\'' | '\"' | '\\' )
+  : '\\' ('t' | 'b' | 'n' | 'r' | 'f' | '\'' | '\"' | '\\' 
+  | ('u' HexDigit HexDigit HexDigit HexDigit ))
+  ;
+
+fragment HexDigit
+  : [0-9A-Fa-f]
   ;
 
 /* Toss out whitespaces. */
