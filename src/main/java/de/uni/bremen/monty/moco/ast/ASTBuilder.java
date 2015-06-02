@@ -547,8 +547,7 @@ public class ASTBuilder extends MontyBaseVisitor<ASTNode> {
 			return new FloatLiteral(position(ctx.getStart()), Float.parseFloat(ctx.RealLiteral().getSymbol().getText()));
 		} else if (ctx.CharacterLiteral() != null) {
 
-			return new CharacterLiteral(position(ctx.getStart()),
-			        ctx.CharacterLiteral().getSymbol().getText().charAt(1));
+			return new CharacterLiteral(position(ctx.getStart()), ctx.CharacterLiteral().getSymbol().getText());
 		} else if (ctx.StringLiteral() != null) {
 
 			return new StringLiteral(position(ctx.getStart()), ctx.StringLiteral().getSymbol().getText());

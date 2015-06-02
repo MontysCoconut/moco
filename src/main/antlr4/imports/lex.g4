@@ -216,16 +216,18 @@ fragment Exponent
   ;
 
 CharacterLiteral
-  : '\'' (CharacterEscapeSequence | ~('\'' | '\\')) '\''
+  : '\'' (StringEscapeSequence | ~('\\' | '"' | '\n' | '\r')) '\''
   ;
 
 StringLiteral
   : 'raw'? '"' (StringEscapeSequence | ~('\\' | '"' | '\n' | '\r'))* '"'
   ;
 
+/*
 fragment CharacterEscapeSequence
   : '\\' ('b' | 't' | 'n' | 'f' | 'r' | '\'' | '\\')
   ;
+*/
 
 fragment StringEscapeSequence
   : '\\' ('t' | 'b' | 'n' | 'r' | 'f' | '\'' | '\"' | '\\' )

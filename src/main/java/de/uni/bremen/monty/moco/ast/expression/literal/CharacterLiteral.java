@@ -48,9 +48,44 @@ public class CharacterLiteral extends LiteralExpression<Character> {
 		super(position, value);
 	}
 
+	public CharacterLiteral(Position position, String value) {
+		this(position, analyzeStringInitialization(value));
+	}
+
 	@Override
 	public void visit(BaseVisitor visitor) {
 		visitor.visit(this);
 	}
 
+	/** This method is used when a Char literal is initialized with the token text (not with the character value
+	 * directly. It parses escape sequences and replaces them by the actual characters.
+	 *
+	 * @param value
+	 * @return A Java Character which corresponds to the Monty Char literal */
+	protected static Character analyzeStringInitialization(String value) {
+		// 'value' includes the single quotes, hence we have to consider this in our index counting...
+		// if there is an escape sequence in the char literal, we have to process it...
+		if ((value.length() > 3) && (value.charAt(1) == '\\')) {
+			switch (value.charAt(2)) {
+			case 't':
+				return '\t';
+			case 'b':
+				return '\b';
+			case 'n':
+				return '\n';
+			case 'r':
+				return '\r';
+			case 'f':
+				return '\f';
+			case '\'':
+				return '\'';
+			case '"':
+				return '\"';
+			case '\\':
+				return '\\';
+			}
+		}
+		// if nothing else worked, we just return the first char in the literal (i.e. the x in 'x')
+		return value.charAt(1);
+	}
 }
