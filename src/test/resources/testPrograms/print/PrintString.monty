@@ -1,6 +1,7 @@
-// Testing: The print function with string.
+// Testing: The print function with string and escape sequences.
 //
 // Expected output: Hallo
 
 print("")
-print("Hallo")
+print("Hallo\n")
+print("\uc2a1Hello World!\n\uc2bfComo est\uc3a1s?")
