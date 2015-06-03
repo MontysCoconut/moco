@@ -43,6 +43,10 @@ import de.uni.bremen.monty.moco.ast.Position;
 import de.uni.bremen.monty.moco.visitor.BaseVisitor;
 import org.apache.commons.lang3.StringUtils;
 
+import java.nio.charset.StandardCharsets;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 public class StringLiteral extends LiteralExpression<String> {
 	public StringLiteral(Position position, String value) {
 		super(position, prepareStrLiteral(value));
@@ -79,6 +83,7 @@ public class StringLiteral extends LiteralExpression<String> {
 	 *            the string which should be escaped
 	 * @return an escaped string */
 	public static String replaceEscapeSequences(String value) {
+		// replace escape sequences
 		value = value.replace("\\t", "\\09"); // horizontal tab
 		value = value.replace("\\b", "\\08"); // backspace
 		value = value.replace("\\n", "\\0A"); // line feed
@@ -88,9 +93,31 @@ public class StringLiteral extends LiteralExpression<String> {
 		value = value.replace("\\\"", "\\22"); // double quote
 		value = value.replace("\\\\", "\\5C"); // backslash
 
-		value = value.replaceAll("\\\\u00(..)", "\\\\$1");
-		value = value.replaceAll("\\\\u(..)(..)", "\\\\$1\\\\$2");
+		// replace unicode escape sequences by utf-8 codes
+		StringBuffer output = new StringBuffer();
+		Pattern regex = Pattern.compile("(\\\\u....)|\\P{ASCII}");
+		Matcher matcher = regex.matcher(value);
+		byte[] utf8;
+		while (matcher.find()) {
+			String replacement = "";
 
-		return value;
+			if (matcher.group().startsWith("\\u")) {
+				// convert hexadecimal unicode number to utf-8 encoded bytes
+				utf8 =
+				        Character.toString((char) Integer.parseInt(matcher.group().substring(2), 16)).getBytes(
+				                StandardCharsets.UTF_8);
+			} else {
+				// convert a unicode character to utf-8 encoded bytes
+				utf8 = matcher.group().getBytes(StandardCharsets.UTF_8);
+			}
+			// convert utf-8 bytes to hex strings (for LLVM IR)
+			for (byte c : utf8) {
+				replacement += String.format("\\\\%02x", c);
+			}
+			matcher.appendReplacement(output, replacement);
+		}
+		matcher.appendTail(output);
+
+		return output.toString();
 	}
 }
