@@ -1,7 +1,14 @@
-// Testing: The print function with string and escape sequences.
+// Testing: The print function with string literals
 //
-// Expected output: Hallo
+// Expected output:
+// Hallo
+// ¡Hello World!
+// ¿Como estás?
+// Escape-Sequences: [TAB][BS][CR][FF]'"\
+// UTF-8 literals: ÄÖÜ äöü ß ²³ ©
 
 print("")
 print("Hallo\n")
-print("\uc2a1Hello World!\n\uc2bfComo est\uc3a1s?")
+print("\u00a1Hello World!\n\u00BFComo est\u00e1s?\n")
+print("Escape-Sequences: \t\b\r\f\'\"\\\n")
+print("'UTF-8' literals: ÄÖÜ äöü ß ²³ ©")

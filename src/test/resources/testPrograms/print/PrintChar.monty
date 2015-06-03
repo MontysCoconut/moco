@@ -1,8 +1,17 @@
-// Testing: The print function with char.
+// Testing: The print function with char literals.
 //
-// Expected output: HAHA
+// Expected output: HAHA[TAB][BS][LF][CR][FF]'\""
 
 print('H')
 print('A')
 print('H')
 print('A')
+print('\t')
+print('\b')
+print('\n')
+print('\r')
+print('\f')
+print('\'')
+print('\\')
+print('\"')
+print('"')  // using a double quote without escaping must also work
