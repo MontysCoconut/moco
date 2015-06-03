@@ -216,7 +216,7 @@ fragment Exponent
   ;
 
 CharacterLiteral
-  : '\'' (StringEscapeSequence | ~('\\' | '"' | '\n' | '\r')) '\''
+  : '\'' (StringEscapeSequence | ~('\\' | '\'' | '\n' | '\r')) '\''
   ;
 
 StringLiteral
