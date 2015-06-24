@@ -47,6 +47,7 @@ import de.uni.bremen.monty.moco.ast.expression.*;
 import de.uni.bremen.monty.moco.ast.expression.literal.*;
 import de.uni.bremen.monty.moco.ast.statement.*;
 import de.uni.bremen.monty.moco.codegeneration.CodeGenerator;
+import de.uni.bremen.monty.moco.codegeneration.NameMangler;
 import de.uni.bremen.monty.moco.codegeneration.context.CodeContext;
 import de.uni.bremen.monty.moco.codegeneration.context.ContextUtils;
 import de.uni.bremen.monty.moco.codegeneration.identifier.LLVMIdentifier;
@@ -54,7 +55,6 @@ import de.uni.bremen.monty.moco.codegeneration.identifier.LLVMIdentifierFactory;
 import de.uni.bremen.monty.moco.codegeneration.types.LLVMStructType;
 import de.uni.bremen.monty.moco.codegeneration.types.LLVMType;
 import de.uni.bremen.monty.moco.codegeneration.types.LLVMPointer;
-import de.uni.bremen.monty.moco.codegeneration.types.LLVMTypeFactory;
 import de.uni.bremen.monty.moco.codegeneration.types.TypeConverter;
 
 import java.util.ArrayList;
@@ -80,6 +80,7 @@ public class CodeGenerationVisitor extends BaseVisitor {
 	private final LLVMIdentifierFactory llvmIdentifierFactory = new LLVMIdentifierFactory();
 	private ContextUtils contextUtils = new ContextUtils();
 	private final CodeGenerator codeGenerator;
+	private final NameMangler nameMangler;
 
 	/** Each Expression pushes it's evaluated value onto the Stack. The value is represented by a LLVMIdentifier where
 	 * the evaluated value is stored at runtime.
@@ -101,8 +102,9 @@ public class CodeGenerationVisitor extends BaseVisitor {
 	private Stack<Stack<LLVMIdentifier<LLVMType>>> stackOfStacks = new Stack<>();
 
 	public CodeGenerationVisitor() {
-		TypeConverter typeConverter = new TypeConverter(llvmIdentifierFactory, contextUtils.constant());
-		this.codeGenerator = new CodeGenerator(typeConverter, llvmIdentifierFactory);
+		nameMangler = new NameMangler();
+		TypeConverter typeConverter = new TypeConverter(llvmIdentifierFactory, contextUtils.constant(), nameMangler);
+		this.codeGenerator = new CodeGenerator(typeConverter, llvmIdentifierFactory, nameMangler);
 	}
 
 	public void writeLLVMCode(StringBuffer llvmOutput) {
@@ -134,7 +136,7 @@ public class CodeGenerationVisitor extends BaseVisitor {
 			llvmType = llvmType instanceof LLVMStructType ? pointer(llvmType) : llvmType;
 			boolean resolvable = llvmType instanceof LLVMStructType;
 			LLVMIdentifier<LLVMType> e =
-			        llvmIdentifierFactory.newLocal(param.getMangledIdentifier().getSymbol(), llvmType, resolvable);
+			        llvmIdentifierFactory.newLocal(nameMangler.mangleVariable(param), llvmType, resolvable);
 
 			llvmParameter.add(e);
 		}
@@ -143,13 +145,13 @@ public class CodeGenerationVisitor extends BaseVisitor {
 
 	private void addFunction(ProcedureDeclaration node, TypeDeclaration returnType) {
 		List<LLVMIdentifier<? extends LLVMType>> llvmParameter = buildLLVMParameter(node);
-		String name = node.getMangledIdentifier().getSymbol();
+		String name = nameMangler.mangleProcedure(node);
 		codeGenerator.addFunction(contextUtils.active(), returnType, llvmParameter, name);
 	}
 
 	private void addNativeFunction(ProcedureDeclaration node, TypeDeclaration returnType) {
 		List<LLVMIdentifier<? extends LLVMType>> llvmParameter = buildLLVMParameter(node);
-		String name = node.getMangledIdentifier().getSymbol();
+		String name = nameMangler.mangleProcedure(node);
 		codeGenerator.addNativeFunction(contextUtils.active(), returnType, llvmParameter, name);
 	}
 
@@ -218,12 +220,12 @@ public class CodeGenerationVisitor extends BaseVisitor {
 			if (node.getIsGlobal()) {
 				codeGenerator.declareGlobalVariable(
 				        contextUtils.constant(),
-				        node.getMangledIdentifier().getSymbol(),
+				        nameMangler.mangleVariable(node),
 				        node.getType());
 			} else {
 				codeGenerator.declareLocalVariable(
 				        contextUtils.active(),
-				        node.getMangledIdentifier().getSymbol(),
+				        nameMangler.mangleVariable(node),
 				        node.getType());
 			}
 		}
@@ -238,7 +240,7 @@ public class CodeGenerationVisitor extends BaseVisitor {
 		LLVMIdentifier<LLVMType> llvmIdentifier;
 		if (varDeclaration.getIsGlobal()) {
 			llvmIdentifier =
-			        codeGenerator.resolveGlobalVarName(node.getMangledIdentifier().getSymbol(), node.getType());
+			        codeGenerator.resolveGlobalVarName(nameMangler.mangleVariable(varDeclaration), node.getType());
 		} else if (varDeclaration.isAttribute()) {
 			LLVMIdentifier<?> leftIdentifier = stack.pop();
 			llvmIdentifier =
@@ -251,7 +253,7 @@ public class CodeGenerationVisitor extends BaseVisitor {
 		} else {
 			llvmIdentifier =
 			        codeGenerator.resolveLocalVarName(
-			                node.getMangledIdentifier().getSymbol(),
+			                nameMangler.mangleVariable(varDeclaration),
 			                node.getType(),
 			                !varDeclaration.isParameter());
 		}
@@ -481,7 +483,7 @@ public class CodeGenerationVisitor extends BaseVisitor {
 				if (!declaration.isDefaultInitializer()) {
 					codeGenerator.callVoid(
 					        contextUtils.active(),
-					        definingClass.getDefaultInitializer().getMangledIdentifier().getSymbol(),
+					        nameMangler.mangleProcedure(definingClass.getDefaultInitializer()),
 					        Arrays.<LLVMIdentifier<?>> asList(selfReference),
 					        Arrays.<TypeDeclaration> asList(definingClass));
 				}
@@ -503,7 +505,7 @@ public class CodeGenerationVisitor extends BaseVisitor {
 			if (declaration instanceof FunctionDeclaration) {
 				stack.push((LLVMIdentifier<LLVMType>) codeGenerator.call(
 				        contextUtils.active(),
-				        declaration.getMangledIdentifier().getSymbol(),
+				        nameMangler.mangleProcedure(declaration),
 				        node.getType(),
 				        arguments,
 				        expectedParameters));
@@ -513,7 +515,7 @@ public class CodeGenerationVisitor extends BaseVisitor {
 				}
 				codeGenerator.callVoid(
 				        contextUtils.active(),
-				        declaration.getMangledIdentifier().getSymbol(),
+				        nameMangler.mangleProcedure(declaration),
 				        arguments,
 				        expectedParameters);
 			}

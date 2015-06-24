@@ -42,6 +42,7 @@ package de.uni.bremen.monty.moco.codegeneration.types;
 import de.uni.bremen.monty.moco.ast.ASTNode;
 import de.uni.bremen.monty.moco.ast.CoreClasses;
 import de.uni.bremen.monty.moco.ast.declaration.*;
+import de.uni.bremen.monty.moco.codegeneration.NameMangler;
 import de.uni.bremen.monty.moco.codegeneration.identifier.LLVMIdentifier;
 import de.uni.bremen.monty.moco.codegeneration.identifier.LLVMIdentifierFactory;
 import de.uni.bremen.monty.moco.codegeneration.context.CodeContext;
@@ -55,10 +56,13 @@ public class TypeConverter {
 	private Map<TypeDeclaration, LLVMType> typeMap = new HashMap<>();
 	private LLVMIdentifierFactory llvmIdentifierFactory;
 	private CodeContext constantContext;
+	private NameMangler nameMangler;
 
-	public TypeConverter(LLVMIdentifierFactory llvmIdentifierFactory, CodeContext constantContext) {
+	public TypeConverter(LLVMIdentifierFactory llvmIdentifierFactory, CodeContext constantContext,
+	        NameMangler nameMangler) {
 		this.llvmIdentifierFactory = llvmIdentifierFactory;
 		this.constantContext = constantContext;
+		this.nameMangler = nameMangler;
 		initPreDefinedTypes();
 	}
 
@@ -84,7 +88,7 @@ public class TypeConverter {
 	}
 
 	private LLVMPointer<LLVMStructType> convertType(ClassDeclaration type) {
-		return pointer(struct(type.getMangledIdentifier().getSymbol()));
+		return pointer(struct(nameMangler.mangleClass(type)));
 	}
 
 	public TypeDeclaration mapToBoxedType(LLVMType type) {
@@ -114,8 +118,8 @@ public class TypeConverter {
 	}
 
 	private void addClass(ClassDeclaration classDecl) {
-		String mangledNodeName = classDecl.getMangledIdentifier().getSymbol();
-		LLVMStructType llvmClassType = struct(classDecl.getMangledIdentifier().getSymbol());
+		String mangledNodeName = nameMangler.mangleClass(classDecl);
+		LLVMStructType llvmClassType = struct(mangledNodeName);
 		List<LLVMType> llvmClassTypeDeclarations = new ArrayList<>();
 
 		LLVMStructType llvmVMTType = struct(mangledNodeName + "_vmt_type");
@@ -140,8 +144,8 @@ public class TypeConverter {
 			mapToLLVMType(classDeclaration);
 			LLVMIdentifier<LLVMType> vmtDataIdent =
 			        llvmIdentifierFactory.newGlobal(
-			                classDeclaration.getMangledIdentifier().getSymbol() + "_vmt_data",
-			                (LLVMType) pointer(struct(classDeclaration.getMangledIdentifier().getSymbol() + "_vmt_type")));
+			                nameMangler.mangleClass(classDeclaration) + "_vmt_data",
+			                (LLVMType) pointer(struct(nameMangler.mangleClass(classDeclaration) + "_vmt_type")));
 			llvmCTDataInitializer.add(llvmIdentifierFactory.bitcast(vmtDataIdent, pointer(int8())));
 		}
 		llvmCTDataInitializer.add((LLVMIdentifier<LLVMType>) (LLVMIdentifier<?>) llvmIdentifierFactory.constantNull(pointer(int8())));
@@ -174,7 +178,7 @@ public class TypeConverter {
 				LLVMType signature = mapToLLVMType(procedure);
 				llvmVMTTypeDeclarations.add(signature);
 				llvmVMTDataInitializer.add(llvmIdentifierFactory.newGlobal(
-				        procedure.getMangledIdentifier().getSymbol(),
+				        nameMangler.mangleProcedure(procedure),
 				        signature));
 			}
 		}

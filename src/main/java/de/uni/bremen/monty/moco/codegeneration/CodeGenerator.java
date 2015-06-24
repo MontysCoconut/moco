@@ -42,6 +42,10 @@ import de.uni.bremen.monty.moco.ast.ASTNode;
 import de.uni.bremen.monty.moco.ast.CoreClasses;
 import de.uni.bremen.monty.moco.ast.declaration.*;
 import de.uni.bremen.monty.moco.ast.expression.literal.StringLiteral;
+import de.uni.bremen.monty.moco.ast.declaration.ClassDeclaration;
+import de.uni.bremen.monty.moco.ast.declaration.FunctionDeclaration;
+import de.uni.bremen.monty.moco.ast.declaration.ProcedureDeclaration;
+import de.uni.bremen.monty.moco.ast.declaration.TypeDeclaration;
 import de.uni.bremen.monty.moco.codegeneration.context.CodeContext;
 import de.uni.bremen.monty.moco.codegeneration.context.CodeContext.LLVMFunctionAttribute;
 import de.uni.bremen.monty.moco.codegeneration.context.CodeContext.Linkage;
@@ -72,19 +76,22 @@ public class CodeGenerator {
 	/*
 	 * Map an ASTNode to a label prefix.
 	 */
-	protected HashMap<ASTNode, String> node2label = new HashMap<>();
+	protected final HashMap<ASTNode, String> node2label = new HashMap<>();
 
 	/*
 	 * Map each label to its number of occurrences. We use this information to create unique labels in the resulting
 	 * LLVM code.
 	 */
-	protected HashMap<String, Integer> label2occurrences = new HashMap<>();
+	protected final HashMap<String, Integer> label2occurrences = new HashMap<>();
 
-	private LLVMIdentifierFactory llvmIdentifierFactory;
+	private final LLVMIdentifierFactory llvmIdentifierFactory;
+	private final NameMangler nameMangler;
 
-	public CodeGenerator(TypeConverter typeConverter, LLVMIdentifierFactory llvmIdentifierFactory) {
+	public CodeGenerator(TypeConverter typeConverter, LLVMIdentifierFactory llvmIdentifierFactory,
+	        NameMangler nameMangler) {
 		this.typeConverter = typeConverter;
 		this.llvmIdentifierFactory = llvmIdentifierFactory;
+		this.nameMangler = nameMangler;
 		operations = new Operations(this, llvmIdentifierFactory);
 		blackMagic = new BlackMagic(operations);
 	}
@@ -170,7 +177,7 @@ public class CodeGenerator {
 	private LLVMIdentifier<LLVMPointer<LLVMType>> getVMTPointer(CodeContext c,
 	        LLVMIdentifier<LLVMPointer<LLVMType>> selfReference, ClassDeclaration classDeclaration) {
 		LLVMPointer<LLVMType> vmtType =
-		        pointer((LLVMType) struct(classDeclaration.getMangledIdentifier().getSymbol() + "_vmt_type"));
+		        pointer((LLVMType) struct(nameMangler.mangleClass(classDeclaration) + "_vmt_type"));
 		LLVMIdentifier<LLVMPointer<LLVMType>> vmtPointer = llvmIdentifierFactory.newLocal(vmtType, true);
 		c.getelementptr(
 		        (LLVMIdentifier<LLVMType>) (LLVMIdentifier<?>) vmtPointer,
@@ -197,7 +204,8 @@ public class CodeGenerator {
 
 	public void buildConstructor(CodeContext c, ClassDeclaration classDeclaration) {
 		List<LLVMIdentifier<? extends LLVMType>> llvmParameter = new ArrayList<>();
-		String constructorName = classDeclaration.getMangledIdentifier().getSymbol() + "_constructor";
+		String mangledClass = nameMangler.mangleClass(classDeclaration);
+		String constructorName = mangledClass + "_constructor";
 		addFunction(c, classDeclaration, llvmParameter, constructorName);
 
 		LLVMPointer<LLVMType> selfType = mapToLLVMType(classDeclaration);
@@ -207,9 +215,7 @@ public class CodeGenerator {
 		LLVMIdentifier<LLVMType> vmtPointer =
 		        (LLVMIdentifier<LLVMType>) (LLVMIdentifier<?>) getVMTPointer(c, selfReference, classDeclaration);
 		LLVMIdentifier<LLVMType> vmtData =
-		        llvmIdentifierFactory.newGlobal(
-		                classDeclaration.getMangledIdentifier().getSymbol() + "_vmt_data",
-		                vmtPointer.getType());
+		        llvmIdentifierFactory.newGlobal(mangledClass + "_vmt_data", vmtPointer.getType());
 		c.store(vmtData, llvmIdentifierFactory.pointerTo(vmtPointer));
 
 		returnValue(c, (LLVMIdentifier) selfReference, classDeclaration);
@@ -219,7 +225,7 @@ public class CodeGenerator {
 		LLVMIdentifier<LLVMType> result = llvmIdentifierFactory.newLocal(mapToLLVMType(classDeclaration), false);
 		LLVMIdentifier<LLVMType> signature =
 		        llvmIdentifierFactory.newGlobal(
-		                classDeclaration.getMangledIdentifier().getSymbol() + "_constructor",
+		                nameMangler.mangleClass(classDeclaration) + "_constructor",
 		                result.getType());
 		c.call(signature, result);
 		return result;
@@ -417,10 +423,10 @@ public class CodeGenerator {
 		LLVMIdentifier<LLVMPointer<LLVMType>> pointerArray = llvmIdentifierFactory.newLocal(pointer(pointerArrayType));
 		c.bitcast(pointerArray, ct);
 
-		LLVMType resultVMTType = struct(resultType.getMangledIdentifier().getSymbol() + "_vmt_type");
+		LLVMType resultVMTType = struct(nameMangler.mangleClass(resultType) + "_vmt_type");
 		LLVMIdentifier<LLVMPointer<LLVMType>> resultVMT =
 		        llvmIdentifierFactory.newGlobal(
-		                resultType.getMangledIdentifier().getSymbol() + "_vmt_data",
+		                nameMangler.mangleClass(resultType) + "_vmt_data",
 		                pointer(resultVMTType));
 		LLVMIdentifier<LLVMPointer<LLVMType>> resultPointer =
 		        llvmIdentifierFactory.newLocal(pointer((LLVMType) int8()));
@@ -461,12 +467,12 @@ public class CodeGenerator {
 
 	public LLVMIdentifier<?> callMethod(CodeContext c, FunctionDeclaration declaration,
 	        List<LLVMIdentifier<?>> arguments, List<TypeDeclaration> parameters) {
-		List<LLVMIdentifier<?>> resolvedArguments = resolveArgumentsIfNeeded(c, arguments, parameters);
+		List<LLVMIdentifier<? extends LLVMType>> resolvedArguments = resolveArgumentsIfNeeded(c, arguments, parameters);
 
 		LLVMIdentifier<LLVMPointer<LLVMFunctionType>> functionPointer =
 		        getFunctionPointer(c, (LLVMIdentifier<LLVMPointer<LLVMType>>) resolvedArguments.get(0), declaration);
 		return c.call(
-		        (LLVMIdentifier<LLVMType>) (LLVMIdentifier<?>) resolveIfNeeded(c, functionPointer),
+		        (LLVMIdentifier) resolveIfNeeded(c, functionPointer),
 		        llvmIdentifierFactory.newLocal(mapToLLVMType(declaration.getReturnType()), false),
 		        resolvedArguments);
 	}

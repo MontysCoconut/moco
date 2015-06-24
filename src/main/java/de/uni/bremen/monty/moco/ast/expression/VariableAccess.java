@@ -38,7 +38,8 @@
  */
 package de.uni.bremen.monty.moco.ast.expression;
 
-import de.uni.bremen.monty.moco.ast.*;
+import de.uni.bremen.monty.moco.ast.Position;
+import de.uni.bremen.monty.moco.ast.ResolvableIdentifier;
 import de.uni.bremen.monty.moco.ast.declaration.Declaration;
 import de.uni.bremen.monty.moco.visitor.BaseVisitor;
 
@@ -96,12 +97,5 @@ public class VariableAccess extends Expression {
 	 *            the declaration to set */
 	public void setDeclaration(Declaration declaration) {
 		this.declaration = declaration;
-	}
-
-	/** Get mangled identifier
-	 *
-	 * @return the mangled identifier */
-	public Identifier getMangledIdentifier() {
-		return declaration.getMangledIdentifier();
 	}
 }
