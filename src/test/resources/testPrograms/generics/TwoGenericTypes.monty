@@ -1,0 +1,25 @@
+class Tuple<First,Second>:
+
+  - First a
+  - Second b
+
+  + initializer(First a, Second b):
+    self.a := a
+    self.b := b
+
+  + First first():
+    return self.a
+
+  + Second second():
+    return self.b
+
+Tuple<Int,String> x := Tuple<Int,String>(2,"Halli! ")
+
+while(x.first()>0):
+  print(x.second())
+  x := Tuple<Int,String>(x.first()-1,"Hallo! ")
+
+Tuple<String,Bool> y := Tuple<String,Bool>("Monty",true)
+
+if(y.second()):
+  print(y.first())

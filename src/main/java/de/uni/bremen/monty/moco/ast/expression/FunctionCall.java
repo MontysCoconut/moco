@@ -40,7 +40,6 @@ package de.uni.bremen.monty.moco.ast.expression;
 
 import de.uni.bremen.monty.moco.ast.Position;
 import de.uni.bremen.monty.moco.ast.ResolvableIdentifier;
-import de.uni.bremen.monty.moco.ast.Identifier;
 import de.uni.bremen.monty.moco.ast.declaration.ProcedureDeclaration;
 import de.uni.bremen.monty.moco.ast.statement.Statement;
 import de.uni.bremen.monty.moco.visitor.BaseVisitor;
@@ -95,12 +94,5 @@ public class FunctionCall extends Expression implements Statement {
 	 *            the declaration to set */
 	public void setDeclaration(ProcedureDeclaration declaration) {
 		this.declaration = declaration;
-	}
-
-	/** Get mangled identifier
-	 *
-	 * @return the mangled identifier */
-	public Identifier getMangledIdentifier() {
-		return declaration.getMangledIdentifier();
 	}
 }

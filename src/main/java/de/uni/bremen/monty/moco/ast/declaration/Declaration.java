@@ -38,7 +38,10 @@
  */
 package de.uni.bremen.monty.moco.ast.declaration;
 
-import de.uni.bremen.monty.moco.ast.*;
+import de.uni.bremen.monty.moco.ast.AccessModifier;
+import de.uni.bremen.monty.moco.ast.BasicASTNode;
+import de.uni.bremen.monty.moco.ast.Identifier;
+import de.uni.bremen.monty.moco.ast.Position;
 
 /** The baseclass of every declaration.
  * <p>
@@ -47,9 +50,6 @@ public abstract class Declaration extends BasicASTNode {
 
 	/** The identifier. */
 	private final Identifier identifier;
-
-	/** The mangled identifier. */
-	private Identifier mangledIdentifier;
 
 	private AccessModifier access;
 
@@ -74,20 +74,6 @@ public abstract class Declaration extends BasicASTNode {
 	public void setAccessModifier(AccessModifier access) {
 
 		this.access = access;
-	}
-
-	/** Get the mangled Identifier.
-	 *
-	 * @return mangled Identifier */
-	public Identifier getMangledIdentifier() {
-		return mangledIdentifier;
-	}
-
-	/** Set the mangled Identifier.
-	 *
-	 * @param mangledIdentifier */
-	public void setMangledIdentifier(Identifier mangledIdentifier) {
-		this.mangledIdentifier = mangledIdentifier;
 	}
 
 	/** Get the identifier.

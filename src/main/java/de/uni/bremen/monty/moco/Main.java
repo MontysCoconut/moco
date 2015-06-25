@@ -116,7 +116,7 @@ public class Main {
 		CodeGenerationVisitor cgv = new CodeGenerationVisitor();
 		BaseVisitor[] visitors =
 		        new BaseVisitor[] { new SetParentVisitor(), new DeclarationVisitor(), new ResolveVisitor(),
-		                new TypeCheckVisitor(), new ControlFlowVisitor(), new NameManglingVisitor(), cgv };
+		                new TypeCheckVisitor(), new ControlFlowVisitor(), cgv };
 
 		boolean everyThingIsAwesome = true;
 

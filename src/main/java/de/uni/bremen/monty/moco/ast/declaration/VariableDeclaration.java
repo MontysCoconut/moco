@@ -38,7 +38,9 @@
  */
 package de.uni.bremen.monty.moco.ast.declaration;
 
-import de.uni.bremen.monty.moco.ast.*;
+import de.uni.bremen.monty.moco.ast.Identifier;
+import de.uni.bremen.monty.moco.ast.Position;
+import de.uni.bremen.monty.moco.ast.ResolvableIdentifier;
 import de.uni.bremen.monty.moco.visitor.BaseVisitor;
 
 public class VariableDeclaration extends Declaration {
@@ -58,6 +60,14 @@ public class VariableDeclaration extends Declaration {
 	        DeclarationType declarationType) {
 		this(position, identifier, typeIdentifier);
 		this.declarationType = declarationType;
+	}
+
+	public VariableDeclaration(Position position, Identifier identifier, TypeDeclaration type,
+	        DeclarationType declarationType) {
+		super(position, identifier);
+		this.declarationType = declarationType;
+		this.type = type;
+		this.typeIdentifier = ResolvableIdentifier.convert(type.getIdentifier());
 	}
 
 	public VariableDeclaration(Position position, Identifier identifier, ResolvableIdentifier typeIdentifier) {
@@ -147,5 +157,4 @@ public class VariableDeclaration extends Declaration {
 	@Override
 	public void visitChildren(BaseVisitor visitor) {
 	}
-
 }

@@ -38,7 +38,10 @@
  */
 package de.uni.bremen.monty.moco.ast.declaration;
 
-import de.uni.bremen.monty.moco.ast.*;
+import de.uni.bremen.monty.moco.ast.Block;
+import de.uni.bremen.monty.moco.ast.Identifier;
+import de.uni.bremen.monty.moco.ast.Position;
+import de.uni.bremen.monty.moco.ast.ResolvableIdentifier;
 import de.uni.bremen.monty.moco.visitor.BaseVisitor;
 
 import java.util.List;
@@ -91,6 +94,13 @@ public class FunctionDeclaration extends ProcedureDeclaration {
 	public FunctionDeclaration(Position position, Identifier identifier, Block body,
 	        List<VariableDeclaration> parameter, ClassDeclaration returnType) {
 		super(position, identifier, body, parameter);
+		this.returnType = returnType;
+		this.returnTypeIdentifier = ResolvableIdentifier.convert(returnType.getIdentifier());
+	}
+
+	public FunctionDeclaration(Position position, Identifier identifier, Block body,
+	        List<VariableDeclaration> parameter, DeclarationType declarationType, TypeDeclaration returnType) {
+		super(position, identifier, body, parameter, declarationType);
 		this.returnType = returnType;
 		this.returnTypeIdentifier = ResolvableIdentifier.convert(returnType.getIdentifier());
 	}

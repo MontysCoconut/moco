@@ -42,10 +42,11 @@ package de.uni.bremen.monty.moco.codegeneration.types;
 import de.uni.bremen.monty.moco.ast.ASTNode;
 import de.uni.bremen.monty.moco.ast.CoreClasses;
 import de.uni.bremen.monty.moco.ast.declaration.*;
-import de.uni.bremen.monty.moco.codegeneration.identifier.LLVMIdentifier;
-import de.uni.bremen.monty.moco.codegeneration.identifier.LLVMIdentifierFactory;
+import de.uni.bremen.monty.moco.codegeneration.NameMangler;
 import de.uni.bremen.monty.moco.codegeneration.context.CodeContext;
 import de.uni.bremen.monty.moco.codegeneration.context.CodeContext.Linkage;
+import de.uni.bremen.monty.moco.codegeneration.identifier.LLVMIdentifier;
+import de.uni.bremen.monty.moco.codegeneration.identifier.LLVMIdentifierFactory;
 
 import java.util.*;
 
@@ -55,10 +56,13 @@ public class TypeConverter {
 	private Map<TypeDeclaration, LLVMType> typeMap = new HashMap<>();
 	private LLVMIdentifierFactory llvmIdentifierFactory;
 	private CodeContext constantContext;
+	private NameMangler nameMangler;
 
-	public TypeConverter(LLVMIdentifierFactory llvmIdentifierFactory, CodeContext constantContext) {
+	public TypeConverter(LLVMIdentifierFactory llvmIdentifierFactory, CodeContext constantContext,
+	        NameMangler nameMangler) {
 		this.llvmIdentifierFactory = llvmIdentifierFactory;
 		this.constantContext = constantContext;
+		this.nameMangler = nameMangler;
 		initPreDefinedTypes();
 	}
 
@@ -68,10 +72,8 @@ public class TypeConverter {
 
 	private LLVMPointer<LLVMFunctionType> convertType(ProcedureDeclaration type) {
 		List<LLVMType> parameter = new ArrayList<>();
-		final ASTNode grandFatherNode = type.getParentNode().getParentNode();
-		if (grandFatherNode instanceof ClassDeclaration) {
-			ClassDeclaration typeDeclaration = (ClassDeclaration) grandFatherNode;
-			parameter.add(mapToLLVMType(typeDeclaration));
+		if (type.getDeclarationType().equals(ProcedureDeclaration.DeclarationType.METHOD)) {
+			parameter.add(mapToLLVMType(type.getDefiningClass()));
 		}
 		for (VariableDeclaration varDecl : type.getParameter()) {
 			parameter.add(mapToLLVMType(varDecl.getType()));
@@ -84,7 +86,7 @@ public class TypeConverter {
 	}
 
 	private LLVMPointer<LLVMStructType> convertType(ClassDeclaration type) {
-		return pointer(struct(type.getMangledIdentifier().getSymbol()));
+		return pointer(struct(nameMangler.mangleClass(type)));
 	}
 
 	public TypeDeclaration mapToBoxedType(LLVMType type) {
@@ -102,7 +104,8 @@ public class TypeConverter {
 
 	private <T extends LLVMType> T convertType(TypeDeclaration type) {
 		if (type instanceof ProcedureDeclaration) {
-			return (T) convertType((ProcedureDeclaration) type);
+			LLVMPointer<LLVMFunctionType> llvmFunctionTypeLLVMPointer = convertType((ProcedureDeclaration) type);
+			return (T) llvmFunctionTypeLLVMPointer;
 		}
 		return (T) convertType((ClassDeclaration) type);
 	}
@@ -114,8 +117,8 @@ public class TypeConverter {
 	}
 
 	private void addClass(ClassDeclaration classDecl) {
-		String mangledNodeName = classDecl.getMangledIdentifier().getSymbol();
-		LLVMStructType llvmClassType = struct(classDecl.getMangledIdentifier().getSymbol());
+		String mangledNodeName = nameMangler.mangleClass(classDecl);
+		LLVMStructType llvmClassType = struct(mangledNodeName);
 		List<LLVMType> llvmClassTypeDeclarations = new ArrayList<>();
 
 		LLVMStructType llvmVMTType = struct(mangledNodeName + "_vmt_type");
@@ -138,10 +141,10 @@ public class TypeConverter {
 		for (ClassDeclaration classDeclaration : recursiveSuperClassDeclarations) {
 			// Ensure that addType() was called for this classDeclaration so that a VMT/CT was generated.
 			mapToLLVMType(classDeclaration);
+			String mangledClass = nameMangler.mangleClass(classDeclaration);
 			LLVMIdentifier<LLVMType> vmtDataIdent =
-			        llvmIdentifierFactory.newGlobal(
-			                classDeclaration.getMangledIdentifier().getSymbol() + "_vmt_data",
-			                (LLVMType) pointer(struct(classDeclaration.getMangledIdentifier().getSymbol() + "_vmt_type")));
+			        llvmIdentifierFactory.newGlobal(mangledClass + "_vmt_data", (LLVMType) pointer(struct(mangledClass
+			                + "_vmt_type")));
 			llvmCTDataInitializer.add(llvmIdentifierFactory.bitcast(vmtDataIdent, pointer(int8())));
 		}
 		llvmCTDataInitializer.add((LLVMIdentifier<LLVMType>) (LLVMIdentifier<?>) llvmIdentifierFactory.constantNull(pointer(int8())));
@@ -165,7 +168,13 @@ public class TypeConverter {
 		for (ClassDeclaration classDeclaration : recursiveSuperClassDeclarations) {
 			for (Declaration decl : classDeclaration.getBlock().getDeclarations()) {
 				if (decl instanceof VariableDeclaration) {
-					llvmClassTypeDeclarations.add(mapToLLVMType(((VariableDeclaration) decl).getType()));
+					TypeDeclaration varDecl = ((VariableDeclaration) decl).getType();
+					if (classDecl instanceof ClassDeclarationVariation && varDecl instanceof AbstractGenericType) {
+						ClassDeclarationVariation variation = (ClassDeclarationVariation) classDecl;
+						llvmClassTypeDeclarations.add(mapToLLVMType(variation.mapGenericType(varDecl)));
+					} else {
+						llvmClassTypeDeclarations.add(mapToLLVMType(varDecl));
+					}
 				}
 			}
 		}
@@ -174,7 +183,7 @@ public class TypeConverter {
 				LLVMType signature = mapToLLVMType(procedure);
 				llvmVMTTypeDeclarations.add(signature);
 				llvmVMTDataInitializer.add(llvmIdentifierFactory.newGlobal(
-				        procedure.getMangledIdentifier().getSymbol(),
+				        nameMangler.mangleProcedure(procedure),
 				        signature));
 			}
 		}
@@ -201,6 +210,28 @@ public class TypeConverter {
 	}
 
 	public <T extends LLVMType> T mapToLLVMType(TypeDeclaration type) {
+		if (type instanceof AbstractGenericType) {
+			ASTNode parent = type.getParentNode();
+			while (!(parent instanceof ClassDeclarationVariation)) {
+				parent = parent.getParentNode();
+			}
+			ClassDeclarationVariation classVariation = (ClassDeclarationVariation) parent;
+			ConcreteGenericType concreteType = classVariation.mapAbstractToConcrete((AbstractGenericType) type);
+
+			T t = (T) mapToLLVMType(concreteType.getDecl());
+			return t;
+		} else if (type instanceof ConcreteGenericType) {
+			ConcreteGenericType concreteType = (ConcreteGenericType) type;
+			return (T) mapToLLVMType(concreteType.getDecl());
+		}
+		if (type instanceof ClassDeclaration && !((ClassDeclaration) type).getAbstractGenericTypes().isEmpty()) {
+			ASTNode parent = type;
+			while (!(parent instanceof ClassDeclarationVariation)) {
+				parent = parent.getParentNode();
+			}
+			type = (ClassDeclarationVariation) parent;
+		}
+
 		T llvmType = (T) typeMap.get(type);
 		if (llvmType == null) {
 			llvmType = convertType(type);

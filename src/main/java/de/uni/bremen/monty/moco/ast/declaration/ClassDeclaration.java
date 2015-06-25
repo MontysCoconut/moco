@@ -44,16 +44,19 @@ import de.uni.bremen.monty.moco.ast.Position;
 import de.uni.bremen.monty.moco.ast.ResolvableIdentifier;
 import de.uni.bremen.monty.moco.visitor.BaseVisitor;
 
-import java.util.List;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 /** A ClassDeclaration represents the declaration of a class in the AST.
  * <p>
  * A ClassDeclaration has a list of superclasses and a list of nested declarations. It can be used as a type. */
 public class ClassDeclaration extends TypeDeclaration {
 
+	private final List<AbstractGenericType> abstractGenericTypes;
+
 	/** Identifier of superclasses. */
-	private final List<ResolvableIdentifier> superClassIdentifiers = new ArrayList<>();
+	private final List<ResolvableIdentifier> superClassIdentifiers;
 
 	/** Superclasses. */
 	private final List<TypeDeclaration> superClassDeclarations = new ArrayList<>();
@@ -61,8 +64,10 @@ public class ClassDeclaration extends TypeDeclaration {
 	/** The generated default initializer to be called from every user defined initializer. */
 	private ProcedureDeclaration defaultInitializer;
 
-	/** Block with assignments */
-	private final Block block;
+	/** Block with assignments **/
+	private Block block;
+
+	private final List<ClassDeclarationVariation> variations;
 
 	/** The virtal method table for this class */
 	private List<ProcedureDeclaration> virtualMethodTable = new ArrayList<>();
@@ -85,7 +90,18 @@ public class ClassDeclaration extends TypeDeclaration {
 	        Block block) {
 		super(position, identifier);
 		this.block = block;
-		this.superClassIdentifiers.addAll(superClasses);
+		this.superClassIdentifiers = superClasses;
+		this.abstractGenericTypes = Collections.emptyList();
+		this.variations = Collections.emptyList();
+	}
+
+	public ClassDeclaration(Position position, Identifier identifier, List<ResolvableIdentifier> superClassIdentifiers,
+	        Block block, List<AbstractGenericType> abstractGenericTypes) {
+		super(position, identifier);
+		this.superClassIdentifiers = superClassIdentifiers;
+		this.block = block;
+		this.abstractGenericTypes = abstractGenericTypes;
+		this.variations = new ArrayList<>(abstractGenericTypes.size());
 	}
 
 	/** Get the list of declarations and assignments.
@@ -158,6 +174,10 @@ public class ClassDeclaration extends TypeDeclaration {
 		this.defaultInitializer = defaultInitializer;
 	}
 
+	public List<AbstractGenericType> getAbstractGenericTypes() {
+		return abstractGenericTypes;
+	}
+
 	/** {@inheritDoc} */
 	@Override
 	public void visit(BaseVisitor visitor) {
@@ -167,6 +187,12 @@ public class ClassDeclaration extends TypeDeclaration {
 	/** {@inheritDoc} */
 	@Override
 	public void visitChildren(BaseVisitor visitor) {
+		for (AbstractGenericType abstractGenericType : abstractGenericTypes) {
+			visitor.visitDoubleDispatched(abstractGenericType);
+		}
+		for (ClassDeclarationVariation variation : variations) {
+			visitor.visitDoubleDispatched(variation);
+		}
 		visitor.visitDoubleDispatched(block);
 	}
 
@@ -184,5 +210,13 @@ public class ClassDeclaration extends TypeDeclaration {
 			}
 		}
 		return false;
+	}
+
+	public void addVariation(ClassDeclarationVariation variation) {
+		variations.add(variation);
+	}
+
+	public List<ClassDeclarationVariation> getVariations() {
+		return variations;
 	}
 }

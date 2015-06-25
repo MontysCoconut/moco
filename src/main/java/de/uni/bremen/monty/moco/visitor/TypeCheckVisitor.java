@@ -38,16 +38,18 @@
  */
 package de.uni.bremen.monty.moco.visitor;
 
-import java.util.List;
 import de.uni.bremen.monty.moco.ast.ASTNode;
 import de.uni.bremen.monty.moco.ast.CoreClasses;
 import de.uni.bremen.monty.moco.ast.declaration.*;
 import de.uni.bremen.monty.moco.ast.expression.*;
-import de.uni.bremen.monty.moco.ast.expression.literal.*;
+import de.uni.bremen.monty.moco.ast.expression.literal.ArrayLiteral;
 import de.uni.bremen.monty.moco.ast.statement.Assignment;
 import de.uni.bremen.monty.moco.ast.statement.ConditionalStatement;
 import de.uni.bremen.monty.moco.ast.statement.ReturnStatement;
-import de.uni.bremen.monty.moco.exception.*;
+import de.uni.bremen.monty.moco.exception.InvalidExpressionException;
+import de.uni.bremen.monty.moco.exception.TypeMismatchException;
+
+import java.util.List;
 
 /** This visitor must traverse the entire AST and perform type-safety checks.
  *
@@ -203,7 +205,7 @@ public class TypeCheckVisitor extends BaseVisitor {
 	@Override
 	public void visit(FunctionDeclaration node) {
 		super.visit(node);
-		if (!(node.getReturnType() instanceof ClassDeclaration)) {
+		if (!(node.getReturnType() instanceof ClassDeclaration || node.getReturnType() instanceof AbstractGenericType)) {
 			throw new TypeMismatchException(node, "Must return a class type.");
 		}
 	}
@@ -225,7 +227,9 @@ public class TypeCheckVisitor extends BaseVisitor {
 			if (function.isInitializer()) {
 				throw new TypeMismatchException(node, "Contructor of has to be a procedure.");
 			}
-			if (!node.getType().matchesType(function.getReturnType())) {
+			if (function.getReturnType() instanceof AbstractGenericType) {
+				// TODO Typecheck
+			} else if (!node.getType().matchesType(function.getReturnType())) {
 				throw new TypeMismatchException(node, "Returntype of function call does not match declaration.");
 			}
 		} else {
@@ -234,6 +238,14 @@ public class TypeCheckVisitor extends BaseVisitor {
 			}
 		}
 
+		boolean callMatchesDeclaration = callMatchesDeclaration(node, procedure);
+
+		if (!callMatchesDeclaration) {
+			throw new TypeMismatchException(node, "Arguments of function call do not match declaration.");
+		}
+	}
+
+	private boolean callMatchesDeclaration(FunctionCall node, ProcedureDeclaration procedure) {
 		boolean callMatchesDeclaration = true;
 
 		List<Expression> callParams = node.getArguments();
@@ -242,7 +254,17 @@ public class TypeCheckVisitor extends BaseVisitor {
 			for (int i = 0; i < callParams.size(); i++) {
 				Expression callParam = callParams.get(i);
 				VariableDeclaration declParam = declParams.get(i);
-				if (!callParam.getType().matchesType(declParam.getType())) {
+
+				TypeDeclaration declType = declParam.getType();
+				TypeDeclaration callParamType = callParam.getType();
+
+				if (declType instanceof AbstractGenericType && procedure.isInitializer()
+				        && node.getType() instanceof ClassDeclarationVariation) {
+					ClassDeclarationVariation variation = (ClassDeclarationVariation) node.getType();
+					declType = variation.mapGenericType(declType);
+				}
+
+				if (!callParamType.matchesType(declType)) {
 					callMatchesDeclaration = false;
 					break;
 				}
@@ -250,10 +272,7 @@ public class TypeCheckVisitor extends BaseVisitor {
 		} else {
 			callMatchesDeclaration = false;
 		}
-
-		if (!callMatchesDeclaration) {
-			throw new TypeMismatchException(node, "Arguments of function call do not match declaration.");
-		}
+		return callMatchesDeclaration;
 	}
 
 	/** {@inheritDoc} */

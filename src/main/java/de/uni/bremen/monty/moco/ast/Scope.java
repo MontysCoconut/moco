@@ -38,10 +38,17 @@
  */
 package de.uni.bremen.monty.moco.ast;
 
-import java.util.*;
+import de.uni.bremen.monty.moco.ast.declaration.Declaration;
+import de.uni.bremen.monty.moco.ast.declaration.ProcedureDeclaration;
+import de.uni.bremen.monty.moco.ast.declaration.TypeDeclaration;
+import de.uni.bremen.monty.moco.exception.RedeclarationException;
+import de.uni.bremen.monty.moco.exception.UnknownIdentifierException;
+import de.uni.bremen.monty.moco.exception.UnknownTypeException;
 
-import de.uni.bremen.monty.moco.ast.declaration.*;
-import de.uni.bremen.monty.moco.exception.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /** A scope in which an identifier is associated with a declaration.
  * <p>
@@ -118,6 +125,7 @@ public class Scope {
 			Declaration declaration = resolve(identifier);
 			if (declaration instanceof TypeDeclaration) {
 				return (TypeDeclaration) declaration;
+
 			}
 			throw new UnknownTypeException(identifier);
 		} catch (UnknownIdentifierException e) {

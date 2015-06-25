@@ -39,25 +39,19 @@
 
 package de.uni.bremen.monty.moco.codegeneration.context;
 
-import static de.uni.bremen.monty.moco.codegeneration.types.LLVMTypeFactory.double64;
-import static de.uni.bremen.monty.moco.codegeneration.types.LLVMTypeFactory.int1;
-import static de.uni.bremen.monty.moco.codegeneration.types.LLVMTypeFactory.int32;
-import static de.uni.bremen.monty.moco.codegeneration.types.LLVMTypeFactory.int64;
-import static de.uni.bremen.monty.moco.codegeneration.types.LLVMTypeFactory.int8;
-import static de.uni.bremen.monty.moco.codegeneration.types.LLVMTypeFactory.pointer;
-
-import java.util.Arrays;
-
 import de.uni.bremen.monty.moco.ast.CoreClasses;
 import de.uni.bremen.monty.moco.ast.declaration.TypeDeclaration;
 import de.uni.bremen.monty.moco.codegeneration.Native;
 import de.uni.bremen.monty.moco.codegeneration.CodeGenerator;
+import de.uni.bremen.monty.moco.codegeneration.Native;
 import de.uni.bremen.monty.moco.codegeneration.context.CodeContext.FcmpOperand;
 import de.uni.bremen.monty.moco.codegeneration.context.CodeContext.IcmpOperand;
 import de.uni.bremen.monty.moco.codegeneration.identifier.LLVMIdentifier;
 import de.uni.bremen.monty.moco.codegeneration.identifier.LLVMIdentifierFactory;
 import de.uni.bremen.monty.moco.codegeneration.types.*;
 import de.uni.bremen.monty.moco.codegeneration.types.LLVMTypeFactory.*;
+
+import java.util.Arrays;
 
 import static de.uni.bremen.monty.moco.codegeneration.types.LLVMTypeFactory.*;
 

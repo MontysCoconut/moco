@@ -44,11 +44,16 @@ import de.uni.bremen.monty.moco.ast.expression.*;
 import de.uni.bremen.monty.moco.ast.expression.literal.*;
 import de.uni.bremen.monty.moco.ast.Package;
 import de.uni.bremen.monty.moco.ast.declaration.*;
+import de.uni.bremen.monty.moco.ast.expression.Expression;
+import de.uni.bremen.monty.moco.ast.expression.FunctionCall;
+import de.uni.bremen.monty.moco.ast.expression.MemberAccess;
+import de.uni.bremen.monty.moco.ast.expression.SelfExpression;
+import de.uni.bremen.monty.moco.ast.statement.Statement;
 import de.uni.bremen.monty.moco.exception.InvalidPlaceToDeclareException;
 
-import java.util.List;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
 /** This visitor must traverse the entire AST, set up scopes and define declarations.
  * <p>
@@ -92,6 +97,10 @@ public class DeclarationVisitor extends BaseVisitor {
 
 		currentScope.define(node);
 		currentScope = new ClassScope(currentScope);
+
+		for (AbstractGenericType abstractGenericType : node.getAbstractGenericTypes()) {
+			currentScope.define(abstractGenericType);
+		}
 
 		if (node != CoreClasses.voidType()) {
 			if (node != CoreClasses.objectType() && node.getSuperClassIdentifiers().isEmpty()) {
