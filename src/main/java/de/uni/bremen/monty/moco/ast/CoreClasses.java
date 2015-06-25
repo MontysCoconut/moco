@@ -60,10 +60,6 @@ public class CoreClasses {
 		}
 	}
 
-	public static Collection<ClassDeclaration> getAllCoreClasses() {
-		return coreClasses.values();
-	}
-
 	public static void setCoreClass(String name, ClassDeclaration classDeclaration) {
 		coreClasses.put(name, classDeclaration);
 	}

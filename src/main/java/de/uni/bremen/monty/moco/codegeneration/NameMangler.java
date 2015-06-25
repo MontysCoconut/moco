@@ -111,7 +111,7 @@ public class NameMangler {
 		if (type instanceof AbstractGenericType) {
 			ClassDeclarationVariation variation =
 			        (ClassDeclarationVariation) ((AbstractGenericType) type).getDefinedIn().getParentNode();
-			type = variation.mapAbstractToConcrete((AbstractGenericType) type).getDecl();
+			type = variation.mapAbstractToConcrete((AbstractGenericType) type);
 		}
 		return (ClassDeclaration) type;
 	}
@@ -163,9 +163,8 @@ public class NameMangler {
 		String className = Mangled.CLASS + escapeForLLVM(node.getIdentifier());
 		if (node instanceof ClassDeclarationVariation) {
 			className += Mangled.TYPE;
-			for (ConcreteGenericType concreteGenericType : ((ClassDeclarationVariation) node).getConcreteGenericTypes()) {
-				ClassDeclaration decl = concreteGenericType.getDecl();
-				className += Mangled.TYPE + mangleClass(decl);
+			for (ClassDeclaration concreteGenericType : ((ClassDeclarationVariation) node).getConcreteGenericTypes()) {
+				className += Mangled.TYPE + mangleClass(concreteGenericType);
 			}
 		}
 

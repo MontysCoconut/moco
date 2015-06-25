@@ -38,12 +38,6 @@
  */
 package de.uni.bremen.monty.moco.codegeneration.context;
 
-import static de.uni.bremen.monty.moco.codegeneration.types.LLVMTypeFactory.pointer;
-
-import java.util.List;
-import java.util.Arrays;
-import org.apache.commons.lang3.StringUtils;
-
 import de.uni.bremen.monty.moco.codegeneration.identifier.FunctionSignature;
 import de.uni.bremen.monty.moco.codegeneration.identifier.LLVMIdentifier;
 import de.uni.bremen.monty.moco.codegeneration.types.LLVMPointer;
@@ -51,6 +45,12 @@ import de.uni.bremen.monty.moco.codegeneration.types.LLVMStructType;
 import de.uni.bremen.monty.moco.codegeneration.types.LLVMType;
 import de.uni.bremen.monty.moco.codegeneration.types.LLVMTypeFactory.LLVMBool;
 import de.uni.bremen.monty.moco.codegeneration.types.LLVMTypeFactory.LLVMIntType;
+import org.apache.commons.lang3.StringUtils;
+
+import java.util.Arrays;
+import java.util.List;
+
+import static de.uni.bremen.monty.moco.codegeneration.types.LLVMTypeFactory.pointer;
 
 /** The CodeContext provides methods representing LLVM-Instruction.
  *
@@ -359,15 +359,8 @@ public class CodeContext extends CodeWriter {
 	 * @param type
 	 *            name and structur of the new type */
 	public void type(LLVMStructType type, List<LLVMType> list) {
-		String variableType = " = type { ";
-		if (!list.isEmpty()) {
-			variableType += list.get(0).toString();
-			for (int i = 1; i < list.size(); i++) {
-				variableType += ", " + list.get(i).toString();
-			}
-		}
-
-		appendLine(type + variableType + " }");
+		String variableType = " = type { " + StringUtils.join(list, ',') + "}";
+		appendLine(type + variableType);
 	}
 
 	@SuppressWarnings("unchecked")

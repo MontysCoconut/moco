@@ -146,10 +146,6 @@ public class ResolveVisitor extends VisitOnceVisitor {
 					throw new UnknownIdentifierException(node.getIdentifier());
 				}
 			}
-		} else if (declaration instanceof TypeDeclaration) {
-			TypeDeclaration type = (TypeDeclaration) declaration;
-			node.setDeclaration(declaration);
-			node.setType(type);
 		}
 	}
 
@@ -356,10 +352,10 @@ public class ResolveVisitor extends VisitOnceVisitor {
 			ClassDeclaration originalClass = (ClassDeclaration) originalType;
 			List<ResolvableIdentifier> genericTypes = genericIdentifier.getGenericTypes();
 			if (!genericTypes.isEmpty()) {
-				ArrayList<ConcreteGenericType> concreteGenerics = new ArrayList<>();
+				ArrayList<ClassDeclaration> concreteGenerics = new ArrayList<>();
 				for (ResolvableIdentifier genericType : genericTypes) {
 					Declaration decl = scope.resolve(genericType);
-					concreteGenerics.add(new ConcreteGenericType((ClassDeclaration) decl));
+					concreteGenerics.add((ClassDeclaration) decl);
 				}
 				for (ClassDeclarationVariation variation : originalClass.getVariations()) {
 					if (variation.getConcreteGenericTypes().equals(concreteGenerics)) {

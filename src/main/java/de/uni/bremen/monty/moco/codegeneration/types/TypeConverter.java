@@ -89,19 +89,6 @@ public class TypeConverter {
 		return pointer(struct(nameMangler.mangleClass(type)));
 	}
 
-	public TypeDeclaration mapToBoxedType(LLVMType type) {
-		if (type instanceof LLVMBool) {
-			return CoreClasses.boolType();
-		} else if (type instanceof LLVMInt) {
-			return CoreClasses.intType();
-		} else if (type instanceof LLVMDouble) {
-			return CoreClasses.floatType();
-		} else if (type instanceof LLVMInt8) {
-			return CoreClasses.charType();
-		}
-		return null;
-	}
-
 	private <T extends LLVMType> T convertType(TypeDeclaration type) {
 		if (type instanceof ProcedureDeclaration) {
 			LLVMPointer<LLVMFunctionType> llvmFunctionTypeLLVMPointer = convertType((ProcedureDeclaration) type);
@@ -216,14 +203,15 @@ public class TypeConverter {
 				parent = parent.getParentNode();
 			}
 			ClassDeclarationVariation classVariation = (ClassDeclarationVariation) parent;
-			ConcreteGenericType concreteType = classVariation.mapAbstractToConcrete((AbstractGenericType) type);
+			ClassDeclaration concreteType = classVariation.mapAbstractToConcrete((AbstractGenericType) type);
 
-			T t = (T) mapToLLVMType(concreteType.getDecl());
+			T t = (T) mapToLLVMType(concreteType);
 			return t;
-		} else if (type instanceof ConcreteGenericType) {
-			ConcreteGenericType concreteType = (ConcreteGenericType) type;
-			return (T) mapToLLVMType(concreteType.getDecl());
 		}
+		// else if (type instanceof ConcreteGenericType) {
+		// ConcreteGenericType concreteType = (ConcreteGenericType) type;
+		// return (T) mapToLLVMType(concreteType.getDecl());
+		// }
 		if (type instanceof ClassDeclaration && !((ClassDeclaration) type).getAbstractGenericTypes().isEmpty()) {
 			ASTNode parent = type;
 			while (!(parent instanceof ClassDeclarationVariation)) {
