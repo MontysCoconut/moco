@@ -491,20 +491,24 @@ public class CodeGenerationVisitor extends BaseVisitor {
 
 		if (declaration.isMethod() || declaration.isInitializer()) {
 			expectedParameters.add(0, definingClass);
-			if (declaration.isMethod()
-			        || (declaration.isInitializer() && (node.getParentNode() instanceof MemberAccess))) {
+			if (declaration.isMethod()) {
 				arguments.add(0, stack.pop());
 			} else if (declaration.isInitializer()) {
-				LLVMIdentifier<LLVMType> selfReference =
-				        codeGenerator.callConstructor(contextUtils.active(), definingClass);
-				if (!declaration.isDefaultInitializer()) {
-					codeGenerator.callVoid(
-					        contextUtils.active(),
-					        nameMangler.mangleProcedure(definingClass.getDefaultInitializer()),
-					        Arrays.<LLVMIdentifier<?>> asList(selfReference),
-					        Arrays.<TypeDeclaration> asList(definingClass));
+				if ((node.getParentNode() instanceof MemberAccess)
+				        && (((MemberAccess) node.getParentNode()).getRight() == node)) {
+					arguments.add(0, stack.pop());
+				} else {
+					LLVMIdentifier<LLVMType> selfReference =
+					        codeGenerator.callConstructor(contextUtils.active(), definingClass);
+					if (!declaration.isDefaultInitializer()) {
+						codeGenerator.callVoid(
+						        contextUtils.active(),
+						        nameMangler.mangleProcedure(definingClass.getDefaultInitializer()),
+						        Arrays.<LLVMIdentifier<?>> asList(selfReference),
+						        Arrays.<TypeDeclaration> asList(definingClass));
+					}
+					arguments.add(0, selfReference);
 				}
-				arguments.add(0, selfReference);
 			}
 		}
 
