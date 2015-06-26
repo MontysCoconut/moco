@@ -1,0 +1,17 @@
+// Testing: Methods of classes
+//
+// The methods (functions and procedures) of classes must work together if
+// classes are instantiated without being assigned to a variable.
+// (see: https://github.com/MontysCoconut/moco/issues/17)
+//
+// Expected output: 44
+
+class Person:
+  + Int age():
+    return 4
+
+  + printAge():
+    print(self.age())
+
+print(Person().age())
+Person().printAge()
