@@ -300,7 +300,17 @@ public class ASTBuilder extends MontyBaseVisitor<ASTNode> {
 			if (astNode instanceof Declaration) {
 
 				Declaration decl = (Declaration) astNode;
-				decl.setAccessModifier(AccessModifier.stringToAccess(member.accessModifier().modifier.getText()));
+				AccessModifierContext modifierCtx = member.accessModifier();
+
+				// access modifiers are optional
+				if (modifierCtx != null) {
+					decl.setAccessModifier(AccessModifier.stringToAccess(modifierCtx.modifier.getText()));
+				}
+				// if none is given, the default accessibility is "package"
+				else {
+					decl.setAccessModifier(AccessModifier.stringToAccess("~"));
+				}
+
 				cl.getBlock().addDeclaration(decl);
 			} else if (astNode instanceof Assignment) {
 
