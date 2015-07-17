@@ -66,6 +66,8 @@ public class ProcedureDeclaration extends TypeDeclaration {
 	private ResolvableIdentifier returnTypeIdentifier;
 	private TypeDeclaration returnType;
 
+	private boolean abstractMethod = false;
+
 	/** Constructor.
 	 *
 	 * @param position
@@ -259,5 +261,14 @@ public class ProcedureDeclaration extends TypeDeclaration {
 
 		return !((proc.getReturnType() != null) && (proc.getReturnType() != CoreClasses.voidType()))
 		        || returnType.matchesType(proc.getReturnType());
+	}
+
+	/** @param abstractMethod */
+	public void setAbstract(boolean abstractMethod) {
+		this.abstractMethod = abstractMethod;
+	}
+
+	public boolean isAbstract() {
+		return abstractMethod;
 	}
 }

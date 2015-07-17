@@ -538,6 +538,15 @@ public class CodeGenerationVisitor extends BaseVisitor {
 
 	@Override
 	public void visit(ProcedureDeclaration node) {
+		if (node.isAbstract()) {
+			openNewFunctionScope();
+			addFunction(node, node.getReturnType() != null ? node.getReturnType() : CoreClasses.voidType());
+			codeGenerator.returnValue(
+			        contextUtils.active(),
+			        (LLVMIdentifier<LLVMType>) (LLVMIdentifier<?>) llvmIdentifierFactory.voidId(),
+			        CoreClasses.voidType());
+			closeFunctionContext();
+		}
 		if (node.isFunction()) {
 			openNewFunctionScope();
 			if (isNative(node)) {

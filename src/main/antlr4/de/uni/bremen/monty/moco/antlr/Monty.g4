@@ -22,7 +22,7 @@ independentDeclaration
   ;
 
 classDeclaration
-  : 'abstract'? 'class' type ('inherits' typeList)?
+  : AbstractKeyword? 'class' type ('inherits' typeList)?
     ':' EndOfLine
     Indent
         (memberDeclaration+ | 'pass' EndOfLine)
@@ -31,6 +31,11 @@ classDeclaration
 
 memberDeclaration
   : accessModifier? independentDeclaration
+  | accessModifier? abstractMethodDeclaration
+  ;
+
+abstractMethodDeclaration
+  : AbstractKeyword type? Identifier Lparenthesis parameterList? Rparenthesis EndOfLine
   ;
 
 accessModifier

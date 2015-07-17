@@ -15,7 +15,7 @@ public class ClassDeclarationVariation extends ClassDeclaration {
 	public ClassDeclarationVariation(ClassDeclaration classDecl, ResolvableIdentifier identifier,
 	        List<ClassDeclaration> concreteGenericTypes) {
 		super(classDecl.getPosition(), identifier, classDecl.getSuperClassIdentifiers(), new Block(
-		        classDecl.getBlock().getPosition()), classDecl.getAbstractGenericTypes());
+		        classDecl.getBlock().getPosition()), classDecl.isAbstract(), classDecl.getAbstractGenericTypes());
 		this.concreteGenericTypes = concreteGenericTypes;
 		setParentNode(classDecl.getParentNode());
 		setScope(classDecl.getScope());

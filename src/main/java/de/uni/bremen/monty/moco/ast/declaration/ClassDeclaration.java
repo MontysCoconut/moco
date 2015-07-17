@@ -76,6 +76,8 @@ public class ClassDeclaration extends TypeDeclaration {
 	 * to the vmt. */
 	private int lastAttributeIndex = 1;
 
+	private boolean abstractClass = false;
+
 	/** Constructor.
 	 *
 	 * @param position
@@ -96,12 +98,13 @@ public class ClassDeclaration extends TypeDeclaration {
 	}
 
 	public ClassDeclaration(Position position, Identifier identifier, List<ResolvableIdentifier> superClassIdentifiers,
-	        Block block, List<AbstractGenericType> abstractGenericTypes) {
+	        Block block, boolean isAbstract, List<AbstractGenericType> abstractGenericTypes) {
 		super(position, identifier);
 		this.superClassIdentifiers = superClassIdentifiers;
 		this.block = block;
 		this.abstractGenericTypes = abstractGenericTypes;
 		this.variations = new ArrayList<>(abstractGenericTypes.size());
+		this.abstractClass = isAbstract;
 	}
 
 	/** Get the list of declarations and assignments.
@@ -109,6 +112,11 @@ public class ClassDeclaration extends TypeDeclaration {
 	 * @return the block with declarations and assignments */
 	public Block getBlock() {
 		return block;
+	}
+
+	/** @return true if the class is abstract */
+	public boolean isAbstract() {
+		return this.abstractClass;
 	}
 
 	/** Get the list of identifiers of direct superclasses
