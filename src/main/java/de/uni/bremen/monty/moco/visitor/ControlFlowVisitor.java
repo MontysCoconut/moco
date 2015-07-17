@@ -69,8 +69,12 @@ public class ControlFlowVisitor extends BaseVisitor {
 	@Override
 	public void visit(ProcedureDeclaration node) {
 		if (node.isFunction()) {
-			needsReturnStatement = true;
-			super.visit(node);
+			if (node.isAbstract()) {
+				needsReturnStatement = false;
+			} else {
+				needsReturnStatement = true;
+				super.visit(node);
+			}
 
 			if (needsReturnStatement) {
 				throw new InvalidControlFlowException(node, "ReturnStatement needed.");

@@ -538,33 +538,51 @@ public class CodeGenerationVisitor extends BaseVisitor {
 
 	@Override
 	public void visit(ProcedureDeclaration node) {
-		if (node.isFunction()) {
+		if (node.isAbstract()) {
 			openNewFunctionScope();
-			if (isNative(node)) {
-				addNativeFunction(node, node.getReturnType());
+			if ((node.getReturnType() == null) || (node.getReturnType() == CoreClasses.voidType())) {
+				addFunction(node, CoreClasses.voidType());
+				codeGenerator.returnValue(
+				        contextUtils.active(),
+				        (LLVMIdentifier<LLVMType>) (LLVMIdentifier<?>) llvmIdentifierFactory.voidId(),
+				        CoreClasses.voidType());
 			} else {
 				addFunction(node, node.getReturnType());
-				visitDoubleDispatched(node.getBody());
+				codeGenerator.returnValue(
+				        contextUtils.active(),
+				        (LLVMIdentifier<LLVMType>) (LLVMIdentifier<?>) llvmIdentifierFactory.constantNull((LLVMPointer) codeGenerator.mapToLLVMType(node.getReturnType())),
+				        node.getReturnType());
 			}
 			closeFunctionContext();
 		} else {
-			openNewFunctionScope();
-			if (isNative(node) && !node.isInitializer()) {
-				// addNativeFunction(node, CoreClasses.voidType());
-				addNativeFunction(node, node.getReturnType());
-			} else {
-				// addFunction(node, CoreClasses.voidType());
-				addFunction(node, node.getReturnType());
-
-				visitDoubleDispatched(node.getBody());
-				if (node.isInitializer()) {
-					codeGenerator.returnValue(
-					        contextUtils.active(),
-					        (LLVMIdentifier<LLVMType>) (LLVMIdentifier<?>) llvmIdentifierFactory.voidId(),
-					        CoreClasses.voidType());
+			if (node.isFunction()) {
+				openNewFunctionScope();
+				if (isNative(node)) {
+					addNativeFunction(node, node.getReturnType());
+				} else {
+					addFunction(node, node.getReturnType());
+					visitDoubleDispatched(node.getBody());
 				}
+				closeFunctionContext();
+			} else {
+				openNewFunctionScope();
+				if (isNative(node) && !node.isInitializer()) {
+					// addNativeFunction(node, CoreClasses.voidType());
+					addNativeFunction(node, node.getReturnType());
+				} else {
+					// addFunction(node, CoreClasses.voidType());
+					addFunction(node, node.getReturnType());
+
+					visitDoubleDispatched(node.getBody());
+					if (node.isInitializer()) {
+						codeGenerator.returnValue(
+						        contextUtils.active(),
+						        (LLVMIdentifier<LLVMType>) (LLVMIdentifier<?>) llvmIdentifierFactory.voidId(),
+						        CoreClasses.voidType());
+					}
+				}
+				closeFunctionContext();
 			}
-			closeFunctionContext();
 		}
 	}
 

@@ -258,6 +258,26 @@ public class ASTBuilder extends MontyBaseVisitor<ASTNode> {
 		return procDecl2;
 	}
 
+	private ProcedureDeclaration buildAbstractMethod(boolean functionDeclaration,
+	        ParameterListContext parameterListContext, Token token, TypeContext typeContext, Identifier identifier) {
+
+		List<VariableDeclaration> params = parameterListToVarDeclList(parameterListContext);
+
+		List<VariableDeclaration> allVariableDeclarations = new ArrayList<>();
+		allVariableDeclarations.addAll(params);
+
+		ResolvableIdentifier typeIdent = null;
+		if (typeContext != null) {
+			typeIdent = convertResolvableIdentifier(typeContext);
+		}
+
+		ProcedureDeclaration procDecl =
+		        new ProcedureDeclaration(position(token), identifier, new Block(position(token)),
+		                allVariableDeclarations, currentProcedureContext, typeIdent);
+		procDecl.setAbstract(true);
+		return procDecl;
+	}
+
 	@Override
 	public ASTNode visitFunctionDeclaration(FunctionDeclarationContext ctx) {
 		Identifier identifier;
@@ -280,10 +300,12 @@ public class ASTBuilder extends MontyBaseVisitor<ASTNode> {
 		}
 
 		ArrayList<AbstractGenericType> genericTypes = new ArrayList<>();
+		// if there is an 'abstract' keyword, the class is abstract
+		boolean isAbstract = ctx.getTokens(MontyParser.AbstractKeyword).size() > 0;
 
 		ClassDeclaration cl =
 		        new ClassDeclaration(position(ctx.getStart()), convertResolvableIdentifier(ctx.type()), superClasses,
-		                new Block(position(ctx.getStart())), genericTypes);
+		                new Block(position(ctx.getStart())), isAbstract, genericTypes);
 
 		TypeContext type = ctx.type();
 		if (type.typeList() != null) {
@@ -324,6 +346,16 @@ public class ASTBuilder extends MontyBaseVisitor<ASTNode> {
 		}
 		currentBlocks.pop();
 		return cl;
+	}
+
+	@Override
+	public ASTNode visitAbstractMethodDeclaration(AbstractMethodDeclarationContext ctx) {
+		return buildAbstractMethod(
+		        true,
+		        ctx.parameterList(),
+		        ctx.getStart(),
+		        ctx.type(),
+		        new Identifier(getText(ctx.Identifier())));
 	}
 
 	@Override

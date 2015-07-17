@@ -47,6 +47,7 @@ import de.uni.bremen.monty.moco.ast.statement.Assignment;
 import de.uni.bremen.monty.moco.ast.statement.ConditionalStatement;
 import de.uni.bremen.monty.moco.ast.statement.ReturnStatement;
 import de.uni.bremen.monty.moco.exception.InvalidExpressionException;
+import de.uni.bremen.monty.moco.exception.InvalidPlaceToDeclareException;
 import de.uni.bremen.monty.moco.exception.TypeMismatchException;
 
 import java.util.List;
@@ -59,9 +60,35 @@ public class TypeCheckVisitor extends BaseVisitor {
 	/** {@inheritDoc} */
 	@Override
 	public void visit(ClassDeclaration node) {
+		// go through all direct parent classes (indirect classes are not considered, though)
 		for (TypeDeclaration type : node.getSuperClassDeclarations()) {
 			if (!(type instanceof ClassDeclaration)) {
 				throw new TypeMismatchException(node, String.format("Declaration of superclass is not a class."));
+			}
+		}
+
+		if (!node.isAbstract()) {
+			// go through all methods and ensure that there remains no abstract one
+			// (i.e. all abstract ones are overridden)
+			for (ProcedureDeclaration procDecl : node.getVirtualMethodTable()) {
+				if (procDecl.isAbstract()) {
+					ASTNode parent = procDecl;
+					while (!(parent instanceof ClassDeclaration)) {
+						parent = parent.getParentNode();
+					}
+					// if the method is defined directly in the class
+					if (parent == node) {
+						throw new InvalidPlaceToDeclareException(node, "The non-abstract class '"
+						        + node.getIdentifier().toString() + "' contains an abstract method '"
+						        + procDecl.getIdentifier().toString() + "'!");
+					}
+					// if the method is inherited from a super class
+					else {
+						throw new InvalidPlaceToDeclareException(node, "The non-abstract class '"
+						        + node.getIdentifier().toString() + "' inherits an abstract method '"
+						        + procDecl.getIdentifier().toString() + "', which has not been implemented!");
+					}
+				}
 			}
 		}
 		super.visit(node);
@@ -208,6 +235,16 @@ public class TypeCheckVisitor extends BaseVisitor {
 		if (node.isFunction()) {
 			if (!(node.getReturnType() instanceof ClassDeclaration || node.getReturnType() instanceof AbstractGenericType)) {
 				throw new TypeMismatchException(node, "Must return a class type.");
+			}
+		}
+		if (node.isAbstract()) {
+			ASTNode parent = node.getParentNode();
+			while (!(parent instanceof ClassDeclaration)) {
+				parent = parent.getParentNode();
+			}
+			if (!((ClassDeclaration) parent).isAbstract()) {
+				throw new InvalidPlaceToDeclareException(node, "Abstract method '" + node.getIdentifier()
+				        + "' declared in non-abstract class '" + ((ClassDeclaration) parent).getIdentifier() + "'!");
 			}
 		}
 	}
