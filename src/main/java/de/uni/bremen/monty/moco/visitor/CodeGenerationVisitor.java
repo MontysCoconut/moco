@@ -546,34 +546,35 @@ public class CodeGenerationVisitor extends BaseVisitor {
 			        (LLVMIdentifier<LLVMType>) (LLVMIdentifier<?>) llvmIdentifierFactory.voidId(),
 			        CoreClasses.voidType());
 			closeFunctionContext();
-		}
-		if (node.isFunction()) {
-			openNewFunctionScope();
-			if (isNative(node)) {
-				addNativeFunction(node, node.getReturnType());
-			} else {
-				addFunction(node, node.getReturnType());
-				visitDoubleDispatched(node.getBody());
-			}
-			closeFunctionContext();
 		} else {
-			openNewFunctionScope();
-			if (isNative(node) && !node.isInitializer()) {
-				// addNativeFunction(node, CoreClasses.voidType());
-				addNativeFunction(node, node.getReturnType());
-			} else {
-				// addFunction(node, CoreClasses.voidType());
-				addFunction(node, node.getReturnType());
-
-				visitDoubleDispatched(node.getBody());
-				if (node.isInitializer()) {
-					codeGenerator.returnValue(
-					        contextUtils.active(),
-					        (LLVMIdentifier<LLVMType>) (LLVMIdentifier<?>) llvmIdentifierFactory.voidId(),
-					        CoreClasses.voidType());
+			if (node.isFunction()) {
+				openNewFunctionScope();
+				if (isNative(node)) {
+					addNativeFunction(node, node.getReturnType());
+				} else {
+					addFunction(node, node.getReturnType());
+					visitDoubleDispatched(node.getBody());
 				}
+				closeFunctionContext();
+			} else {
+				openNewFunctionScope();
+				if (isNative(node) && !node.isInitializer()) {
+					// addNativeFunction(node, CoreClasses.voidType());
+					addNativeFunction(node, node.getReturnType());
+				} else {
+					// addFunction(node, CoreClasses.voidType());
+					addFunction(node, node.getReturnType());
+
+					visitDoubleDispatched(node.getBody());
+					if (node.isInitializer()) {
+						codeGenerator.returnValue(
+						        contextUtils.active(),
+						        (LLVMIdentifier<LLVMType>) (LLVMIdentifier<?>) llvmIdentifierFactory.voidId(),
+						        CoreClasses.voidType());
+					}
+				}
+				closeFunctionContext();
 			}
-			closeFunctionContext();
 		}
 	}
 
