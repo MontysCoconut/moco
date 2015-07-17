@@ -203,10 +203,12 @@ public class TypeCheckVisitor extends BaseVisitor {
 
 	/** {@inheritDoc} */
 	@Override
-	public void visit(FunctionDeclaration node) {
+	public void visit(ProcedureDeclaration node) {
 		super.visit(node);
-		if (!(node.getReturnType() instanceof ClassDeclaration || node.getReturnType() instanceof AbstractGenericType)) {
-			throw new TypeMismatchException(node, "Must return a class type.");
+		if (node.isFunction()) {
+			if (!(node.getReturnType() instanceof ClassDeclaration || node.getReturnType() instanceof AbstractGenericType)) {
+				throw new TypeMismatchException(node, "Must return a class type.");
+			}
 		}
 	}
 
@@ -216,21 +218,19 @@ public class TypeCheckVisitor extends BaseVisitor {
 		super.visit(node);
 		TypeDeclaration declaration = node.getDeclaration();
 
-		// FunctionDeclaration extends ProcedureDeclaration
 		if (!(declaration instanceof ProcedureDeclaration)) {
 			throw new TypeMismatchException(node, String.format("%s is not a callable.", node.getIdentifier()));
 		}
 
 		ProcedureDeclaration procedure = (ProcedureDeclaration) declaration;
-		if (declaration instanceof FunctionDeclaration) {
-			FunctionDeclaration function = (FunctionDeclaration) declaration;
-			if (function.isInitializer()) {
-				throw new TypeMismatchException(node, "Contructor of has to be a procedure.");
+		if (procedure.isFunction()) {
+			if (procedure.isInitializer()) {
+				throw new TypeMismatchException(node, "Contructor has to be a procedure.");
 			}
-			if (function.getReturnType() instanceof AbstractGenericType) {
+			if (procedure.getReturnType() instanceof AbstractGenericType) {
 				// TODO Typecheck
-			} else if (!node.getType().matchesType(function.getReturnType())) {
-				throw new TypeMismatchException(node, "Returntype of function call does not match declaration.");
+			} else if (!node.getType().matchesType(procedure.getReturnType())) {
+				throw new TypeMismatchException(node, "Return type of function call does not match declaration.");
 			}
 		} else {
 			if (!procedure.isInitializer() && node.getType() != CoreClasses.voidType()) {
@@ -283,13 +283,12 @@ public class TypeCheckVisitor extends BaseVisitor {
 		while (!(parent instanceof ProcedureDeclaration)) {
 			parent = parent.getParentNode();
 		}
-
-		if (parent instanceof FunctionDeclaration) {
-			FunctionDeclaration func = (FunctionDeclaration) parent;
-			if (!(node.getParameter().getType().matchesType(func.getReturnType()))) {
+		ProcedureDeclaration proc = ((ProcedureDeclaration) parent);
+		if (proc.isFunction()) {
+			if (!(node.getParameter().getType().matchesType(proc.getReturnType()))) {
 				throw new TypeMismatchException(node, String.format(
 				        "Expected to return %s:",
-				        func.getReturnType().getIdentifier()));
+				        proc.getReturnType().getIdentifier()));
 			}
 		} else if (node.getParameter() != null) {
 			throw new TypeMismatchException(node, "Expected to return void.");

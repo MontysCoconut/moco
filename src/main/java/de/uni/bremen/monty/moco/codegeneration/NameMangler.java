@@ -117,10 +117,9 @@ public class NameMangler {
 	}
 
 	public String mangleProcedure(ProcedureDeclaration node) {
-		if (node instanceof FunctionDeclaration) {
-			FunctionDeclaration functionDeclaration = (FunctionDeclaration) node;
+		if (node.isFunction()) {
 			String funcName = Mangled.FUNC + escapeForLLVM(node.getIdentifier());
-			funcName += Mangled.TYPE + mangleClass(getConcreteClass(node, functionDeclaration.getReturnType()));
+			funcName += Mangled.TYPE + mangleClass(getConcreteClass(node, node.getReturnType()));
 
 			return mangleProcedureDeclaration(node, funcName);
 

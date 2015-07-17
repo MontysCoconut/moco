@@ -260,22 +260,19 @@ public class ResolveVisitor extends VisitOnceVisitor {
 
 	/** {@inheritDoc} */
 	@Override
-	public void visit(FunctionDeclaration node) {
-		Scope scope = node.getScope();
-
-		TypeDeclaration returnType = scope.resolveType(node.getReturnTypeIdentifier());
-		returnType = getGenericTypeDeclaration(scope, returnType, node.getReturnTypeIdentifier());
-		node.setReturnType(returnType);
-		super.visit(node);
-	}
-
-	/** {@inheritDoc} */
-	@Override
 	public void visit(ProcedureDeclaration node) {
-		if (node.isMethod() && node.getIdentifier().getSymbol().equals("initializer")) {
-			node.setDeclarationType(ProcedureDeclaration.DeclarationType.INITIALIZER);
+		if (node.isFunction()) {
+			Scope scope = node.getScope();
+			TypeDeclaration returnType = scope.resolveType(node.getReturnTypeIdentifier());
+			returnType = getGenericTypeDeclaration(scope, returnType, node.getReturnTypeIdentifier());
+			node.setReturnType(returnType);
+			super.visit(node);
+		} else {
+			if (node.isMethod() && node.getIdentifier().getSymbol().equals("initializer")) {
+				node.setDeclarationType(ProcedureDeclaration.DeclarationType.INITIALIZER);
+			}
+			super.visit(node);
 		}
-		super.visit(node);
 	}
 
 	/** {@inheritDoc} */
@@ -307,11 +304,10 @@ public class ResolveVisitor extends VisitOnceVisitor {
 			ProcedureDeclaration concreteFunction = getConcreteProcedure(node, procedure);
 
 			node.setDeclaration(concreteFunction);
-			if (procedure instanceof FunctionDeclaration) {
-				FunctionDeclaration function = (FunctionDeclaration) procedure;
-				visitDoubleDispatched(function);
+			if (procedure.isFunction()) {
+				visitDoubleDispatched(procedure);
 
-				node.setType(((FunctionDeclaration) concreteFunction).getReturnType());
+				node.setType(concreteFunction.getReturnType());
 			} else {
 				node.setType(CoreClasses.voidType());
 			}
@@ -387,7 +383,7 @@ public class ResolveVisitor extends VisitOnceVisitor {
 				// and verify that it is a procedure...
 				if (declaration instanceof ProcedureDeclaration) {
 					// and not a function
-					if (!(declaration instanceof FunctionDeclaration)) {
+					if (!(((ProcedureDeclaration) declaration).isFunction())) {
 						procedures.add((ProcedureDeclaration) declaration);
 					}
 				}

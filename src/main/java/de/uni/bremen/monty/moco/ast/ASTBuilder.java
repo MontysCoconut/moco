@@ -200,13 +200,14 @@ public class ASTBuilder extends MontyBaseVisitor<ASTNode> {
 			if (functionDeclaration) {
 				block.addStatement(new ReturnStatement(new Position(), expression));
 				procDecl1 =
-				        new FunctionDeclaration(position(token), identifier, block, subParams, declarationTypeCopy,
+				        new ProcedureDeclaration(position(token), identifier, block, subParams, declarationTypeCopy,
 				                convertResolvableIdentifier(typeContext));
 			} else {
 				block.addStatement((Statement) expression);
 				block.addStatement(new ReturnStatement(new Position(), null));
 				procDecl1 =
-				        new ProcedureDeclaration(position(token), identifier, block, subParams, declarationTypeCopy);
+				        new ProcedureDeclaration(position(token), identifier, block, subParams, declarationTypeCopy,
+				                (TypeDeclaration) null);
 			}
 			currentBlocks.peek().addDeclaration(procDecl1);
 		}
@@ -247,12 +248,12 @@ public class ASTBuilder extends MontyBaseVisitor<ASTNode> {
 
 		if (functionDeclaration) {
 			procDecl2 =
-			        new FunctionDeclaration(position(token), identifier, (Block) visit(statementBlockContext),
+			        new ProcedureDeclaration(position(token), identifier, (Block) visit(statementBlockContext),
 			                allVariableDeclarations, declarationTypeCopy, convertResolvableIdentifier(typeContext));
 		} else {
 			procDecl2 =
 			        new ProcedureDeclaration(position(token), identifier, (Block) visit(statementBlockContext),
-			                allVariableDeclarations, declarationTypeCopy);
+			                allVariableDeclarations, declarationTypeCopy, (TypeDeclaration) null);
 		}
 		return procDecl2;
 	}

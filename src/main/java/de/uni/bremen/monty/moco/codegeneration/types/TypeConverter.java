@@ -78,9 +78,8 @@ public class TypeConverter {
 		for (VariableDeclaration varDecl : type.getParameter()) {
 			parameter.add(mapToLLVMType(varDecl.getType()));
 		}
-		if (type instanceof FunctionDeclaration) {
-			FunctionDeclaration func = (FunctionDeclaration) type;
-			return pointer(function(mapToLLVMType(func.getReturnType()), parameter));
+		if (type.isFunction()) {
+			return pointer(function(mapToLLVMType(type.getReturnType()), parameter));
 		}
 		return pointer(function(voidType(), parameter));
 	}

@@ -38,10 +38,7 @@
  */
 package de.uni.bremen.monty.moco.ast.declaration;
 
-import de.uni.bremen.monty.moco.ast.ASTNode;
-import de.uni.bremen.monty.moco.ast.Block;
-import de.uni.bremen.monty.moco.ast.Identifier;
-import de.uni.bremen.monty.moco.ast.Position;
+import de.uni.bremen.monty.moco.ast.*;
 import de.uni.bremen.monty.moco.visitor.BaseVisitor;
 
 import java.util.List;
@@ -65,6 +62,10 @@ public class ProcedureDeclaration extends TypeDeclaration {
 	/** Index of the procedure in the vmt if it is a procedure in the class struct */
 	private int vmtIndex;
 
+	/** The return returnType. */
+	private ResolvableIdentifier returnTypeIdentifier;
+	private TypeDeclaration returnType;
+
 	/** Constructor.
 	 *
 	 * @param position
@@ -76,17 +77,69 @@ public class ProcedureDeclaration extends TypeDeclaration {
 	 * @param parameter
 	 *            the parameter of this procedure */
 	public ProcedureDeclaration(Position position, Identifier identifier, Block body,
-	        List<VariableDeclaration> parameter, DeclarationType declarationType) {
+	        List<VariableDeclaration> parameter, DeclarationType declarationType,
+	        ResolvableIdentifier returnTypeIdentifier) {
 		super(position, identifier);
 		this.body = body;
 		this.parameter = parameter;
 		this.declarationType = declarationType;
 		this.vmtIndex = -1;
+		this.returnTypeIdentifier = returnTypeIdentifier;
 	}
 
 	public ProcedureDeclaration(Position position, Identifier identifier, Block body,
-	        List<VariableDeclaration> parameter) {
-		this(position, identifier, body, parameter, DeclarationType.UNBOUND);
+	        List<VariableDeclaration> parameter, ResolvableIdentifier returnTypeIdentifier) {
+		this(position, identifier, body, parameter, DeclarationType.UNBOUND, returnTypeIdentifier);
+	}
+
+	/** Constructor
+	 *
+	 * @param position
+	 *            * Position of this node
+	 * @param identifier
+	 *            the identifier
+	 * @param body
+	 *            the body of this function
+	 * @param parameter
+	 *            the parameter of this function
+	 * @param returnType
+	 *            the return returnType */
+	public ProcedureDeclaration(Position position, Identifier identifier, Block body,
+	        List<VariableDeclaration> parameter, ClassDeclaration returnType) {
+		this(position, identifier, body, parameter,
+		        returnType != null ? ResolvableIdentifier.convert(returnType.getIdentifier()) : null);
+		this.returnType = returnType;
+	}
+
+	public ProcedureDeclaration(Position position, Identifier identifier, Block body,
+	        List<VariableDeclaration> parameter, DeclarationType declarationType, TypeDeclaration returnType) {
+		this(position, identifier, body, parameter, declarationType,
+		        returnType != null ? ResolvableIdentifier.convert(returnType.getIdentifier()) : null);
+		this.returnType = returnType;
+	}
+
+	/** get the return returnType.
+	 *
+	 * @return the return returnType */
+	public ResolvableIdentifier getReturnTypeIdentifier() {
+		return returnTypeIdentifier;
+	}
+
+	/** get the returnType.
+	 *
+	 * @return the returnType */
+	public TypeDeclaration getReturnType() {
+		if (returnType == null) {
+			return CoreClasses.voidType();
+		}
+		return returnType;
+	}
+
+	/** set the returnType
+	 *
+	 * @param returnType */
+	public void setReturnType(TypeDeclaration returnType) {
+		this.returnType = returnType;
 	}
 
 	/** Get the body block.
@@ -169,6 +222,16 @@ public class ProcedureDeclaration extends TypeDeclaration {
 		visitor.visitDoubleDispatched(body);
 	}
 
+	/** @return true if the procedure has no return type */
+	public boolean isProcedure() {
+		return returnTypeIdentifier == null;
+	}
+
+	/** @return true if the function has a return type */
+	public boolean isFunction() {
+		return returnTypeIdentifier != null;
+	}
+
 	/** Check equality of two types taking into account the AST object hierachy.
 	 * <p>
 	 *
@@ -192,6 +255,9 @@ public class ProcedureDeclaration extends TypeDeclaration {
 				return false;
 			}
 		}
-		return true;
+		ProcedureDeclaration proc = ((ProcedureDeclaration) other);
+
+		return !((proc.getReturnType() != null) && (proc.getReturnType() != CoreClasses.voidType()))
+		        || returnType.matchesType(proc.getReturnType());
 	}
 }

@@ -51,9 +51,9 @@ public class ClassDeclarationVariation extends ClassDeclaration {
 
 	public ProcedureDeclaration mapFunction(ProcedureDeclaration procedureDeclaration) {
 		ProcedureDeclaration funDecl;
-		if (procedureDeclaration instanceof FunctionDeclaration) {
-			TypeDeclaration returnType = mapGenericType(((FunctionDeclaration) procedureDeclaration).getReturnType());
-			funDecl = new ConcreteFunDecl(this, (FunctionDeclaration) procedureDeclaration, returnType);
+		if (procedureDeclaration.isFunction()) {
+			TypeDeclaration returnType = mapGenericType((procedureDeclaration).getReturnType());
+			funDecl = new ConcreteFunDecl(this, procedureDeclaration, returnType);
 		} else {
 			funDecl = new ConcreteProcDecl(this, procedureDeclaration);
 		}
