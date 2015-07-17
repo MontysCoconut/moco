@@ -540,11 +540,19 @@ public class CodeGenerationVisitor extends BaseVisitor {
 	public void visit(ProcedureDeclaration node) {
 		if (node.isAbstract()) {
 			openNewFunctionScope();
-			addFunction(node, node.getReturnType() != null ? node.getReturnType() : CoreClasses.voidType());
-			codeGenerator.returnValue(
-			        contextUtils.active(),
-			        (LLVMIdentifier<LLVMType>) (LLVMIdentifier<?>) llvmIdentifierFactory.voidId(),
-			        CoreClasses.voidType());
+			if ((node.getReturnType() == null) || (node.getReturnType() == CoreClasses.voidType())) {
+				addFunction(node, CoreClasses.voidType());
+				codeGenerator.returnValue(
+				        contextUtils.active(),
+				        (LLVMIdentifier<LLVMType>) (LLVMIdentifier<?>) llvmIdentifierFactory.voidId(),
+				        CoreClasses.voidType());
+			} else {
+				addFunction(node, node.getReturnType());
+				codeGenerator.returnValue(
+				        contextUtils.active(),
+				        (LLVMIdentifier<LLVMType>) (LLVMIdentifier<?>) llvmIdentifierFactory.constantNull((LLVMPointer) codeGenerator.mapToLLVMType(node.getReturnType())),
+				        node.getReturnType());
+			}
 			closeFunctionContext();
 		} else {
 			if (node.isFunction()) {
