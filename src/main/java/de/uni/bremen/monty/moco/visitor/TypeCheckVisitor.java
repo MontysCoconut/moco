@@ -60,9 +60,22 @@ public class TypeCheckVisitor extends BaseVisitor {
 	/** {@inheritDoc} */
 	@Override
 	public void visit(ClassDeclaration node) {
+		// go through all direct parent classes (indirect classes are not considered, though)
 		for (TypeDeclaration type : node.getSuperClassDeclarations()) {
 			if (!(type instanceof ClassDeclaration)) {
 				throw new TypeMismatchException(node, String.format("Declaration of superclass is not a class."));
+			}
+		}
+
+		if (!node.isAbstract()) {
+			// go through all methods and ensure that there remains no abstract one
+			// (i.e. all abstract ones are overridden)
+			for (ProcedureDeclaration procDecl : node.getVirtualMethodTable()) {
+				if (procDecl.isAbstract()) {
+					throw new InvalidPlaceToDeclareException(node, "The class '" + node.getIdentifier().toString()
+					        + "' inherits an abstract method '" + procDecl.getIdentifier().toString()
+					        + "', which has not been implemented!");
+				}
 			}
 		}
 		super.visit(node);
