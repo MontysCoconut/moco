@@ -42,6 +42,7 @@ import de.uni.bremen.monty.moco.ast.*;
 import de.uni.bremen.monty.moco.ast.declaration.*;
 import de.uni.bremen.monty.moco.ast.expression.*;
 import de.uni.bremen.monty.moco.ast.expression.literal.*;
+import de.uni.bremen.monty.moco.exception.InvalidExpressionException;
 import de.uni.bremen.monty.moco.exception.UnknownIdentifierException;
 import de.uni.bremen.monty.moco.exception.UnknownTypeException;
 
@@ -291,6 +292,12 @@ public class ResolveVisitor extends VisitOnceVisitor {
 		if (declaration != null && declaration instanceof ClassDeclaration) {
 			ClassDeclaration classDecl = (ClassDeclaration) declaration;
 			ResolvableIdentifier identifier = node.getIdentifier();
+
+			if (classDecl.isAbstract()) {
+				throw new InvalidExpressionException(node, "The abstract class '" + identifier.toString()
+				        + "' may not be instantiated");
+			}
+
 			declaration = getGenericTypeDeclaration(scope, classDecl, identifier);
 			node.setType(declaration);
 			ProcedureDeclaration initializer = findMatchingInitializer(node, classDecl);
