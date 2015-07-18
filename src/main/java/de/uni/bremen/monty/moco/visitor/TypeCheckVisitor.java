@@ -47,6 +47,7 @@ import de.uni.bremen.monty.moco.ast.statement.Assignment;
 import de.uni.bremen.monty.moco.ast.statement.ConditionalStatement;
 import de.uni.bremen.monty.moco.ast.statement.ReturnStatement;
 import de.uni.bremen.monty.moco.exception.InvalidExpressionException;
+import de.uni.bremen.monty.moco.exception.InvalidPlaceToDeclareException;
 import de.uni.bremen.monty.moco.exception.TypeMismatchException;
 
 import java.util.List;
@@ -208,6 +209,16 @@ public class TypeCheckVisitor extends BaseVisitor {
 		if (node.isFunction()) {
 			if (!(node.getReturnType() instanceof ClassDeclaration || node.getReturnType() instanceof AbstractGenericType)) {
 				throw new TypeMismatchException(node, "Must return a class type.");
+			}
+		}
+		if (node.isAbstract()) {
+			ASTNode parent = node.getParentNode();
+			while (!(parent instanceof ClassDeclaration)) {
+				parent = parent.getParentNode();
+			}
+			if (!((ClassDeclaration) parent).isAbstract()) {
+				throw new InvalidPlaceToDeclareException(node, "Abstract method '" + node.getIdentifier()
+				        + "' declared in non-abstract class '" + ((ClassDeclaration) parent).getIdentifier() + "'!");
 			}
 		}
 	}
