@@ -1,0 +1,14 @@
+// Testing: Abstract classes containing abstract methods
+//
+// Expected output: "LOG: Hello, World!\n"
+
+abstract class Logger:
+    abstract log(String message)
+
+class StdOutLogger inherits Logger:
+    log(String message):
+        print("LOG: ")
+        println(message)
+
+Logger logger := StdOutLogger()
+logger.log("Hello, World!")

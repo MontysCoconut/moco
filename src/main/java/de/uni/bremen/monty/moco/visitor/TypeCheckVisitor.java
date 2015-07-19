@@ -72,9 +72,22 @@ public class TypeCheckVisitor extends BaseVisitor {
 			// (i.e. all abstract ones are overridden)
 			for (ProcedureDeclaration procDecl : node.getVirtualMethodTable()) {
 				if (procDecl.isAbstract()) {
-					throw new InvalidPlaceToDeclareException(node, "The class '" + node.getIdentifier().toString()
-					        + "' inherits an abstract method '" + procDecl.getIdentifier().toString()
-					        + "', which has not been implemented!");
+					ASTNode parent = procDecl;
+					while (!(parent instanceof ClassDeclaration)) {
+						parent = parent.getParentNode();
+					}
+					// if the method is defined directly in the class
+					if (parent == node) {
+						throw new InvalidPlaceToDeclareException(node, "The non-abstract class '"
+						        + node.getIdentifier().toString() + "' contains an abstract method '"
+						        + procDecl.getIdentifier().toString() + "'!");
+					}
+					// if the method is inherited from a super class
+					else {
+						throw new InvalidPlaceToDeclareException(node, "The non-abstract class '"
+						        + node.getIdentifier().toString() + "' inherits an abstract method '"
+						        + procDecl.getIdentifier().toString() + "', which has not been implemented!");
+					}
 				}
 			}
 		}
