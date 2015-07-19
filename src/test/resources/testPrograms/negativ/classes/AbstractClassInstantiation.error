@@ -1,0 +1,1 @@
+ResolveVisitor caught error in FunctionCall at file: AbstractClassInstantiation.monty, line: 4, char: 17: The abstract class 'Logger' may not be instantiated

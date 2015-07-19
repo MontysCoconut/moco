@@ -1,0 +1,4 @@
+abstract class Logger:
+    abtract log(String message):
+
+Logger logger := Logger()
