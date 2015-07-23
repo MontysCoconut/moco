@@ -96,6 +96,7 @@ public class ControlFlowVisitor extends BaseVisitor {
 		boolean needsReturnStatementCopy = needsReturnStatement;
 		visitDoubleDispatched(node.getThenBlock());
 		boolean needsReturnStatementCopyThen = needsReturnStatement;
+		this.needsReturnStatement = needsReturnStatementCopy;
 		visitDoubleDispatched(node.getElseBlock());
 		boolean needsReturnStatementCopyElse = needsReturnStatement;
 
