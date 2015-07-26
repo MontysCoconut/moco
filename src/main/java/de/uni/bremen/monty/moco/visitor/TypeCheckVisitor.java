@@ -214,16 +214,10 @@ public class TypeCheckVisitor extends BaseVisitor {
 	@Override
 	public void visit(FunctionCall node) {
 		super.visit(node);
-		TypeDeclaration declaration = node.getDeclaration();
+		ProcedureDeclaration procedure = node.getDeclaration();
 
-		// FunctionDeclaration extends ProcedureDeclaration
-		if (!(declaration instanceof ProcedureDeclaration)) {
-			throw new TypeMismatchException(node, String.format("%s is not a callable.", node.getIdentifier()));
-		}
-
-		ProcedureDeclaration procedure = (ProcedureDeclaration) declaration;
-		if (declaration instanceof FunctionDeclaration) {
-			FunctionDeclaration function = (FunctionDeclaration) declaration;
+		if (procedure instanceof FunctionDeclaration) {
+			FunctionDeclaration function = (FunctionDeclaration) procedure;
 			if (function.isInitializer()) {
 				throw new TypeMismatchException(node, "Contructor of has to be a procedure.");
 			}

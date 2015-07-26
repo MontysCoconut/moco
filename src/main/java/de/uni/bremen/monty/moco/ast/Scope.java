@@ -134,6 +134,19 @@ public class Scope {
 		}
 	}
 
+	/** Tries to resolve an identifier for a type declaration.
+	 *
+	 * @param identifier
+	 *            the identifier to resolve
+	 * @return the declaration or null */
+	public TypeDeclaration tryToResolveType(ResolvableIdentifier identifier) {
+		try {
+			return resolveType(identifier);
+		} catch (UnknownTypeException e) {
+			return null;
+		}
+	}
+
 	/** Resolve an identifier for list of overloaded procedures or functions.
 	 *
 	 * @param identifier

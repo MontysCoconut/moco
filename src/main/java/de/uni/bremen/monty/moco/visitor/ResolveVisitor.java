@@ -75,6 +75,10 @@ public class ResolveVisitor extends VisitOnceVisitor {
 		}
 		super.visit(node);
 
+		setVMT(node, superClasses);
+	}
+
+	private void setVMT(ClassDeclaration node, List<TypeDeclaration> superClasses) {
 		int attributeIndex = 1;
 		List<ProcedureDeclaration> virtualMethodTable = node.getVirtualMethodTable();
 		// This can only deal with single inheritance!
@@ -274,16 +278,13 @@ public class ResolveVisitor extends VisitOnceVisitor {
 		super.visit(node);
 
 		Scope scope = node.getScope();
-		TypeDeclaration declaration = null;
+		Declaration declaration = null;
 
-		try {
-			declaration = scope.resolveType(node.getIdentifier());
-		} catch (UnknownTypeException ute) {
-		}
+		declaration = scope.tryToResolveType(node.getIdentifier());
 
 		if (declaration instanceof ClassDeclaration) {
 			ClassDeclaration classDecl = (ClassDeclaration) declaration;
-			node.setType(declaration);
+			node.setType(classDecl);
 			ProcedureDeclaration initializer = findMatchingInitializer(node, classDecl);
 			initializer = (initializer != null) ? initializer : classDecl.getDefaultInitializer();
 			node.setDeclaration(initializer);
