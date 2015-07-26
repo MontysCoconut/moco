@@ -1,0 +1,30 @@
+class Wrapper<Content>:
+  + initializer(Content content):
+    self.content := content
+
+  - Content content
+
+  + Content get():
+    return self.content
+
+  + set(Content content):
+    self.content := content
+
+class StringWrapper inherits Wrapper<String>:
+
+  + initializer(String content):
+    parent(Wrapper<String>).initializer(content)
+
+  + Bool isStringWrapper():
+    return true
+
+
+
+
+StringWrapper wrapper := StringWrapper("Foo\n")
+print(wrapper.get())
+print(wrapper.isStringWrapper())
+print("\n")
+wrapper.set("Bar")
+print(wrapper.get())
+

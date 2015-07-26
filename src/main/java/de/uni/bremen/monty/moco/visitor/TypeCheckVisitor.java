@@ -227,9 +227,7 @@ public class TypeCheckVisitor extends BaseVisitor {
 			if (function.isInitializer()) {
 				throw new TypeMismatchException(node, "Contructor of has to be a procedure.");
 			}
-			if (function.getReturnType() instanceof AbstractGenericType) {
-				// TODO Typecheck
-			} else if (!node.getType().matchesType(function.getReturnType())) {
+			if (!node.getType().matchesType(function.getReturnType())) {
 				throw new TypeMismatchException(node, "Returntype of function call does not match declaration.");
 			}
 		} else {
@@ -257,12 +255,6 @@ public class TypeCheckVisitor extends BaseVisitor {
 
 				TypeDeclaration declType = declParam.getType();
 				TypeDeclaration callParamType = callParam.getType();
-
-				if (declType instanceof AbstractGenericType && procedure.isInitializer()
-				        && node.getType() instanceof ClassDeclarationVariation) {
-					ClassDeclarationVariation variation = (ClassDeclarationVariation) node.getType();
-					declType = variation.mapGenericType(declType);
-				}
 
 				if (!callParamType.matchesType(declType)) {
 					callMatchesDeclaration = false;

@@ -155,16 +155,11 @@ public class TypeConverter {
 		for (ClassDeclaration classDeclaration : recursiveSuperClassDeclarations) {
 			for (Declaration decl : classDeclaration.getBlock().getDeclarations()) {
 				if (decl instanceof VariableDeclaration) {
-					TypeDeclaration varDecl = ((VariableDeclaration) decl).getType();
-					if (classDecl instanceof ClassDeclarationVariation && varDecl instanceof AbstractGenericType) {
-						ClassDeclarationVariation variation = (ClassDeclarationVariation) classDecl;
-						llvmClassTypeDeclarations.add(mapToLLVMType(variation.mapGenericType(varDecl)));
-					} else {
-						llvmClassTypeDeclarations.add(mapToLLVMType(varDecl));
-					}
+					llvmClassTypeDeclarations.add(mapToLLVMType(((VariableDeclaration) decl).getType()));
 				}
 			}
 		}
+
 		for (ProcedureDeclaration procedure : classDecl.getVirtualMethodTable()) {
 			if (!procedure.isInitializer()) {
 				LLVMType signature = mapToLLVMType(procedure);
@@ -207,17 +202,6 @@ public class TypeConverter {
 
 			T t = (T) mapToLLVMType(concreteType);
 			return t;
-		}
-		// else if (type instanceof ConcreteGenericType) {
-		// ConcreteGenericType concreteType = (ConcreteGenericType) type;
-		// return (T) mapToLLVMType(concreteType.getDecl());
-		// }
-		if (type instanceof ClassDeclaration && !((ClassDeclaration) type).getAbstractGenericTypes().isEmpty()) {
-			ASTNode parent = type;
-			while (!(parent instanceof ClassDeclarationVariation)) {
-				parent = parent.getParentNode();
-			}
-			type = (ClassDeclarationVariation) parent;
 		}
 
 		T llvmType = (T) typeMap.get(type);

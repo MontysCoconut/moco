@@ -38,6 +38,7 @@
  */
 package de.uni.bremen.monty.moco.ast;
 
+import de.uni.bremen.monty.moco.ast.declaration.ClassDeclaration;
 import de.uni.bremen.monty.moco.ast.declaration.Declaration;
 import de.uni.bremen.monty.moco.ast.declaration.ProcedureDeclaration;
 import de.uni.bremen.monty.moco.ast.declaration.TypeDeclaration;
@@ -124,7 +125,7 @@ public class Scope {
 		try {
 			Declaration declaration = resolve(identifier);
 			if (declaration instanceof TypeDeclaration) {
-				return (TypeDeclaration) declaration;
+				return resolveGenericClass((TypeDeclaration) declaration, identifier);
 
 			}
 			throw new UnknownTypeException(identifier);
@@ -206,5 +207,20 @@ public class Scope {
 			procedures.put(identifier, new ArrayList<ProcedureDeclaration>());
 		}
 		procedures.get(identifier).add(declaration);
+	}
+
+	private TypeDeclaration resolveGenericClass(TypeDeclaration originalType, ResolvableIdentifier genericIdentifier) {
+		List<ResolvableIdentifier> genericTypes = genericIdentifier.getGenericTypes();
+		if (!genericTypes.isEmpty() && originalType instanceof ClassDeclaration) {
+			ClassDeclaration originalClass = (ClassDeclaration) originalType;
+			ArrayList<ClassDeclaration> concreteGenerics = new ArrayList<>();
+			for (ResolvableIdentifier genericType : genericTypes) {
+				TypeDeclaration decl = resolveType(genericType);
+				decl = resolveGenericClass(decl, genericType);
+				concreteGenerics.add((ClassDeclaration) decl);
+			}
+			return originalClass.getVariation(genericIdentifier, concreteGenerics);
+		}
+		return originalType;
 	}
 }

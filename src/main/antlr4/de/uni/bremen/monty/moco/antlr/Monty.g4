@@ -162,7 +162,7 @@ primary
   | Identifier
   | ConstantIdentifier
   | 'self'
-  | 'parent(' parent=ClassIdentifier ')'
+  | 'parent(' parent=type ')'
   ;
 
 inOperator
