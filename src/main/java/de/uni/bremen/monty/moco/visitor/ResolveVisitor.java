@@ -75,6 +75,10 @@ public class ResolveVisitor extends VisitOnceVisitor {
 		}
 		super.visit(node);
 
+		setVMT(node, superClasses);
+	}
+
+	private void setVMT(ClassDeclaration node, List<TypeDeclaration> superClasses) {
 		int attributeIndex = 1;
 		List<ProcedureDeclaration> virtualMethodTable = node.getVirtualMethodTable();
 		// This can only deal with single inheritance!
@@ -122,7 +126,6 @@ public class ResolveVisitor extends VisitOnceVisitor {
 		super.visit(node);
 		Scope scope = node.getScope();
 		TypeDeclaration type = scope.resolveType(node.getTypeIdentifier());
-		type = getGenericTypeDeclaration(scope, type, node.getTypeIdentifier());
 		node.setType(type);
 	}
 
@@ -138,8 +141,7 @@ public class ResolveVisitor extends VisitOnceVisitor {
 			VariableDeclaration variable = (VariableDeclaration) declaration;
 			node.setDeclaration(variable);
 			visitDoubleDispatched(variable);
-			TypeDeclaration type = getGenericTypeDeclaration(scope, variable.getType(), node.getIdentifier());
-			node.setType(type);
+			node.setType(variable.getType());
 			if (!(scope instanceof ClassScope) && findEnclosingClass(node) == CoreClasses.voidType()) {
 				if (node.getDeclaration() == null
 				        || node.getDeclaration().getPosition().getLineNumber() > node.getPosition().getLineNumber()) {
@@ -190,14 +192,7 @@ public class ResolveVisitor extends VisitOnceVisitor {
 		}
 		visitDoubleDispatched(node.getRight());
 
-		TypeDeclaration type;
-		if (leftType instanceof ClassDeclarationVariation) {
-			ClassDeclarationVariation classDecl = (ClassDeclarationVariation) leftType;
-			type = classDecl.mapGenericType(node.getRight().getType());
-			node.getRight().setType(type);
-		} else {
-			type = node.getRight().getType();
-		}
+		TypeDeclaration type = node.getRight().getType();
 		node.setType(type);
 	}
 
@@ -264,7 +259,6 @@ public class ResolveVisitor extends VisitOnceVisitor {
 		Scope scope = node.getScope();
 
 		TypeDeclaration returnType = scope.resolveType(node.getReturnTypeIdentifier());
-		returnType = getGenericTypeDeclaration(scope, returnType, node.getReturnTypeIdentifier());
 		node.setReturnType(returnType);
 		super.visit(node);
 	}
@@ -284,52 +278,29 @@ public class ResolveVisitor extends VisitOnceVisitor {
 		super.visit(node);
 
 		Scope scope = node.getScope();
-		TypeDeclaration declaration = null;
+		Declaration declaration = null;
 
-		try {
-			declaration = scope.resolveType(node.getIdentifier());
-		} catch (UnknownTypeException ute) {
-		}
+		declaration = scope.tryToResolveType(node.getIdentifier());
 
-		if (declaration != null && declaration instanceof ClassDeclaration) {
+		if (declaration instanceof ClassDeclaration) {
 			ClassDeclaration classDecl = (ClassDeclaration) declaration;
-			ResolvableIdentifier identifier = node.getIdentifier();
-			declaration = getGenericTypeDeclaration(scope, classDecl, identifier);
-			node.setType(declaration);
+			node.setType(classDecl);
 			ProcedureDeclaration initializer = findMatchingInitializer(node, classDecl);
 			initializer = (initializer != null) ? initializer : classDecl.getDefaultInitializer();
-			if (declaration instanceof ClassDeclarationVariation) {
-				initializer = ((ClassDeclarationVariation) declaration).mapFunction(initializer);
-			}
 			node.setDeclaration(initializer);
 		} else {
 			ProcedureDeclaration procedure = findMatchingProcedure(node, scope.resolveProcedure(node.getIdentifier()));
-			ProcedureDeclaration concreteFunction = getConcreteProcedure(node, procedure);
 
-			node.setDeclaration(concreteFunction);
+			node.setDeclaration(procedure);
 			if (procedure instanceof FunctionDeclaration) {
 				FunctionDeclaration function = (FunctionDeclaration) procedure;
 				visitDoubleDispatched(function);
 
-				node.setType(((FunctionDeclaration) concreteFunction).getReturnType());
+				node.setType(((FunctionDeclaration) procedure).getReturnType());
 			} else {
 				node.setType(CoreClasses.voidType());
 			}
 		}
-		if (!node.getDeclaration().getDeclarationType().equals(ProcedureDeclaration.DeclarationType.UNBOUND)) {
-			// System.out.println();
-		}
-	}
-
-	private ProcedureDeclaration getConcreteProcedure(FunctionCall node, ProcedureDeclaration function) {
-		if (function.getDeclarationType().equals(ProcedureDeclaration.DeclarationType.METHOD)) {
-			Expression boundObject = ((MemberAccess) node.getParentNode()).getLeft();
-			if (boundObject.getType() instanceof ClassDeclarationVariation) {
-				ClassDeclarationVariation variation = (ClassDeclarationVariation) boundObject.getType();
-				function = variation.mapFunction(function);
-			}
-		}
-		return function;
 	}
 
 	/** Find an enclosing class of this node.
@@ -344,28 +315,6 @@ public class ResolveVisitor extends VisitOnceVisitor {
 			parent = parent.getParentNode();
 		}
 		return CoreClasses.voidType();
-	}
-
-	private TypeDeclaration getGenericTypeDeclaration(Scope scope, TypeDeclaration originalType,
-	        ResolvableIdentifier genericIdentifier) {
-		if (originalType instanceof ClassDeclaration) {
-			ClassDeclaration originalClass = (ClassDeclaration) originalType;
-			List<ResolvableIdentifier> genericTypes = genericIdentifier.getGenericTypes();
-			if (!genericTypes.isEmpty()) {
-				ArrayList<ClassDeclaration> concreteGenerics = new ArrayList<>();
-				for (ResolvableIdentifier genericType : genericTypes) {
-					Declaration decl = scope.resolve(genericType);
-					concreteGenerics.add((ClassDeclaration) decl);
-				}
-				for (ClassDeclarationVariation variation : originalClass.getVariations()) {
-					if (variation.getConcreteGenericTypes().equals(concreteGenerics)) {
-						return variation;
-					}
-				}
-				return new ClassDeclarationVariation(originalClass, genericIdentifier, concreteGenerics);
-			}
-		}
-		return originalType;
 	}
 
 	/** Searches the given class declaration in order to find a initializer declaration that matches the signature of the

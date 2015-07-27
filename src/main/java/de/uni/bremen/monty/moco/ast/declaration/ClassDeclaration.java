@@ -219,4 +219,24 @@ public class ClassDeclaration extends TypeDeclaration {
 	public List<ClassDeclarationVariation> getVariations() {
 		return variations;
 	}
+
+	public TypeDeclaration getVariation(ResolvableIdentifier genericIdentifier,
+	        ArrayList<ClassDeclaration> concreteGenerics) {
+		for (ClassDeclarationVariation variation : getVariations()) {
+			if (variation.getConcreteGenericTypes().equals(concreteGenerics)) {
+				return variation;
+			}
+		}
+		return new ClassDeclarationVariation(this, genericIdentifier, concreteGenerics);
+	}
+
+	public List<ProcedureDeclaration> getMethods() {
+		ArrayList<ProcedureDeclaration> methods = new ArrayList<>();
+		for (Declaration decl : getBlock().getDeclarations()) {
+			if (decl instanceof ProcedureDeclaration) {
+				methods.add((ProcedureDeclaration) decl);
+			}
+		}
+		return methods;
+	}
 }

@@ -274,7 +274,8 @@ public class ASTBuilder extends MontyBaseVisitor<ASTNode> {
 		List<ResolvableIdentifier> superClasses = new ArrayList<>();
 		if (ctx.typeList() != null) {
 			for (TypeContext typeContext : ctx.typeList().type()) {
-				superClasses.add(new ResolvableIdentifier(typeContext.ClassIdentifier().getText()));
+				ResolvableIdentifier type = convertResolvableIdentifier(typeContext);
+				superClasses.add(type);
 			}
 		}
 
@@ -595,7 +596,7 @@ public class ASTBuilder extends MontyBaseVisitor<ASTNode> {
 	}
 
 	public ParentExpression visitParent(PrimaryContext ctx) {
-		return new ParentExpression(position(ctx.getStart()), new ResolvableIdentifier(getText(ctx.ClassIdentifier())));
+		return new ParentExpression(position(ctx.getStart()), convertResolvableIdentifier(ctx.type()));
 	}
 
 	public ASTNode visitTernary(ExpressionContext ctx) {
