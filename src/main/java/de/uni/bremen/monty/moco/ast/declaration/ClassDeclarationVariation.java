@@ -1,7 +1,9 @@
 package de.uni.bremen.monty.moco.ast.declaration;
 
 import de.uni.bremen.monty.moco.ast.Block;
+import de.uni.bremen.monty.moco.ast.ClassScope;
 import de.uni.bremen.monty.moco.ast.ResolvableIdentifier;
+import de.uni.bremen.monty.moco.ast.Scope;
 import de.uni.bremen.monty.moco.ast.statement.Statement;
 
 import java.util.ArrayList;
@@ -18,12 +20,23 @@ public class ClassDeclarationVariation extends ClassDeclaration {
 		        classDecl.getBlock().getPosition()), classDecl.getAbstractGenericTypes());
 		this.concreteGenericTypes = concreteGenericTypes;
 		setParentNode(classDecl.getParentNode());
-		setScope(classDecl.getScope());
+		ClassScope classScope = new ClassScope(classDecl.getScope().getParentScope());
+		classScope.addParentClassScope((ClassScope) classDecl.getScope());
+		setScope(classScope);
 		classDecl.addVariation(this);
-		getVirtualMethodTable().addAll(mapFunctions(classDecl.getVirtualMethodTable()));
+		Collection<ProcedureDeclaration> procedureDeclarations = mapFunctions(classDecl.getVirtualMethodTable());
+		getVirtualMethodTable().addAll(procedureDeclarations);
 		mapBlock(classDecl.getBlock());
 		getBlock().setParentNode(this);
-		setDefaultInitializer(mapFunction(classDecl.getDefaultInitializer()));
+		ProcedureDeclaration defaultInitializer = mapFunction(classDecl.getDefaultInitializer());
+		setDefaultInitializer(defaultInitializer);
+		for (Declaration procedureDeclaration : getBlock().getDeclarations()) {
+			if (!(procedureDeclaration instanceof ProcedureDeclaration)
+			        || !((ProcedureDeclaration) procedureDeclaration).isDefaultInitializer()) {
+				classScope.define(procedureDeclaration);
+			}
+		}
+		classScope.define(defaultInitializer);
 	}
 
 	private void mapBlock(Block block) {
@@ -49,7 +62,7 @@ public class ClassDeclarationVariation extends ClassDeclaration {
 		return procedureDeclarations;
 	}
 
-	public ProcedureDeclaration mapFunction(ProcedureDeclaration procedureDeclaration) {
+	private ProcedureDeclaration mapFunction(ProcedureDeclaration procedureDeclaration) {
 		ProcedureDeclaration funDecl;
 		if (procedureDeclaration instanceof FunctionDeclaration) {
 			TypeDeclaration returnType = mapGenericType(((FunctionDeclaration) procedureDeclaration).getReturnType());
@@ -59,10 +72,11 @@ public class ClassDeclarationVariation extends ClassDeclaration {
 		}
 		funDecl.getParameter().addAll(mapParameter(procedureDeclaration.getParameter(), funDecl));
 		funDecl.setParentNode(this);
+		funDecl.setScope(procedureDeclaration.getScope());
 		return funDecl;
 	}
 
-	public TypeDeclaration mapGenericType(TypeDeclaration type) {
+	private TypeDeclaration mapGenericType(TypeDeclaration type) {
 		if (type instanceof AbstractGenericType) {
 			return mapAbstractToConcrete((AbstractGenericType) type);
 		} else {
@@ -94,6 +108,7 @@ public class ClassDeclarationVariation extends ClassDeclaration {
 				        new VariableDeclaration(variableDeclaration.getPosition(), variableDeclaration.getIdentifier(),
 				                type, variableDeclaration.getDeclarationType());
 				var.setParentNode(decl);
+				var.setScope(getScope());
 			} else {
 				var = variableDeclaration;
 			}
@@ -102,11 +117,13 @@ public class ClassDeclarationVariation extends ClassDeclaration {
 		return params;
 	}
 
-	public Declaration mapDeclaration(VariableDeclaration declaration) {
+	private Declaration mapDeclaration(VariableDeclaration declaration) {
 		VariableDeclaration variableDeclaration =
 		        new VariableDeclaration(declaration.getPosition(), declaration.getIdentifier(),
 		                mapGenericType(declaration.getType()), declaration.getDeclarationType());
 		variableDeclaration.setParentNode(this);
+		variableDeclaration.setScope(getScope());
+		variableDeclaration.setAttributeIndex(declaration.getAttributeIndex());
 		return variableDeclaration;
 	}
 }

@@ -11,6 +11,7 @@ public class ConcreteProcDecl extends ProcedureDeclaration {
 		this.variation = variation;
 		setParentNode(variation);
 		setVMTIndex(abstractDecl.getVMTIndex());
+		setScope(abstractDecl.getScope());
 	}
 
 	@Override
