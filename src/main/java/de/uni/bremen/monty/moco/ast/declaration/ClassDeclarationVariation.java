@@ -53,7 +53,7 @@ public class ClassDeclarationVariation extends ClassDeclaration {
 		ProcedureDeclaration funDecl;
 		if (procedureDeclaration.isFunction()) {
 			TypeDeclaration returnType = mapGenericType((procedureDeclaration).getReturnType());
-			funDecl = new ConcreteFunDecl(this, procedureDeclaration, returnType);
+			funDecl = new ConcreteProcDecl(this, procedureDeclaration, returnType);
 		} else {
 			funDecl = new ConcreteProcDecl(this, procedureDeclaration);
 		}

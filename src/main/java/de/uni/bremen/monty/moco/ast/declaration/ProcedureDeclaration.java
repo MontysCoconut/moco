@@ -66,7 +66,7 @@ public class ProcedureDeclaration extends TypeDeclaration {
 	private ResolvableIdentifier returnTypeIdentifier;
 	private TypeDeclaration returnType;
 
-	private boolean abstractMethod = false;
+	private final boolean abstractMethod;
 
 	/** Constructor.
 	 *
@@ -87,6 +87,19 @@ public class ProcedureDeclaration extends TypeDeclaration {
 		this.declarationType = declarationType;
 		this.vmtIndex = -1;
 		this.returnTypeIdentifier = returnTypeIdentifier;
+		this.abstractMethod = false;
+	}
+
+	public ProcedureDeclaration(Position position, Identifier identifier, Block body,
+	        List<VariableDeclaration> parameter, DeclarationType declarationType,
+	        ResolvableIdentifier returnTypeIdentifier, boolean isAbstract) {
+		super(position, identifier);
+		this.body = body;
+		this.parameter = parameter;
+		this.declarationType = declarationType;
+		this.vmtIndex = -1;
+		this.returnTypeIdentifier = returnTypeIdentifier;
+		this.abstractMethod = isAbstract;
 	}
 
 	public ProcedureDeclaration(Position position, Identifier identifier, Block body,
@@ -261,11 +274,6 @@ public class ProcedureDeclaration extends TypeDeclaration {
 
 		return !((proc.getReturnType() != null) && (proc.getReturnType() != CoreClasses.voidType()))
 		        || returnType.matchesType(proc.getReturnType());
-	}
-
-	/** @param abstractMethod */
-	public void setAbstract(boolean abstractMethod) {
-		this.abstractMethod = abstractMethod;
 	}
 
 	public boolean isAbstract() {

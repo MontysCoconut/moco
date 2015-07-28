@@ -263,18 +263,14 @@ public class ASTBuilder extends MontyBaseVisitor<ASTNode> {
 
 		List<VariableDeclaration> params = parameterListToVarDeclList(parameterListContext);
 
-		List<VariableDeclaration> allVariableDeclarations = new ArrayList<>();
-		allVariableDeclarations.addAll(params);
-
 		ResolvableIdentifier typeIdent = null;
 		if (typeContext != null) {
 			typeIdent = convertResolvableIdentifier(typeContext);
 		}
 
 		ProcedureDeclaration procDecl =
-		        new ProcedureDeclaration(position(token), identifier, new Block(position(token)),
-		                allVariableDeclarations, currentProcedureContext, typeIdent);
-		procDecl.setAbstract(true);
+		        new ProcedureDeclaration(position(token), identifier, new Block(position(token)), params,
+		                currentProcedureContext, typeIdent, true);
 		return procDecl;
 	}
 
