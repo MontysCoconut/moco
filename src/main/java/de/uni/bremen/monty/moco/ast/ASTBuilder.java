@@ -327,7 +327,7 @@ public class ASTBuilder extends MontyBaseVisitor<ASTNode> {
 				}
 				// if none is given, the default accessibility is "package"
 				else {
-					decl.setAccessModifier(AccessModifier.stringToAccess("~"));
+					decl.setAccessModifier(AccessModifier.PACKAGE);
 				}
 
 				cl.getBlock().addDeclaration(decl);
