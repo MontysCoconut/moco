@@ -89,11 +89,11 @@ public class ASTBuilderTest {
 		VariableDeclaration memberDecl = (VariableDeclaration) classDecl.getBlock().getDeclarations().get(0);
 		VariableDeclaration memberInit = (VariableDeclaration) classDecl.getBlock().getDeclarations().get(1);
 		ProcedureDeclaration memberProc = (ProcedureDeclaration) classDecl.getBlock().getDeclarations().get(2);
-		FunctionDeclaration memberFun = (FunctionDeclaration) classDecl.getBlock().getDeclarations().get(3);
+		ProcedureDeclaration memberFun = (ProcedureDeclaration) classDecl.getBlock().getDeclarations().get(3);
 
 		VariableDeclaration varDecl = (VariableDeclaration) ast.getBlock().getDeclarations().get(1);
 		VariableDeclaration varInit = (VariableDeclaration) ast.getBlock().getDeclarations().get(2);
-		FunctionDeclaration funDecl = (FunctionDeclaration) ast.getBlock().getDeclarations().get(3);
+		ProcedureDeclaration funDecl = (ProcedureDeclaration) ast.getBlock().getDeclarations().get(3);
 		ProcedureDeclaration procDecl = (ProcedureDeclaration) ast.getBlock().getDeclarations().get(4);
 
 		assertThat(varDecl.getDeclarationType(), is(VariableDeclaration.DeclarationType.VARIABLE));

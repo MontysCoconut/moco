@@ -200,13 +200,14 @@ public class ASTBuilder extends MontyBaseVisitor<ASTNode> {
 			if (functionDeclaration) {
 				block.addStatement(new ReturnStatement(new Position(), expression));
 				procDecl1 =
-				        new FunctionDeclaration(position(token), identifier, block, subParams, declarationTypeCopy,
+				        new ProcedureDeclaration(position(token), identifier, block, subParams, declarationTypeCopy,
 				                convertResolvableIdentifier(typeContext));
 			} else {
 				block.addStatement((Statement) expression);
 				block.addStatement(new ReturnStatement(new Position(), null));
 				procDecl1 =
-				        new ProcedureDeclaration(position(token), identifier, block, subParams, declarationTypeCopy);
+				        new ProcedureDeclaration(position(token), identifier, block, subParams, declarationTypeCopy,
+				                (TypeDeclaration) null);
 			}
 			currentBlocks.peek().addDeclaration(procDecl1);
 		}
@@ -247,14 +248,30 @@ public class ASTBuilder extends MontyBaseVisitor<ASTNode> {
 
 		if (functionDeclaration) {
 			procDecl2 =
-			        new FunctionDeclaration(position(token), identifier, (Block) visit(statementBlockContext),
+			        new ProcedureDeclaration(position(token), identifier, (Block) visit(statementBlockContext),
 			                allVariableDeclarations, declarationTypeCopy, convertResolvableIdentifier(typeContext));
 		} else {
 			procDecl2 =
 			        new ProcedureDeclaration(position(token), identifier, (Block) visit(statementBlockContext),
-			                allVariableDeclarations, declarationTypeCopy);
+			                allVariableDeclarations, declarationTypeCopy, (TypeDeclaration) null);
 		}
 		return procDecl2;
+	}
+
+	private ProcedureDeclaration buildAbstractMethod(boolean functionDeclaration,
+	        ParameterListContext parameterListContext, Token token, TypeContext typeContext, Identifier identifier) {
+
+		List<VariableDeclaration> params = parameterListToVarDeclList(parameterListContext);
+
+		ResolvableIdentifier typeIdent = null;
+		if (typeContext != null) {
+			typeIdent = convertResolvableIdentifier(typeContext);
+		}
+
+		ProcedureDeclaration procDecl =
+		        new ProcedureDeclaration(position(token), identifier, new Block(position(token)), params,
+		                currentProcedureContext, typeIdent, true);
+		return procDecl;
 	}
 
 	@Override
@@ -280,10 +297,12 @@ public class ASTBuilder extends MontyBaseVisitor<ASTNode> {
 		}
 
 		ArrayList<AbstractGenericType> genericTypes = new ArrayList<>();
+		// if there is an 'abstract' keyword, the class is abstract
+		boolean isAbstract = ctx.getTokens(MontyParser.AbstractKeyword).size() > 0;
 
 		ClassDeclaration cl =
 		        new ClassDeclaration(position(ctx.getStart()), convertResolvableIdentifier(ctx.type()), superClasses,
-		                new Block(position(ctx.getStart())), genericTypes);
+		                new Block(position(ctx.getStart())), isAbstract, genericTypes);
 
 		TypeContext type = ctx.type();
 		if (type.typeList() != null) {
@@ -324,6 +343,16 @@ public class ASTBuilder extends MontyBaseVisitor<ASTNode> {
 		}
 		currentBlocks.pop();
 		return cl;
+	}
+
+	@Override
+	public ASTNode visitAbstractMethodDeclaration(AbstractMethodDeclarationContext ctx) {
+		return buildAbstractMethod(
+		        true,
+		        ctx.parameterList(),
+		        ctx.getStart(),
+		        ctx.type(),
+		        new Identifier(getText(ctx.Identifier())));
 	}
 
 	@Override
