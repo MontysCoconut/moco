@@ -42,7 +42,6 @@ import de.uni.bremen.monty.moco.ast.ASTNode;
 import de.uni.bremen.monty.moco.ast.Block;
 import de.uni.bremen.monty.moco.ast.Package;
 import de.uni.bremen.monty.moco.ast.declaration.Declaration;
-import de.uni.bremen.monty.moco.ast.declaration.FunctionDeclaration;
 import de.uni.bremen.monty.moco.ast.declaration.ProcedureDeclaration;
 import de.uni.bremen.monty.moco.ast.statement.BreakStatement;
 import de.uni.bremen.monty.moco.ast.statement.ConditionalStatement;
@@ -68,11 +67,15 @@ public class ControlFlowVisitor extends BaseVisitor {
 
 	/** {@inheritDoc} */
 	@Override
-	public void visit(FunctionDeclaration node) {
-		needsReturnStatement = true;
-		super.visit(node);
-		if (needsReturnStatement) {
-			throw new InvalidControlFlowException(node, "ReturnStatement needed.");
+	public void visit(ProcedureDeclaration node) {
+		needsReturnStatement = false;
+		if (node.isFunction() && !node.isAbstract()) {
+			needsReturnStatement = true;
+			super.visit(node);
+
+			if (needsReturnStatement) {
+				throw new InvalidControlFlowException(node, "ReturnStatement needed.");
+			}
 		}
 	}
 

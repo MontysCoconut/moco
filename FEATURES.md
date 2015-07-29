@@ -69,7 +69,7 @@
  Attributes                | ✔           | -
  Methods                   | ✔           | -
  Access modifiers          | ✘           | -
- Abstract classes          | ✘           | -
+ Abstract classes          | ✔           | -
  Single inheritance        | ✔           | -
  Automatic downcasting     | ✔           | -
  Multiple inheritance      | ✘           | -

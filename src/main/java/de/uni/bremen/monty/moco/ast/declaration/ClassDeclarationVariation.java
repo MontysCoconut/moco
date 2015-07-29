@@ -17,7 +17,7 @@ public class ClassDeclarationVariation extends ClassDeclaration {
 	public ClassDeclarationVariation(ClassDeclaration classDecl, ResolvableIdentifier identifier,
 	        List<ClassDeclaration> concreteGenericTypes) {
 		super(classDecl.getPosition(), identifier, classDecl.getSuperClassIdentifiers(), new Block(
-		        classDecl.getBlock().getPosition()), classDecl.getAbstractGenericTypes());
+		        classDecl.getBlock().getPosition()), classDecl.isAbstract(), classDecl.getAbstractGenericTypes());
 		this.concreteGenericTypes = concreteGenericTypes;
 		setParentNode(classDecl.getParentNode());
 		ClassScope classScope = new ClassScope(classDecl.getScope().getParentScope());
@@ -64,9 +64,9 @@ public class ClassDeclarationVariation extends ClassDeclaration {
 
 	private ProcedureDeclaration mapFunction(ProcedureDeclaration procedureDeclaration) {
 		ProcedureDeclaration funDecl;
-		if (procedureDeclaration instanceof FunctionDeclaration) {
-			TypeDeclaration returnType = mapGenericType(((FunctionDeclaration) procedureDeclaration).getReturnType());
-			funDecl = new ConcreteFunDecl(this, (FunctionDeclaration) procedureDeclaration, returnType);
+		if (procedureDeclaration.isFunction()) {
+			TypeDeclaration returnType = mapGenericType((procedureDeclaration).getReturnType());
+			funDecl = new ConcreteProcDecl(this, procedureDeclaration, returnType);
 		} else {
 			funDecl = new ConcreteProcDecl(this, procedureDeclaration);
 		}

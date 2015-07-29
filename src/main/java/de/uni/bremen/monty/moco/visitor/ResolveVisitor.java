@@ -42,6 +42,7 @@ import de.uni.bremen.monty.moco.ast.*;
 import de.uni.bremen.monty.moco.ast.declaration.*;
 import de.uni.bremen.monty.moco.ast.expression.*;
 import de.uni.bremen.monty.moco.ast.expression.literal.*;
+import de.uni.bremen.monty.moco.exception.InvalidExpressionException;
 import de.uni.bremen.monty.moco.exception.UnknownIdentifierException;
 import de.uni.bremen.monty.moco.exception.UnknownTypeException;
 
@@ -255,19 +256,15 @@ public class ResolveVisitor extends VisitOnceVisitor {
 
 	/** {@inheritDoc} */
 	@Override
-	public void visit(FunctionDeclaration node) {
-		Scope scope = node.getScope();
-
-		TypeDeclaration returnType = scope.resolveType(node.getReturnTypeIdentifier());
-		node.setReturnType(returnType);
-		super.visit(node);
-	}
-
-	/** {@inheritDoc} */
-	@Override
 	public void visit(ProcedureDeclaration node) {
-		if (node.isMethod() && node.getIdentifier().getSymbol().equals("initializer")) {
-			node.setDeclarationType(ProcedureDeclaration.DeclarationType.INITIALIZER);
+		if (node.isFunction()) {
+			Scope scope = node.getScope();
+			TypeDeclaration returnType = scope.resolveType(node.getReturnTypeIdentifier());
+			node.setReturnType(returnType);
+		} else {
+			if (node.isMethod() && node.getIdentifier().getSymbol().equals("initializer")) {
+				node.setDeclarationType(ProcedureDeclaration.DeclarationType.INITIALIZER);
+			}
 		}
 		super.visit(node);
 	}
@@ -284,19 +281,22 @@ public class ResolveVisitor extends VisitOnceVisitor {
 
 		if (declaration instanceof ClassDeclaration) {
 			ClassDeclaration classDecl = (ClassDeclaration) declaration;
+			ResolvableIdentifier identifier = node.getIdentifier();
+			if (classDecl.isAbstract()) {
+				throw new InvalidExpressionException(node, "The abstract class '" + identifier.toString()
+				        + "' may not be instantiated");
+			}
 			node.setType(classDecl);
 			ProcedureDeclaration initializer = findMatchingInitializer(node, classDecl);
 			initializer = (initializer != null) ? initializer : classDecl.getDefaultInitializer();
 			node.setDeclaration(initializer);
 		} else {
 			ProcedureDeclaration procedure = findMatchingProcedure(node, scope.resolveProcedure(node.getIdentifier()));
-
 			node.setDeclaration(procedure);
-			if (procedure instanceof FunctionDeclaration) {
-				FunctionDeclaration function = (FunctionDeclaration) procedure;
-				visitDoubleDispatched(function);
+			if (procedure.isFunction()) {
+				visitDoubleDispatched(procedure);
 
-				node.setType(((FunctionDeclaration) procedure).getReturnType());
+				node.setType(procedure.getReturnType());
 			} else {
 				node.setType(CoreClasses.voidType());
 			}
@@ -336,7 +336,7 @@ public class ResolveVisitor extends VisitOnceVisitor {
 				// and verify that it is a procedure...
 				if (declaration instanceof ProcedureDeclaration) {
 					// and not a function
-					if (!(declaration instanceof FunctionDeclaration)) {
+					if (!(((ProcedureDeclaration) declaration).isFunction())) {
 						procedures.add((ProcedureDeclaration) declaration);
 					}
 				}

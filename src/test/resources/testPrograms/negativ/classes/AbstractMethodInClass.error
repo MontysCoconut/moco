@@ -1,0 +1,1 @@
+TypeCheckVisitor caught error in ClassDeclaration at file: AbstractMethodInClass.monty, line: 1, char: 0: The non-abstract class 'Logger' contains an abstract method 'log'!

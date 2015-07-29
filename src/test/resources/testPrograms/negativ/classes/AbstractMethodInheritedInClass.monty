@@ -1,0 +1,6 @@
+abstract class Logger:
+    abstract log(String message)
+
+class StdOutLogger inherits Logger:
+    pass
+

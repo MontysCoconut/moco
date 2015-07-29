@@ -50,6 +50,7 @@ import de.uni.bremen.monty.moco.ast.expression.MemberAccess;
 import de.uni.bremen.monty.moco.ast.expression.SelfExpression;
 import de.uni.bremen.monty.moco.ast.statement.Statement;
 import de.uni.bremen.monty.moco.exception.InvalidPlaceToDeclareException;
+import sun.reflect.generics.tree.ReturnType;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -122,16 +123,6 @@ public class DeclarationVisitor extends BaseVisitor {
 
 	/** {@inheritDoc} */
 	@Override
-	public void visit(FunctionDeclaration node) {
-		currentScope.define(node);
-		currentScope = new Scope(currentScope);
-		super.visit(node);
-		node.setScope(node.getBody().getScope());
-		currentScope = currentScope.getParentScope();
-	}
-
-	/** {@inheritDoc} */
-	@Override
 	public void visit(ProcedureDeclaration node) {
 		currentScope.define(node);
 		currentScope = new Scope(currentScope);
@@ -183,7 +174,7 @@ public class DeclarationVisitor extends BaseVisitor {
 		ProcedureDeclaration initializer =
 		        new ProcedureDeclaration(node.getPosition(), new Identifier(node.getIdentifier().getSymbol()
 		                + "_definit"), new Block(node.getPosition()), new ArrayList<VariableDeclaration>(),
-		                ProcedureDeclaration.DeclarationType.DEFAULT_INITIALIZER);
+		                ProcedureDeclaration.DeclarationType.DEFAULT_INITIALIZER, (TypeDeclaration) null);
 		initializer.setParentNode(node.getBlock());
 		Block initializerBlock = initializer.getBody();
 		initializerBlock.setParentNode(initializer);

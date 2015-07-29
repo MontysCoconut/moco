@@ -40,10 +40,8 @@ package de.uni.bremen.monty.moco.codegeneration;
 
 import de.uni.bremen.monty.moco.ast.ASTNode;
 import de.uni.bremen.monty.moco.ast.CoreClasses;
-import de.uni.bremen.monty.moco.ast.declaration.*;
 import de.uni.bremen.monty.moco.ast.expression.literal.StringLiteral;
 import de.uni.bremen.monty.moco.ast.declaration.ClassDeclaration;
-import de.uni.bremen.monty.moco.ast.declaration.FunctionDeclaration;
 import de.uni.bremen.monty.moco.ast.declaration.ProcedureDeclaration;
 import de.uni.bremen.monty.moco.ast.declaration.TypeDeclaration;
 import de.uni.bremen.monty.moco.codegeneration.context.CodeContext;
@@ -465,7 +463,7 @@ public class CodeGenerator {
 		c.callVoid(llvmIdentifierFactory.newGlobal(functionName, (LLVMType) voidType()), resolvedArguments);
 	}
 
-	public LLVMIdentifier<?> callMethod(CodeContext c, FunctionDeclaration declaration,
+	public LLVMIdentifier<?> callMethod(CodeContext c, ProcedureDeclaration declaration,
 	        List<LLVMIdentifier<?>> arguments, List<TypeDeclaration> parameters) {
 		List<LLVMIdentifier<? extends LLVMType>> resolvedArguments = resolveArgumentsIfNeeded(c, arguments, parameters);
 
