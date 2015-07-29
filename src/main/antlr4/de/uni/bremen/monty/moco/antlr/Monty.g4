@@ -30,7 +30,7 @@ classDeclaration
   ;
 
 memberDeclaration
-  : accessModifier independentDeclaration
+  : accessModifier? independentDeclaration
   ;
 
 accessModifier
