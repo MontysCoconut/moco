@@ -1,0 +1,22 @@
+class Wrapper<Content>:
+  + initializer(Content content):
+    self.content := content
+
+  - Content content
+
+  + Content get():
+    return self.content
+
+  + set(Content content):
+    self.content := content
+
+printWrapper(Wrapper<Wrapper<String>> wrapper):
+  Wrapper<String> inner := wrapper.get()
+  print(inner.get())
+
+
+Wrapper<Wrapper<String>> wrapper := Wrapper<Wrapper<String>>(Wrapper<String>("Hi there!\n"))
+printWrapper(wrapper)
+wrapper.set(Wrapper<String>("Heyho!"))
+Wrapper<String> inner := wrapper.get()
+print(inner.get())

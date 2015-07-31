@@ -14,10 +14,13 @@ public class ClassDeclarationVariation extends ClassDeclaration {
 
 	private List<ClassDeclaration> concreteGenericTypes;
 
+	private final ClassDeclaration baseClass;
+
 	public ClassDeclarationVariation(ClassDeclaration classDecl, ResolvableIdentifier identifier,
 	        List<ClassDeclaration> concreteGenericTypes) {
 		super(classDecl.getPosition(), identifier, classDecl.getSuperClassIdentifiers(), new Block(
 		        classDecl.getBlock().getPosition()), classDecl.isAbstract(), classDecl.getAbstractGenericTypes());
+		this.baseClass = classDecl;
 		this.concreteGenericTypes = concreteGenericTypes;
 		setParentNode(classDecl.getParentNode());
 		ClassScope classScope = new ClassScope(classDecl.getScope().getParentScope());
@@ -125,5 +128,21 @@ public class ClassDeclarationVariation extends ClassDeclaration {
 		variableDeclaration.setScope(getScope());
 		variableDeclaration.setAttributeIndex(declaration.getAttributeIndex());
 		return variableDeclaration;
+	}
+
+	@Override
+	public List<ClassDeclarationVariation> getVariations() {
+		return baseClass.getVariations();
+	}
+
+	@Override
+	public TypeDeclaration getVariation(ResolvableIdentifier genericIdentifier,
+	        ArrayList<ClassDeclaration> concreteGenerics) {
+		return baseClass.getVariation(genericIdentifier, concreteGenerics);
+	}
+
+	@Override
+	public void addVariation(ClassDeclarationVariation variation) {
+		baseClass.addVariation(variation);
 	}
 }

@@ -154,6 +154,7 @@ public class ProcedureDeclaration extends TypeDeclaration {
 	 *
 	 * @param returnType */
 	public void setReturnType(TypeDeclaration returnType) {
+		if (this.returnType != null) return;
 		this.returnType = returnType;
 	}
 
