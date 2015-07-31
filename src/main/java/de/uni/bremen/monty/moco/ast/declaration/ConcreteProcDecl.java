@@ -7,7 +7,16 @@ public class ConcreteProcDecl extends ProcedureDeclaration {
 
 	public ConcreteProcDecl(ClassDeclarationVariation variation, ProcedureDeclaration abstractDecl) {
 		super(abstractDecl.getPosition(), abstractDecl.getIdentifier(), abstractDecl.getBody(),
-		        new ArrayList<VariableDeclaration>(), abstractDecl.getDeclarationType());
+		        new ArrayList<VariableDeclaration>(), abstractDecl.getDeclarationType(), (TypeDeclaration) null);
+		this.variation = variation;
+		setParentNode(variation);
+		setVMTIndex(abstractDecl.getVMTIndex());
+	}
+
+	public ConcreteProcDecl(ClassDeclarationVariation variation, ProcedureDeclaration abstractDecl,
+	        TypeDeclaration returnType) {
+		super(abstractDecl.getPosition(), abstractDecl.getIdentifier(), abstractDecl.getBody(),
+		        new ArrayList<VariableDeclaration>(), abstractDecl.getDeclarationType(), returnType);
 		this.variation = variation;
 		setParentNode(variation);
 		setVMTIndex(abstractDecl.getVMTIndex());

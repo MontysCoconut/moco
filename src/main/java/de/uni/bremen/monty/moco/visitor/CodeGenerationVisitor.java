@@ -506,17 +506,17 @@ public class CodeGenerationVisitor extends BaseVisitor {
 		}
 
 		if (declaration.isMethod() && !declaration.isInitializer()) {
-			if (declaration instanceof FunctionDeclaration) {
+			if (declaration.isFunction()) {
 				stack.push((LLVMIdentifier<LLVMType>) codeGenerator.callMethod(
 				        contextUtils.active(),
-				        (FunctionDeclaration) declaration,
+				        declaration,
 				        arguments,
 				        expectedParameters));
 			} else {
 				codeGenerator.callVoidMethod(contextUtils.active(), declaration, arguments, expectedParameters);
 			}
 		} else {
-			if (declaration instanceof FunctionDeclaration) {
+			if (declaration.isFunction()) {
 				stack.push((LLVMIdentifier<LLVMType>) codeGenerator.call(
 				        contextUtils.active(),
 				        nameMangler.mangleProcedure(declaration),
@@ -537,35 +537,53 @@ public class CodeGenerationVisitor extends BaseVisitor {
 	}
 
 	@Override
-	public void visit(FunctionDeclaration node) {
-		openNewFunctionScope();
-		if (isNative(node)) {
-			addNativeFunction(node, node.getReturnType());
-		} else {
-			addFunction(node, node.getReturnType());
-			visitDoubleDispatched(node.getBody());
-		}
-		closeFunctionContext();
-	}
-
-	@Override
 	public void visit(ProcedureDeclaration node) {
-		openNewFunctionScope();
-
-		if (isNative(node) && !node.isInitializer()) {
-			addNativeFunction(node, CoreClasses.voidType());
-		} else {
-			addFunction(node, CoreClasses.voidType());
-
-			visitDoubleDispatched(node.getBody());
-			if (node.isInitializer()) {
+		if (node.isAbstract()) {
+			openNewFunctionScope();
+			if ((node.getReturnType() == null) || (node.getReturnType() == CoreClasses.voidType())) {
+				addFunction(node, CoreClasses.voidType());
 				codeGenerator.returnValue(
 				        contextUtils.active(),
 				        (LLVMIdentifier<LLVMType>) (LLVMIdentifier<?>) llvmIdentifierFactory.voidId(),
 				        CoreClasses.voidType());
+			} else {
+				addFunction(node, node.getReturnType());
+				codeGenerator.returnValue(
+				        contextUtils.active(),
+				        (LLVMIdentifier<LLVMType>) (LLVMIdentifier<?>) llvmIdentifierFactory.constantNull((LLVMPointer) codeGenerator.mapToLLVMType(node.getReturnType())),
+				        node.getReturnType());
+			}
+			closeFunctionContext();
+		} else {
+			if (node.isFunction()) {
+				openNewFunctionScope();
+				if (isNative(node)) {
+					addNativeFunction(node, node.getReturnType());
+				} else {
+					addFunction(node, node.getReturnType());
+					visitDoubleDispatched(node.getBody());
+				}
+				closeFunctionContext();
+			} else {
+				openNewFunctionScope();
+				if (isNative(node) && !node.isInitializer()) {
+					// addNativeFunction(node, CoreClasses.voidType());
+					addNativeFunction(node, node.getReturnType());
+				} else {
+					// addFunction(node, CoreClasses.voidType());
+					addFunction(node, node.getReturnType());
+
+					visitDoubleDispatched(node.getBody());
+					if (node.isInitializer()) {
+						codeGenerator.returnValue(
+						        contextUtils.active(),
+						        (LLVMIdentifier<LLVMType>) (LLVMIdentifier<?>) llvmIdentifierFactory.voidId(),
+						        CoreClasses.voidType());
+					}
+				}
+				closeFunctionContext();
 			}
 		}
-		closeFunctionContext();
 	}
 
 	@Override
@@ -573,14 +591,14 @@ public class CodeGenerationVisitor extends BaseVisitor {
 		super.visit(node);
 		if (node.getParameter() != null) {
 			ASTNode parent = node;
-			while (!(parent instanceof FunctionDeclaration)) {
+			while (!(parent instanceof ProcedureDeclaration)) {
 				parent = parent.getParentNode();
 			}
 			LLVMIdentifier<LLVMType> returnValue = stack.pop();
 			codeGenerator.returnValue(
 			        contextUtils.active(),
 			        returnValue,
-			        ((FunctionDeclaration) parent).getReturnType());
+			        ((ProcedureDeclaration) parent).getReturnType());
 		} else {
 			codeGenerator.returnValue(
 			        contextUtils.active(),

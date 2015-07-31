@@ -1,0 +1,2 @@
+class Logger:
+    abstract log(String message)

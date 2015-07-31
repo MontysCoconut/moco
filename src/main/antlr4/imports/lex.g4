@@ -136,6 +136,10 @@ BooleanLiteral
   : ('true'  | 'false')
   ;
 
+AbstractKeyword
+  : 'abstract'
+  ;
+
 /* Unicode identifiers. */
 Identifier
   : '_'* LowercaseLetter (LowercaseLetter | UppercaseLetter | Digit | '_')*
