@@ -48,7 +48,7 @@ import java.util.List;
 
 public class FunctionCall extends Expression implements Statement {
 	private final ResolvableIdentifier identifier;
-	private final List<Expression> arguments;
+	protected final List<Expression> arguments;
 	private ProcedureDeclaration declaration;
 
 	public FunctionCall(Position position, ResolvableIdentifier identifier, List<Expression> arguments) {

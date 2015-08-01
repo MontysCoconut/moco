@@ -302,11 +302,21 @@ public class BaseVisitor {
 		onExitChildrenEachNode(node);
 	}
 
-	/** Visitor method to visit a ArrayLiteral.
+	/** Visitor method to visit an ArrayLiteral.
 	 *
 	 * @param node
 	 *            the node to visit */
 	public void visit(ArrayLiteral node) {
+		onEnterChildrenEachNode(node);
+		node.visitChildren(this);
+		onExitChildrenEachNode(node);
+	}
+
+	/** Visitor method to visit a TupleLiteral.
+	 *
+	 * @param node
+	 *            the node to visit */
+	public void visit(TupleLiteral node) {
 		onEnterChildrenEachNode(node);
 		node.visitChildren(this);
 		onExitChildrenEachNode(node);

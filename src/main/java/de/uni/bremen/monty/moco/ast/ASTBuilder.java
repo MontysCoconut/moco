@@ -618,8 +618,20 @@ public class ASTBuilder extends MontyBaseVisitor<ASTNode> {
 				elements.add((Expression) visit(eContext));
 			}
 			return new ArrayLiteral(position(ctx.getStart()), elements);
+		} else if (ctx.tupleLiteral() != null) {
+			ArrayList<Expression> elements = new ArrayList<>();
+			for (ExpressionContext eContext : ctx.tupleLiteral().expression()) {
+				elements.add((Expression) visit(eContext));
+			}
+			TupleLiteral tuple = new TupleLiteral(position(ctx.getStart()), elements);
+			// generate a new tuple type if necessary
+			ClassDeclaration tupleType = tuple.generateTupleType();
+			// if a new type was generated, it has to be attached to the module
+			if (tupleType != null) {
+				currentBlocks.get(0).addDeclaration(tupleType);
+			}
+			return tuple;
 		} else {
-
 			return new BooleanLiteral(position(ctx.getStart()), Boolean.parseBoolean(ctx.BooleanLiteral().toString()));
 		}
 	}

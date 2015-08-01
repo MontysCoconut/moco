@@ -156,7 +156,11 @@ public class NameMangler {
 	}
 
 	public String mangleClass(ClassDeclaration node) {
-		ModuleDeclaration module = (ModuleDeclaration) node.getParentNode().getParentNode();
+		ASTNode n = node;
+		while (!(n instanceof ModuleDeclaration)) {
+			n = n.getParentNode();
+		}
+		ModuleDeclaration module = (ModuleDeclaration) n;
 		String base = mangleModule(module);
 
 		String className = Mangled.CLASS + escapeForLLVM(node.getIdentifier());
