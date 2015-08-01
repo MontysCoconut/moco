@@ -274,6 +274,10 @@ public class ResolveVisitor extends VisitOnceVisitor {
 	public void visit(FunctionCall node) {
 		super.visit(node);
 
+		if (node instanceof TupleLiteral) {
+			((TupleLiteral) node).setConcreteTupleType();
+		}
+
 		Scope scope = node.getScope();
 		Declaration declaration = null;
 

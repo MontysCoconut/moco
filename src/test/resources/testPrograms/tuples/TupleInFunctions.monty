@@ -1,0 +1,25 @@
+// Testing: Tuples
+//
+// testing whether tuples work as parameters and return types
+// further testing whether tuple types are accepted even if no
+// aggregate was used for that type (Tuple3 in that case)
+//
+// Expected output: 42\nempty tuple\n
+
+
+printFirst((Int, String) tuple):
+    println(tuple._1)
+
+printThird(Tuple3<Int, String, Float> tuple):
+    println(tuple._3)
+
+printEmpty(Tuple0 empty):
+    println("empty tuple")
+
+
+
+Tuple2<Int, String> t := (42, "Hello")
+printFirst(t)
+
+Tuple0 empty := ()
+printEmpty(empty)

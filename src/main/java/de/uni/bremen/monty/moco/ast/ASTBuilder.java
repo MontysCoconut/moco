@@ -46,25 +46,25 @@ import de.uni.bremen.monty.moco.ast.declaration.ProcedureDeclaration.Declaration
 import de.uni.bremen.monty.moco.ast.expression.*;
 import de.uni.bremen.monty.moco.ast.expression.literal.*;
 import de.uni.bremen.monty.moco.ast.statement.*;
+import de.uni.bremen.monty.moco.util.TupleDeclarationFactory;
 import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.misc.NotNull;
 import org.antlr.v4.runtime.tree.TerminalNode;
 import org.apache.commons.io.FilenameUtils;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Stack;
+import java.util.*;
 
 public class ASTBuilder extends MontyBaseVisitor<ASTNode> {
 	private final String fileName;
 	private Stack<Block> currentBlocks;
 	private VariableDeclaration.DeclarationType currentVariableContext;
 	private ProcedureDeclaration.DeclarationType currentProcedureContext;
+	private TupleDeclarationFactory tupleDeclarationFactory;
 
 	public ASTBuilder(String fileName) {
 		this.fileName = fileName;
 		currentBlocks = new Stack<>();
+		tupleDeclarationFactory = new TupleDeclarationFactory();
 	}
 
 	private Position position(Token idSymbol) {
@@ -95,6 +95,9 @@ public class ASTBuilder extends MontyBaseVisitor<ASTNode> {
 		}
 		addStatementsToBlock(block, ctx.statement());
 		currentBlocks.pop();
+		for (ClassDeclaration decl : tupleDeclarationFactory.getTupleTypes()) {
+			module.getBlock().addDeclaration(decl);
+		}
 		return module;
 	}
 
@@ -120,25 +123,35 @@ public class ASTBuilder extends MontyBaseVisitor<ASTNode> {
 	@Override
 	public ASTNode visitVariableDeclaration(@NotNull VariableDeclarationContext ctx) {
 		ResolvableIdentifier type = convertResolvableIdentifier(ctx.type());
-
+		tupleDeclarationFactory.checkTupleType(type);
 		return new VariableDeclaration(position(ctx.getStart()), new Identifier(getText(ctx.Identifier())), type,
 		        currentVariableContext);
 	}
 
 	private ResolvableIdentifier convertResolvableIdentifier(TypeContext type) {
-		String typeName = type.ClassIdentifier().toString();
+		String typeName;
+		List<TypeContext> typeParameters = null;
+		// if there is no class identifier, we have to handle syntactic sugar here
+		if (type.ClassIdentifier() == null) {
+			// a tuple
+			typeParameters = type.type();
+			int n = typeParameters != null ? typeParameters.size() : 0;
+			typeName = "Tuple" + n;
+		} else {
+			typeName = type.ClassIdentifier().toString();
+			if (type.typeList() != null) {
+				typeParameters = type.typeList().type();
+			}
+		}
+
+		// handle generic type parameters
 		ArrayList<ResolvableIdentifier> genericTypes = new ArrayList<>();
-		if (type.typeList() != null) {
-			for (TypeContext typeContext : type.typeList().type()) {
+		if (typeParameters != null) {
+			for (TypeContext typeContext : typeParameters) {
 				genericTypes.add(convertResolvableIdentifier(typeContext));
 			}
 		}
 		return new ResolvableIdentifier(typeName, genericTypes);
-	}
-
-	private Identifier convertIdentifier(TypeContext type) {
-		String typeName = type.ClassIdentifier().toString();
-		return new Identifier(typeName);
 	}
 
 	@Override
@@ -150,6 +163,7 @@ public class ASTBuilder extends MontyBaseVisitor<ASTNode> {
 		} else {
 			identifier = new ResolvableIdentifier(ctx.Identifier().getText());
 		}
+		tupleDeclarationFactory.checkTupleType(identifier); // since constructor calls are also function calls
 		FunctionCall func = new FunctionCall(position(ctx.getStart()), identifier, arguments);
 		if (ctx.expressionList() != null) {
 			for (ExpressionContext exprC : ctx.expressionList().expression()) {
@@ -199,9 +213,11 @@ public class ASTBuilder extends MontyBaseVisitor<ASTNode> {
 			ProcedureDeclaration procDecl1;
 			if (functionDeclaration) {
 				block.addStatement(new ReturnStatement(new Position(), expression));
+				ResolvableIdentifier returnTypeIdent = convertResolvableIdentifier(typeContext);
+				tupleDeclarationFactory.checkTupleType(returnTypeIdent);
 				procDecl1 =
 				        new ProcedureDeclaration(position(token), identifier, block, subParams, declarationTypeCopy,
-				                convertResolvableIdentifier(typeContext));
+				                returnTypeIdent);
 			} else {
 				block.addStatement((Statement) expression);
 				block.addStatement(new ReturnStatement(new Position(), null));
@@ -247,9 +263,11 @@ public class ASTBuilder extends MontyBaseVisitor<ASTNode> {
 		ProcedureDeclaration procDecl2;
 
 		if (functionDeclaration) {
+			ResolvableIdentifier returnTypeIdent = convertResolvableIdentifier(typeContext);
+			tupleDeclarationFactory.checkTupleType(returnTypeIdent);
 			procDecl2 =
 			        new ProcedureDeclaration(position(token), identifier, (Block) visit(statementBlockContext),
-			                allVariableDeclarations, declarationTypeCopy, convertResolvableIdentifier(typeContext));
+			                allVariableDeclarations, declarationTypeCopy, returnTypeIdent);
 		} else {
 			procDecl2 =
 			        new ProcedureDeclaration(position(token), identifier, (Block) visit(statementBlockContext),
@@ -266,6 +284,7 @@ public class ASTBuilder extends MontyBaseVisitor<ASTNode> {
 		ResolvableIdentifier typeIdent = null;
 		if (typeContext != null) {
 			typeIdent = convertResolvableIdentifier(typeContext);
+			tupleDeclarationFactory.checkTupleType(typeIdent);
 		}
 
 		ProcedureDeclaration procDecl =
@@ -293,6 +312,7 @@ public class ASTBuilder extends MontyBaseVisitor<ASTNode> {
 			for (TypeContext typeContext : ctx.typeList().type()) {
 				ResolvableIdentifier type = convertResolvableIdentifier(typeContext);
 				superClasses.add(type);
+				tupleDeclarationFactory.checkTupleType(type);
 			}
 		}
 
@@ -308,7 +328,7 @@ public class ASTBuilder extends MontyBaseVisitor<ASTNode> {
 		if (type.typeList() != null) {
 			for (TypeContext typeContext1 : type.typeList().type()) {
 				genericTypes.add(new AbstractGenericType(cl, position(typeContext1.getStart()),
-				        new ResolvableIdentifier(getText(typeContext1.ClassIdentifier()))));
+				        convertResolvableIdentifier(typeContext1)));
 			}
 		}
 
@@ -618,8 +638,16 @@ public class ASTBuilder extends MontyBaseVisitor<ASTNode> {
 				elements.add((Expression) visit(eContext));
 			}
 			return new ArrayLiteral(position(ctx.getStart()), elements);
+		} else if (ctx.tupleLiteral() != null) {
+			ArrayList<Expression> elements = new ArrayList<>();
+			for (ExpressionContext eContext : ctx.tupleLiteral().expression()) {
+				elements.add((Expression) visit(eContext));
+			}
+			// generate a new tuple type if necessary
+			ClassDeclaration tupleType = tupleDeclarationFactory.getTupleType(elements.size());
+			TupleLiteral tuple = new TupleLiteral(position(ctx.getStart()), tupleType, elements);
+			return tuple;
 		} else {
-
 			return new BooleanLiteral(position(ctx.getStart()), Boolean.parseBoolean(ctx.BooleanLiteral().toString()));
 		}
 	}
@@ -686,13 +714,15 @@ public class ASTBuilder extends MontyBaseVisitor<ASTNode> {
 	}
 
 	private CastExpression visitCastExpression(ExpressionContext ctx) {
-		return new CastExpression(position(ctx.getStart()), (Expression) visit(ctx.expr), new ResolvableIdentifier(
-		        getText(ctx.ClassIdentifier())));
+		ResolvableIdentifier type = new ResolvableIdentifier(getText(ctx.ClassIdentifier()));
+		tupleDeclarationFactory.checkTupleType(type);
+		return new CastExpression(position(ctx.getStart()), (Expression) visit(ctx.expr), type);
 	}
 
 	private IsExpression visitIsExpression(ExpressionContext ctx) {
-		return new IsExpression(position(ctx.getStart()), (Expression) visit(ctx.expr), new ResolvableIdentifier(
-		        getText(ctx.ClassIdentifier())));
+		ResolvableIdentifier type = new ResolvableIdentifier(getText(ctx.ClassIdentifier()));
+		tupleDeclarationFactory.checkTupleType(type);
+		return new IsExpression(position(ctx.getStart()), (Expression) visit(ctx.expr), type);
 	}
 
 	protected ASTNode aggregateResult(ASTNode aggregate, ASTNode nextResult) {

@@ -1,0 +1,21 @@
+// Testing: Tuples
+//
+// Testing the different syntax variations for tuple expressions and types
+// - traditional way, using class identifiers
+// - traditional type name, sugar for the instantiation
+// - both, type and expression sugared.
+// all three examples should produce the same output
+//
+// Expected output: 1\nXy\n1\nXy\n1\nXy\n
+
+Tuple2<Int, String> a := Tuple2<Int, String>(1,"Xy")
+println(a._1)
+println(a._2)
+
+Tuple2<Int, String> b := (1,"Xy")
+println(b._1)
+println(b._2)
+
+(Int, String) c := (1,"Xy")
+println(c._1)
+println(c._2)
