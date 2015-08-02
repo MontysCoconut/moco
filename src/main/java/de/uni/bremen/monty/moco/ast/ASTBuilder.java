@@ -120,7 +120,7 @@ public class ASTBuilder extends MontyBaseVisitor<ASTNode> {
 	@Override
 	public ASTNode visitVariableDeclaration(@NotNull VariableDeclarationContext ctx) {
 		ResolvableIdentifier type = convertResolvableIdentifier(ctx.type());
-
+		checkTupleType(type);
 		return new VariableDeclaration(position(ctx.getStart()), new Identifier(getText(ctx.Identifier())), type,
 		        currentVariableContext);
 	}
@@ -199,9 +199,11 @@ public class ASTBuilder extends MontyBaseVisitor<ASTNode> {
 			ProcedureDeclaration procDecl1;
 			if (functionDeclaration) {
 				block.addStatement(new ReturnStatement(new Position(), expression));
+				ResolvableIdentifier returnTypeIdent = convertResolvableIdentifier(typeContext);
+				checkTupleType(returnTypeIdent);
 				procDecl1 =
 				        new ProcedureDeclaration(position(token), identifier, block, subParams, declarationTypeCopy,
-				                convertResolvableIdentifier(typeContext));
+				                returnTypeIdent);
 			} else {
 				block.addStatement((Statement) expression);
 				block.addStatement(new ReturnStatement(new Position(), null));
@@ -247,9 +249,11 @@ public class ASTBuilder extends MontyBaseVisitor<ASTNode> {
 		ProcedureDeclaration procDecl2;
 
 		if (functionDeclaration) {
+			ResolvableIdentifier returnTypeIdent = convertResolvableIdentifier(typeContext);
+			checkTupleType(returnTypeIdent);
 			procDecl2 =
 			        new ProcedureDeclaration(position(token), identifier, (Block) visit(statementBlockContext),
-			                allVariableDeclarations, declarationTypeCopy, convertResolvableIdentifier(typeContext));
+			                allVariableDeclarations, declarationTypeCopy, returnTypeIdent);
 		} else {
 			procDecl2 =
 			        new ProcedureDeclaration(position(token), identifier, (Block) visit(statementBlockContext),
@@ -266,6 +270,7 @@ public class ASTBuilder extends MontyBaseVisitor<ASTNode> {
 		ResolvableIdentifier typeIdent = null;
 		if (typeContext != null) {
 			typeIdent = convertResolvableIdentifier(typeContext);
+			checkTupleType(typeIdent);
 		}
 
 		ProcedureDeclaration procDecl =
@@ -293,6 +298,7 @@ public class ASTBuilder extends MontyBaseVisitor<ASTNode> {
 			for (TypeContext typeContext : ctx.typeList().type()) {
 				ResolvableIdentifier type = convertResolvableIdentifier(typeContext);
 				superClasses.add(type);
+				checkTupleType(type);
 			}
 		}
 
@@ -625,11 +631,7 @@ public class ASTBuilder extends MontyBaseVisitor<ASTNode> {
 			}
 			TupleLiteral tuple = new TupleLiteral(position(ctx.getStart()), elements);
 			// generate a new tuple type if necessary
-			ClassDeclaration tupleType = TupleClassDeclaration.getNewInstance(elements.size());
-			// if a new type was generated, it has to be attached to the module
-			if (tupleType != null) {
-				currentBlocks.get(0).addDeclaration(tupleType);
-			}
+			addTupleType(elements.size());
 			return tuple;
 		} else {
 			return new BooleanLiteral(position(ctx.getStart()), Boolean.parseBoolean(ctx.BooleanLiteral().toString()));
@@ -698,16 +700,38 @@ public class ASTBuilder extends MontyBaseVisitor<ASTNode> {
 	}
 
 	private CastExpression visitCastExpression(ExpressionContext ctx) {
-		return new CastExpression(position(ctx.getStart()), (Expression) visit(ctx.expr), new ResolvableIdentifier(
-		        getText(ctx.ClassIdentifier())));
+		ResolvableIdentifier type = new ResolvableIdentifier(getText(ctx.ClassIdentifier()));
+		checkTupleType(type);
+		return new CastExpression(position(ctx.getStart()), (Expression) visit(ctx.expr), type);
 	}
 
 	private IsExpression visitIsExpression(ExpressionContext ctx) {
-		return new IsExpression(position(ctx.getStart()), (Expression) visit(ctx.expr), new ResolvableIdentifier(
-		        getText(ctx.ClassIdentifier())));
+		ResolvableIdentifier type = new ResolvableIdentifier(getText(ctx.ClassIdentifier()));
+		checkTupleType(type);
+		return new IsExpression(position(ctx.getStart()), (Expression) visit(ctx.expr), type);
 	}
 
 	protected ASTNode aggregateResult(ASTNode aggregate, ASTNode nextResult) {
 		return nextResult == null ? aggregate : nextResult;
+	}
+
+	protected void addTupleType(int n) {
+		ClassDeclaration tupleType = TupleClassDeclaration.getNewInstance(n);
+		// if a new type was generated, it has to be attached to the module
+		if (tupleType != null) {
+			currentBlocks.get(0).addDeclaration(tupleType);
+		}
+	}
+
+	protected void checkTupleType(ResolvableIdentifier type) {
+		String str = type.toString();
+		if (str.startsWith("Tuple")) {
+			String number = str.substring(5);
+			try {
+				addTupleType(Integer.parseInt(number));
+			} catch (Exception e) {
+				// if the rest is not a number, we don't need to create a tuple type
+			}
+		}
 	}
 }
