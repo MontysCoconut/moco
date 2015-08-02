@@ -88,7 +88,7 @@ public class TupleLiteral extends FunctionCall {
 
 				// add an attribute with that type to the class
 				VariableDeclaration attr =
-				        new VariableDeclaration(new Position(), new Identifier("x_" + i), t,
+				        new VariableDeclaration(new Position(), new Identifier("_" + (i + 1)), t,
 				                VariableDeclaration.DeclarationType.ATTRIBUTE);
 				classContent.addDeclaration(attr);
 

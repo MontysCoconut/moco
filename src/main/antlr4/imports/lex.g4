@@ -141,12 +141,14 @@ AbstractKeyword
   ;
 
 /* Unicode identifiers. */
-Identifier
-  : '_'* LowercaseLetter (LowercaseLetter | UppercaseLetter | Digit | '_')*
-  ;
 
 ClassIdentifier
   : UppercaseLetter (LowercaseLetter | UppercaseLetter | Digit)* LowercaseLetter (LowercaseLetter | UppercaseLetter | Digit)*
+  ;
+
+Identifier
+  : '_'* LowercaseLetter (LowercaseLetter | UppercaseLetter | Digit | '_')*
+  | '_'+ (LowercaseLetter | UppercaseLetter | Digit | '_')*
   ;
 
 ConstantIdentifier
