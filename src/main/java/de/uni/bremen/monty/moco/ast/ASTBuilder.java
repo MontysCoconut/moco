@@ -151,12 +151,6 @@ public class ASTBuilder extends MontyBaseVisitor<ASTNode> {
 		return new ResolvableIdentifier(typeName, genericTypes);
 	}
 
-	private Identifier convertIdentifier(TypeContext type) {
-		// TODO: Tuple Syntax Sugar beachten
-		String typeName = type.ClassIdentifier().toString();
-		return new Identifier(typeName);
-	}
-
 	@Override
 	public ASTNode visitFunctionCall(FunctionCallContext ctx) {
 		ArrayList<Expression> arguments = new ArrayList<>();
