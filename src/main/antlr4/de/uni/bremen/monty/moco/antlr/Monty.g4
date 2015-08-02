@@ -55,6 +55,7 @@ constantDeclaration
 
 type
   : ClassIdentifier ('<' typeList '>')?
+  | '(' type (',' type)+ ')'
   ;
 
 typeList

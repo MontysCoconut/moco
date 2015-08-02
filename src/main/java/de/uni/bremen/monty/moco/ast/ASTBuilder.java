@@ -126,10 +126,25 @@ public class ASTBuilder extends MontyBaseVisitor<ASTNode> {
 	}
 
 	private ResolvableIdentifier convertResolvableIdentifier(TypeContext type) {
-		String typeName = type.ClassIdentifier().toString();
+		String typeName;
+		List<TypeContext> typeParameters = null;
+		// if there is no class identifier, we have to handle syntactic sugar here
+		if (type.ClassIdentifier() == null) {
+			// a tuple
+			typeParameters = type.type();
+			int n = typeParameters != null ? typeParameters.size() : 0;
+			typeName = "Tuple" + n;
+		} else {
+			typeName = type.ClassIdentifier().toString();
+			if (type.typeList() != null) {
+				typeParameters = type.typeList().type();
+			}
+		}
+
+		// handle generic type parameters
 		ArrayList<ResolvableIdentifier> genericTypes = new ArrayList<>();
-		if (type.typeList() != null) {
-			for (TypeContext typeContext : type.typeList().type()) {
+		if (typeParameters != null) {
+			for (TypeContext typeContext : typeParameters) {
 				genericTypes.add(convertResolvableIdentifier(typeContext));
 			}
 		}
@@ -137,6 +152,7 @@ public class ASTBuilder extends MontyBaseVisitor<ASTNode> {
 	}
 
 	private Identifier convertIdentifier(TypeContext type) {
+		// TODO: Tuple Syntax Sugar beachten
 		String typeName = type.ClassIdentifier().toString();
 		return new Identifier(typeName);
 	}
@@ -315,7 +331,7 @@ public class ASTBuilder extends MontyBaseVisitor<ASTNode> {
 		if (type.typeList() != null) {
 			for (TypeContext typeContext1 : type.typeList().type()) {
 				genericTypes.add(new AbstractGenericType(cl, position(typeContext1.getStart()),
-				        new ResolvableIdentifier(getText(typeContext1.ClassIdentifier()))));
+				        convertResolvableIdentifier(typeContext1)));
 			}
 		}
 
