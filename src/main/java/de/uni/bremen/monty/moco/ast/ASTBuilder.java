@@ -150,6 +150,7 @@ public class ASTBuilder extends MontyBaseVisitor<ASTNode> {
 		} else {
 			identifier = new ResolvableIdentifier(ctx.Identifier().getText());
 		}
+		checkTupleType(identifier); // since constructor calls are also function calls
 		FunctionCall func = new FunctionCall(position(ctx.getStart()), identifier, arguments);
 		if (ctx.expressionList() != null) {
 			for (ExpressionContext exprC : ctx.expressionList().expression()) {
