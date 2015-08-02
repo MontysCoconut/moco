@@ -36,63 +36,38 @@
  * You should have received a copy of the GNU General Public
  * License along with this library.
  */
-package de.uni.bremen.monty.moco.ast.expression;
 
-import de.uni.bremen.monty.moco.ast.Position;
-import de.uni.bremen.monty.moco.ast.ResolvableIdentifier;
-import de.uni.bremen.monty.moco.ast.declaration.ProcedureDeclaration;
-import de.uni.bremen.monty.moco.ast.statement.Statement;
-import de.uni.bremen.monty.moco.visitor.BaseVisitor;
+package de.uni.bremen.monty.moco.ast.expression.literal;
 
-import java.util.List;
+import de.uni.bremen.monty.moco.ast.*;
+import de.uni.bremen.monty.moco.ast.declaration.*;
+import de.uni.bremen.monty.moco.ast.expression.*;
 
-public class FunctionCall extends Expression implements Statement {
-	private final ResolvableIdentifier identifier;
-	protected final List<Expression> arguments;
-	private ProcedureDeclaration declaration;
+import java.util.ArrayList;
 
-	public FunctionCall(Position position, ResolvableIdentifier identifier, List<Expression> arguments) {
-		super(position);
-		this.identifier = identifier;
-		this.arguments = arguments;
-	}
+public class TupleLiteral extends FunctionCall {
 
-	/** get the identifier.
+	/** Constructor.
 	 *
-	 * @return the identifier */
-	public ResolvableIdentifier getIdentifier() {
-		return identifier;
+	 * @param position
+	 *            Position of this node
+	 * @param entries */
+	public TupleLiteral(Position position, ArrayList<Expression> entries) {
+		super(position, new ResolvableIdentifier("Tuple" + entries.size(), new ArrayList<ResolvableIdentifier>()),
+		        entries);
 	}
 
-	/** get the List of paramter
-	 *
-	 * @return the paramters */
-	public List<Expression> getArguments() {
-		return arguments;
-	}
-
-	/** {@inheritDoc} */
-	@Override
-	public void visit(BaseVisitor visitor) {
-		visitor.visit(this);
-	}
-
-	/** {@inheritDoc} */
-	@Override
-	public void visitChildren(BaseVisitor visitor) {
-		for (Expression expression : arguments) {
-			visitor.visitDoubleDispatched(expression);
+	public void setTypeAutomatically() {
+		ClassDeclaration classDecl = TupleClassDeclaration.getInstance(arguments.size());
+		ArrayList<ClassDeclaration> concreteTypes = new ArrayList<>(arguments.size());
+		for (Expression entry : arguments) {
+			if (entry.getType() instanceof ClassDeclaration) {
+				concreteTypes.add((ClassDeclaration) entry.getType());
+				getIdentifier().getGenericTypes().add(ResolvableIdentifier.convert(entry.getType().getIdentifier()));
+			} else {
+				throw new RuntimeException("TYPE:: " + entry.getType());
+			}
 		}
-	}
-
-	/** @return the declaration */
-	public ProcedureDeclaration getDeclaration() {
-		return declaration;
-	}
-
-	/** @param declaration
-	 *            the declaration to set */
-	public void setDeclaration(ProcedureDeclaration declaration) {
-		this.declaration = declaration;
+		setType(classDecl.getVariation(ResolvableIdentifier.convert(classDecl.getIdentifier()), concreteTypes));
 	}
 }
