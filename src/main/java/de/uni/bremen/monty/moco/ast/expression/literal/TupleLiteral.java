@@ -42,18 +42,10 @@ package de.uni.bremen.monty.moco.ast.expression.literal;
 import de.uni.bremen.monty.moco.ast.*;
 import de.uni.bremen.monty.moco.ast.declaration.*;
 import de.uni.bremen.monty.moco.ast.expression.*;
-import de.uni.bremen.monty.moco.ast.statement.Assignment;
-import de.uni.bremen.monty.moco.ast.statement.ReturnStatement;
-import de.uni.bremen.monty.moco.visitor.BaseVisitor;
 
 import java.util.ArrayList;
-import java.util.Map;
-import java.util.HashMap;
-import java.util.List;
 
 public class TupleLiteral extends FunctionCall {
-
-	private static Map<Integer, ClassDeclaration> tupleTypes = new HashMap<>();
 
 	/** Constructor.
 	 *
@@ -65,61 +57,8 @@ public class TupleLiteral extends FunctionCall {
 		        entries);
 	}
 
-	/** This method checks whether a tuple type with the correct length is already defined. If not, a new tuple type is
-	 * generated. */
-	public ClassDeclaration generateTupleType() {
-		int n = arguments.size();
-		ClassDeclaration tupleType = tupleTypes.get(n);
-		if (tupleType == null) {
-			List<AbstractGenericType> genericTypes = new ArrayList<>();
-
-			Block classContent = new Block(new Position());
-			tupleType =
-			        new ClassDeclaration(new Position(), new Identifier("Tuple" + n),
-			                new ArrayList<ResolvableIdentifier>(), classContent, false, genericTypes);
-
-			List<VariableDeclaration> initializerParameters = new ArrayList<>();
-			Block initializerBody = new Block(new Position());
-
-			for (int i = 0; i < n; i++) {
-				// add the type parameter to the class
-				AbstractGenericType t = new AbstractGenericType(tupleType, new Position(), new Identifier("T" + i));
-				genericTypes.add(t);
-
-				// add an attribute with that type to the class
-				VariableDeclaration attr =
-				        new VariableDeclaration(new Position(), new Identifier("_" + (i + 1)), t,
-				                VariableDeclaration.DeclarationType.ATTRIBUTE);
-				classContent.addDeclaration(attr);
-
-				// add a parameter with that type to the initializer parameter list
-				VariableDeclaration param =
-				        new VariableDeclaration(new Position(), new Identifier("p" + i), t,
-				                VariableDeclaration.DeclarationType.PARAMETER);
-				initializerParameters.add(param);
-
-				// add an assignment to the initializer body: "self._1 := p1"
-				initializerBody.addStatement(new Assignment(new Position(), new MemberAccess(new Position(),
-				        new SelfExpression(new Position()), new VariableAccess(new Position(),
-				                ResolvableIdentifier.convert(attr.getIdentifier()))), new VariableAccess(
-				        new Position(), ResolvableIdentifier.convert(param.getIdentifier()))));
-			}
-			initializerBody.addStatement(new ReturnStatement(new Position(), null));
-			// generate default initializer with every attribute being a parameter
-			ProcedureDeclaration initializer =
-			        new ProcedureDeclaration(new Position(), new Identifier("initializer"), initializerBody,
-			                initializerParameters, ProcedureDeclaration.DeclarationType.INITIALIZER,
-			                (TypeDeclaration) null);
-			classContent.addDeclaration(initializer);
-
-			tupleTypes.put(n, tupleType);
-			return tupleType;
-		}
-		return null;
-	}
-
 	public void setTypeAutomatically() {
-		ClassDeclaration classDecl = getTupleType(arguments.size());
+		ClassDeclaration classDecl = TupleClassDeclaration.getInstance(arguments.size());
 		ArrayList<ClassDeclaration> concreteTypes = new ArrayList<>(arguments.size());
 		for (Expression entry : arguments) {
 			if (entry.getType() instanceof ClassDeclaration) {
@@ -130,11 +69,5 @@ public class TupleLiteral extends FunctionCall {
 			}
 		}
 		setType(classDecl.getVariation(ResolvableIdentifier.convert(classDecl.getIdentifier()), concreteTypes));
-	}
-
-	/** @param n
-	 * @return the ClassDeclaration for TupleN, null if it does not exist */
-	public static ClassDeclaration getTupleType(int n) {
-		return tupleTypes.get(n);
 	}
 }

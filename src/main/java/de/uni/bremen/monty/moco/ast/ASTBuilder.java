@@ -625,7 +625,7 @@ public class ASTBuilder extends MontyBaseVisitor<ASTNode> {
 			}
 			TupleLiteral tuple = new TupleLiteral(position(ctx.getStart()), elements);
 			// generate a new tuple type if necessary
-			ClassDeclaration tupleType = tuple.generateTupleType();
+			ClassDeclaration tupleType = TupleClassDeclaration.getNewInstance(elements.size());
 			// if a new type was generated, it has to be attached to the module
 			if (tupleType != null) {
 				currentBlocks.get(0).addDeclaration(tupleType);
