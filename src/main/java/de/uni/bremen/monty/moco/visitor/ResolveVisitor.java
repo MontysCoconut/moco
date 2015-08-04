@@ -368,7 +368,7 @@ public class ResolveVisitor extends VisitOnceVisitor {
 				for (int i = 0; i < callParams.size(); i++) {
 					Expression callParam = callParams.get(i);
 					VariableDeclaration procParam = procParams.get(i);
-					visit(procParam);
+					visitDoubleDispatched(procParam);
 					if (!callParam.getType().matchesType(procParam.getType())) {
 						allParamsMatch = false;
 						break;

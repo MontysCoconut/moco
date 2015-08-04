@@ -119,6 +119,7 @@ public class VariableDeclaration extends Declaration {
 	 *
 	 * @param type */
 	public void setType(TypeDeclaration type) {
+		if (this.type != null) return;
 		this.type = type;
 	}
 
