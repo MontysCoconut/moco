@@ -1,0 +1,30 @@
+// Testing: Tuples
+//
+// Testing the possibility to inherit from a tuple type
+//
+// Expected output: 3\n2\n33 > 2
+
+class MyIntTuple2 inherits Tuple2<Int, Int>:
+    initializer(Int b, Int a):
+        self._1 := a
+        self._2 := b
+
+MyIntTuple2 x := MyIntTuple2(2,3)
+
+println(x._1)
+println(x._2)
+
+
+
+
+class MyTuple3 inherits (Int, String, Int):
+    initializer(Int a, String text, Int b):
+        self._1 := b
+        self._2 := text
+        self._3 := a
+
+MyTuple3 y := MyTuple3(2, " > ", 3)
+
+print(y._1)
+print(y._2)
+print(y._3)

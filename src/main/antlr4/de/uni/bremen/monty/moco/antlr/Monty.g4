@@ -55,6 +55,7 @@ constantDeclaration
 
 type
   : ClassIdentifier ('<' typeList '>')?
+  | '(' type (',' type)+ ')'
   ;
 
 typeList
@@ -225,8 +226,13 @@ literal
   | StringLiteral
   | BooleanLiteral
   | arrayLiteral
+  | tupleLiteral
   ;
 
 arrayLiteral
   : Lbracket (expression (',' expression)*)? Rbracket
+  ;
+
+tupleLiteral
+  : Lparenthesis (expression (',' expression)+)? Rparenthesis
   ;
