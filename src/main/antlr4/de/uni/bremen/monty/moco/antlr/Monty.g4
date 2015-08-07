@@ -94,6 +94,7 @@ statement
   | ifStatement                                                     #ifStm
   | tryStatement                                                    #tryStm
   | independentDeclaration                                          #independentDeclStm
+  | unpackAssignment                                                #unpackAssignStm
   | assignment                                                      #assignStm
   | compoundAssignment                                              #compoundAssign
   | command='return' expression? EndOfLine                          #returnStm
@@ -126,6 +127,19 @@ tryStatement
 
 assignment
   : left=expression ':=' right=expression EndOfLine
+  ;
+
+unpackAssignment
+  : left=unpackList ':=' right=expression EndOfLine
+  ;
+
+unpackList
+  : unpackable (',' unpackable)+
+  ;
+
+unpackable
+  : expression
+  | variableDeclaration
   ;
 
 compoundAssignment

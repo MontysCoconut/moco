@@ -102,6 +102,24 @@ public class ASTBuilder extends MontyBaseVisitor<ASTNode> {
 	}
 
 	@Override
+	public ASTNode visitUnpackAssignment(@NotNull MontyParser.UnpackAssignmentContext ctx) {
+		Expression right = (Expression) visit(ctx.right);
+		List<Expression> left = new ArrayList<>(ctx.left.unpackable().size());
+
+		for (UnpackableContext target : ctx.left.unpackable()) {
+			if (target.variableDeclaration() != null) {
+				VariableDeclaration decl = (VariableDeclaration) visitVariableDeclaration(target.variableDeclaration());
+				currentBlocks.peek().addDeclaration(decl);
+				left.add(new VariableAccess(position(target.getStart()),
+				        ResolvableIdentifier.convert(decl.getIdentifier())));
+			} else {
+				left.add((Expression) visitExpression(target.expression()));
+			}
+		}
+		return new UnpackAssignment(position(ctx.getStart()), left, right);
+	}
+
+	@Override
 	public ASTNode visitAssignment(@NotNull AssignmentContext ctx) {
 		Assignment assignment =
 		        new Assignment(position(ctx.getStart()), (Expression) visit(ctx.left), (Expression) visit(ctx.right));
