@@ -126,7 +126,14 @@ public class ResolveVisitor extends VisitOnceVisitor {
 	public void visit(VariableDeclaration node) {
 		super.visit(node);
 		Scope scope = node.getScope();
-		TypeDeclaration type = scope.resolveType(node.getTypeIdentifier());
+		TypeDeclaration type;
+		if (node.typeMustBeInferred()) {
+			Expression inferred = node.getExpressionToInferType();
+			visitDoubleDispatched(inferred);
+			type = inferred.getType();
+		} else {
+			type = scope.resolveType(node.getTypeIdentifier());
+		}
 		node.setType(type);
 	}
 

@@ -116,7 +116,9 @@ public class ASTBuilder extends MontyBaseVisitor<ASTNode> {
 				left.add((Expression) visitExpression(target.expression()));
 			}
 		}
-		return new UnpackAssignment(position(ctx.getStart()), left, right);
+		UnpackAssignment assignment = new UnpackAssignment(position(ctx.getStart()), left, right);
+		currentBlocks.peek().addDeclaration(assignment.getTmpDecl());
+		return assignment;
 	}
 
 	@Override
