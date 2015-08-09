@@ -42,7 +42,9 @@ import de.uni.bremen.monty.moco.ast.*;
 import de.uni.bremen.monty.moco.ast.declaration.*;
 import de.uni.bremen.monty.moco.ast.expression.*;
 import de.uni.bremen.monty.moco.ast.expression.literal.*;
+import de.uni.bremen.monty.moco.ast.statement.UnpackAssignment;
 import de.uni.bremen.monty.moco.exception.InvalidExpressionException;
+import de.uni.bremen.monty.moco.exception.TypeMismatchException;
 import de.uni.bremen.monty.moco.exception.UnknownIdentifierException;
 import de.uni.bremen.monty.moco.exception.UnknownTypeException;
 
@@ -259,6 +261,23 @@ public class ResolveVisitor extends VisitOnceVisitor {
 	public void visit(ArrayLiteral node) {
 		node.setType(CoreClasses.arrayType());
 		super.visit(node);
+	}
+
+	/** {@inheritDoc} */
+	@Override
+	public void visit(UnpackAssignment node) {
+		String typeSymbol = node.getTmpDecl().getType().getIdentifier().getSymbol();
+		if (typeSymbol.startsWith("Tuple")) {
+			int rhsLength = Integer.parseInt(typeSymbol.substring(5));
+			int lhsLength = (node.getAssignments().size() - 1);
+			if (lhsLength != rhsLength) {
+				throw new TypeMismatchException(node, "can't unpack a " + rhsLength + "-tuple to " + lhsLength
+				        + " variables");
+			}
+			super.visit(node);
+		} else {
+			throw new TypeMismatchException(node, "can't unpack something that is not a tuple");
+		}
 	}
 
 	/** {@inheritDoc} */
