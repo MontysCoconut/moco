@@ -1,0 +1,32 @@
+// Testing: Tuples
+//
+// Testing the unpack-mechanism for tuples
+//
+// Expected output: 3\n12\n16\nHello\n42\n3.141\n0\nleft\nright\n
+
+Int a, Int b := (3,4)
+Int c, b := (16,12)
+String hello, Int fourtyTwo := ("Hello", 42)
+
+Float pi
+Bool isFour
+
+(Bool, Float) myTuple := (false, 3.141)
+isFour, pi := myTuple
+
+println(a)
+println(b)
+println(c)
+println(hello)
+println(fourtyTwo)
+println(pi)
+println(isFour)
+
+
+String left  := "right"
+String right := "left"
+
+left, right := (right, left)
+
+println(left)
+println(right)

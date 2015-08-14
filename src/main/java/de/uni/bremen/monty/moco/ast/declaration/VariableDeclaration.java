@@ -41,6 +41,7 @@ package de.uni.bremen.monty.moco.ast.declaration;
 import de.uni.bremen.monty.moco.ast.Identifier;
 import de.uni.bremen.monty.moco.ast.Position;
 import de.uni.bremen.monty.moco.ast.ResolvableIdentifier;
+import de.uni.bremen.monty.moco.ast.expression.Expression;
 import de.uni.bremen.monty.moco.visitor.BaseVisitor;
 
 public class VariableDeclaration extends Declaration {
@@ -52,6 +53,7 @@ public class VariableDeclaration extends Declaration {
 	private TypeDeclaration type;
 	private DeclarationType declarationType;
 	private boolean isGlobal;
+	private Expression inferTypeFrom = null;
 
 	/* Index of the variable if it is an attribute in the class struct */
 	private int attributeIndex;
@@ -75,6 +77,11 @@ public class VariableDeclaration extends Declaration {
 		this.typeIdentifier = typeIdentifier;
 		this.declarationType = DeclarationType.VARIABLE;
 		attributeIndex = -1;
+	}
+
+	public VariableDeclaration(Position position, Identifier identifier, Expression inferTypeFrom) {
+		this(position, identifier, (ResolvableIdentifier) null);
+		this.inferTypeFrom = inferTypeFrom;
 	}
 
 	/** set the declaration type */
@@ -157,5 +164,13 @@ public class VariableDeclaration extends Declaration {
 	/** {@inheritDoc} */
 	@Override
 	public void visitChildren(BaseVisitor visitor) {
+	}
+
+	public boolean typeMustBeInferred() {
+		return inferTypeFrom != null;
+	}
+
+	public Expression getExpressionToInferType() {
+		return inferTypeFrom;
 	}
 }
