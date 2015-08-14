@@ -104,19 +104,19 @@ public class ClassScope extends Scope {
 		return null;
 	}
 
-	/** Resolve an identifier for list of overloaded procedures or functions in inherited scope.
+	/** Resolve an identifier for list of overloaded functions in inherited scope.
 	 *
 	 * @param identifier
 	 *            the identifier to resolve
-	 * @return the list of procedure declarations */
-	protected List<ProcedureDeclaration> resolveProcedureMember(ResolvableIdentifier identifier) {
-		List<ProcedureDeclaration> result = new ArrayList<ProcedureDeclaration>();
+	 * @return the list of function declarations */
+	protected List<FunctionDeclaration> resolveFunctionMember(ResolvableIdentifier identifier) {
+		List<FunctionDeclaration> result = new ArrayList<FunctionDeclaration>();
 
-		if (procedures.containsKey(identifier)) {
-			result.addAll(procedures.get(identifier));
+		if (functions.containsKey(identifier)) {
+			result.addAll(functions.get(identifier));
 		}
 		for (ClassScope scope : parentClassesScopes) {
-			result.addAll(scope.resolveProcedureMember(identifier));
+			result.addAll(scope.resolveFunctionMember(identifier));
 		}
 		return result;
 	}
@@ -138,20 +138,20 @@ public class ClassScope extends Scope {
 		return super.resolve(identifier);
 	}
 
-	/** Resolve an identifier for list of overloaded procedures or functions.
+	/** Resolve an identifier for list of overloaded functions.
 	 * <p>
 	 * It first searches its associations, the parent classes in inheritance hierachy and only then the parent scope.
 	 *
 	 * @param identifier
 	 *            the identifier to resolve
-	 * @return the list of procedure declarations */
+	 * @return the list of function declarations */
 	@Override
-	public List<ProcedureDeclaration> resolveProcedure(ResolvableIdentifier identifier) {
-		List<ProcedureDeclaration> result = new ArrayList<ProcedureDeclaration>();
-		result.addAll(resolveProcedureMember(identifier));
+	public List<FunctionDeclaration> resolveFunction(ResolvableIdentifier identifier) {
+		List<FunctionDeclaration> result = new ArrayList<FunctionDeclaration>();
+		result.addAll(resolveFunctionMember(identifier));
 		if (parent != null) {
 			try {
-				result.addAll(parent.resolveProcedure(identifier));
+				result.addAll(parent.resolveFunction(identifier));
 			} catch (UnknownIdentifierException e) {
 			}
 		}

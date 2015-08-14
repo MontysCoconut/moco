@@ -14,11 +14,15 @@ importLine
   : 'import' Identifier EndOfLine+
   ;
 
+declaration
+  : independentDeclaration
+  | classDeclaration
+  ;
+
 independentDeclaration
   : variableDeclaration (':=' expression)? EndOfLine
   | constantDeclaration (':=' expression)? EndOfLine
   | functionDeclaration
-  | procedureDeclaration
   ;
 
 classDeclaration
@@ -63,14 +67,9 @@ typeList
   ;
 
 functionDeclaration
-  : type
+  : (type)?
     Identifier
     Lparenthesis parameterList? Rparenthesis ':' EndOfLine
-    statementBlock
-  ;
-
-procedureDeclaration
-  : Identifier Lparenthesis parameterList? Rparenthesis ':' EndOfLine
     statementBlock
   ;
 
@@ -93,7 +92,7 @@ statement
   : whileStatement                                                  #whileStm
   | ifStatement                                                     #ifStm
   | tryStatement                                                    #tryStm
-  | independentDeclaration                                          #independentDeclStm
+  | declaration                                                     #declStm
   | unpackAssignment                                                #unpackAssignStm
   | assignment                                                      #assignStm
   | compoundAssignment                                              #compoundAssign

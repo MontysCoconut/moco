@@ -7,4 +7,4 @@
 Int square(Int value):
    return value * value
 
-print(square)
+square(square)

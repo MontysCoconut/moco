@@ -42,7 +42,7 @@ import de.uni.bremen.monty.moco.ast.ASTNode;
 import de.uni.bremen.monty.moco.ast.CoreClasses;
 import de.uni.bremen.monty.moco.ast.expression.literal.StringLiteral;
 import de.uni.bremen.monty.moco.ast.declaration.ClassDeclaration;
-import de.uni.bremen.monty.moco.ast.declaration.ProcedureDeclaration;
+import de.uni.bremen.monty.moco.ast.declaration.FunctionDeclaration;
 import de.uni.bremen.monty.moco.ast.declaration.TypeDeclaration;
 import de.uni.bremen.monty.moco.codegeneration.context.CodeContext;
 import de.uni.bremen.monty.moco.codegeneration.context.CodeContext.LLVMFunctionAttribute;
@@ -186,7 +186,7 @@ public class CodeGenerator {
 	}
 
 	private LLVMIdentifier<LLVMPointer<LLVMFunctionType>> getFunctionPointer(CodeContext c,
-	        LLVMIdentifier<LLVMPointer<LLVMType>> selfReference, ProcedureDeclaration declaration) {
+	        LLVMIdentifier<LLVMPointer<LLVMType>> selfReference, FunctionDeclaration declaration) {
 		LLVMIdentifier<LLVMPointer<LLVMType>> vmtPointer =
 		        getVMTPointer(c, selfReference, declaration.getDefiningClass());
 
@@ -463,7 +463,7 @@ public class CodeGenerator {
 		c.callVoid(llvmIdentifierFactory.newGlobal(functionName, (LLVMType) voidType()), resolvedArguments);
 	}
 
-	public LLVMIdentifier<?> callMethod(CodeContext c, ProcedureDeclaration declaration,
+	public LLVMIdentifier<?> callMethod(CodeContext c, FunctionDeclaration declaration,
 	        List<LLVMIdentifier<?>> arguments, List<TypeDeclaration> parameters) {
 		List<LLVMIdentifier<? extends LLVMType>> resolvedArguments = resolveArgumentsIfNeeded(c, arguments, parameters);
 
@@ -475,7 +475,7 @@ public class CodeGenerator {
 		        resolvedArguments);
 	}
 
-	public void callVoidMethod(CodeContext c, ProcedureDeclaration declaration, List<LLVMIdentifier<?>> arguments,
+	public void callVoidMethod(CodeContext c, FunctionDeclaration declaration, List<LLVMIdentifier<?>> arguments,
 	        List<TypeDeclaration> parameters) {
 		List<LLVMIdentifier<?>> resolvedArguments = resolveArgumentsIfNeeded(c, arguments, parameters);
 

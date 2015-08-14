@@ -1,0 +1,13 @@
+// Testing: Local classes inside functions
+//
+// Expected output: 64
+
+Int square(Int x):
+    class Square:
+        Int square(Int x):
+            return x*x
+
+    Square sq := Square()
+    return sq.square(x)
+
+println(square(8))

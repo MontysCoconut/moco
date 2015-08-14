@@ -1,0 +1,2 @@
+abstract class Function<ParamType, ReturnType>:
+    + abstract ReturnType _apply_(ParamType p)

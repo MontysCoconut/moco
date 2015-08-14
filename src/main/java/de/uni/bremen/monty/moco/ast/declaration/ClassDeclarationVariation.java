@@ -3,7 +3,6 @@ package de.uni.bremen.monty.moco.ast.declaration;
 import de.uni.bremen.monty.moco.ast.Block;
 import de.uni.bremen.monty.moco.ast.ClassScope;
 import de.uni.bremen.monty.moco.ast.ResolvableIdentifier;
-import de.uni.bremen.monty.moco.ast.Scope;
 import de.uni.bremen.monty.moco.ast.statement.Statement;
 
 import java.util.ArrayList;
@@ -27,16 +26,16 @@ public class ClassDeclarationVariation extends ClassDeclaration {
 		classScope.addParentClassScope((ClassScope) classDecl.getScope());
 		setScope(classScope);
 		classDecl.addVariation(this);
-		Collection<ProcedureDeclaration> procedureDeclarations = mapFunctions(classDecl.getVirtualMethodTable());
-		getVirtualMethodTable().addAll(procedureDeclarations);
+		Collection<FunctionDeclaration> functionDeclarations = mapFunctions(classDecl.getVirtualMethodTable());
+		getVirtualMethodTable().addAll(functionDeclarations);
 		mapBlock(classDecl.getBlock());
 		getBlock().setParentNode(this);
-		ProcedureDeclaration defaultInitializer = mapFunction(classDecl.getDefaultInitializer());
+		FunctionDeclaration defaultInitializer = mapFunction(classDecl.getDefaultInitializer());
 		setDefaultInitializer(defaultInitializer);
-		for (Declaration procedureDeclaration : getBlock().getDeclarations()) {
-			if (!(procedureDeclaration instanceof ProcedureDeclaration)
-			        || !((ProcedureDeclaration) procedureDeclaration).isDefaultInitializer()) {
-				classScope.define(procedureDeclaration);
+		for (Declaration functionDeclaration : getBlock().getDeclarations()) {
+			if (!(functionDeclaration instanceof FunctionDeclaration)
+			        || !((FunctionDeclaration) functionDeclaration).isDefaultInitializer()) {
+				classScope.define(functionDeclaration);
 			}
 		}
 		classScope.define(defaultInitializer);
@@ -48,8 +47,8 @@ public class ClassDeclarationVariation extends ClassDeclaration {
 		}
 		for (Declaration declaration : block.getDeclarations()) {
 
-			if (declaration instanceof ProcedureDeclaration) {
-				declaration = mapFunction((ProcedureDeclaration) declaration);
+			if (declaration instanceof FunctionDeclaration) {
+				declaration = mapFunction((FunctionDeclaration) declaration);
 			} else if (declaration instanceof VariableDeclaration) {
 				declaration = mapDeclaration((VariableDeclaration) declaration);
 			}
@@ -57,25 +56,25 @@ public class ClassDeclarationVariation extends ClassDeclaration {
 		}
 	}
 
-	private Collection<ProcedureDeclaration> mapFunctions(List<ProcedureDeclaration> originalVirtualMethods) {
-		ArrayList<ProcedureDeclaration> procedureDeclarations = new ArrayList<>();
-		for (ProcedureDeclaration procedureDeclaration : originalVirtualMethods) {
-			procedureDeclarations.add(mapFunction(procedureDeclaration));
+	private Collection<FunctionDeclaration> mapFunctions(List<FunctionDeclaration> originalVirtualMethods) {
+		ArrayList<FunctionDeclaration> functionDeclarations = new ArrayList<>();
+		for (FunctionDeclaration functionDeclaration : originalVirtualMethods) {
+			functionDeclarations.add(mapFunction(functionDeclaration));
 		}
-		return procedureDeclarations;
+		return functionDeclarations;
 	}
 
-	private ProcedureDeclaration mapFunction(ProcedureDeclaration procedureDeclaration) {
-		ProcedureDeclaration funDecl;
-		if (procedureDeclaration.isFunction()) {
-			TypeDeclaration returnType = mapGenericType((procedureDeclaration).getReturnType());
-			funDecl = new ConcreteProcDecl(this, procedureDeclaration, returnType);
+	private FunctionDeclaration mapFunction(FunctionDeclaration functionDeclaration) {
+		FunctionDeclaration funDecl;
+		if (functionDeclaration.isFunction()) {
+			TypeDeclaration returnType = mapGenericType((functionDeclaration).getReturnType());
+			funDecl = new ConcreteProcDecl(this, functionDeclaration, returnType);
 		} else {
-			funDecl = new ConcreteProcDecl(this, procedureDeclaration);
+			funDecl = new ConcreteProcDecl(this, functionDeclaration);
 		}
-		funDecl.getParameter().addAll(mapParameter(procedureDeclaration.getParameter(), funDecl));
+		funDecl.getParameters().addAll(mapParameter(functionDeclaration.getParameters(), funDecl));
 		funDecl.setParentNode(this);
-		funDecl.setScope(procedureDeclaration.getScope());
+		funDecl.setScope(functionDeclaration.getScope());
 		return funDecl;
 	}
 
@@ -100,7 +99,7 @@ public class ClassDeclarationVariation extends ClassDeclaration {
 		return concreteGenericTypes;
 	}
 
-	private List<VariableDeclaration> mapParameter(List<VariableDeclaration> parameter, ProcedureDeclaration decl) {
+	private List<VariableDeclaration> mapParameter(List<VariableDeclaration> parameter, FunctionDeclaration decl) {
 		ArrayList<VariableDeclaration> params = new ArrayList<>();
 		for (VariableDeclaration variableDeclaration : parameter) {
 			VariableDeclaration var;

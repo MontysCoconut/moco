@@ -48,17 +48,16 @@ import de.uni.bremen.monty.moco.ast.expression.literal.IntegerLiteral;
 import de.uni.bremen.monty.moco.ast.expression.literal.StringLiteral;
 import de.uni.bremen.monty.moco.ast.statement.Assignment;
 import de.uni.bremen.monty.moco.ast.statement.ConditionalStatement;
+import de.uni.bremen.monty.moco.util.TupleDeclarationFactory;
 import org.antlr.v4.runtime.ANTLRInputStream;
 import org.antlr.v4.runtime.CommonTokenStream;
 import org.apache.commons.io.FileUtils;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import java.io.File;
 import java.io.IOException;
 import java.net.URISyntaxException;
 
-import static de.uni.bremen.monty.moco.ast.declaration.VariableDeclaration.DeclarationType;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertTrue;
@@ -88,36 +87,40 @@ public class ASTBuilderTest {
 		ClassDeclaration classDecl = (ClassDeclaration) ast.getBlock().getDeclarations().get(0);
 		VariableDeclaration memberDecl = (VariableDeclaration) classDecl.getBlock().getDeclarations().get(0);
 		VariableDeclaration memberInit = (VariableDeclaration) classDecl.getBlock().getDeclarations().get(1);
-		ProcedureDeclaration memberProc = (ProcedureDeclaration) classDecl.getBlock().getDeclarations().get(2);
-		ProcedureDeclaration memberFun = (ProcedureDeclaration) classDecl.getBlock().getDeclarations().get(3);
+		FunctionDeclaration memberProc = (FunctionDeclaration) classDecl.getBlock().getDeclarations().get(2);
+		FunctionDeclaration memberFun = (FunctionDeclaration) classDecl.getBlock().getDeclarations().get(3);
 
 		VariableDeclaration varDecl = (VariableDeclaration) ast.getBlock().getDeclarations().get(1);
 		VariableDeclaration varInit = (VariableDeclaration) ast.getBlock().getDeclarations().get(2);
-		ProcedureDeclaration funDecl = (ProcedureDeclaration) ast.getBlock().getDeclarations().get(3);
-		ProcedureDeclaration procDecl = (ProcedureDeclaration) ast.getBlock().getDeclarations().get(4);
+		// 3 is the wrapper class
+		// 4 is the wrapper instance
+		FunctionDeclaration funDecl = (FunctionDeclaration) ast.getBlock().getDeclarations().get(5);
+		// 6 is the wrapper class
+		// 7 is the wrapper instance
+		FunctionDeclaration procDecl = (FunctionDeclaration) ast.getBlock().getDeclarations().get(8);
 
 		assertThat(varDecl.getDeclarationType(), is(VariableDeclaration.DeclarationType.VARIABLE));
 		assertThat(varInit.getDeclarationType(), is(VariableDeclaration.DeclarationType.VARIABLE));
 		assertThat(
-		        funDecl.getParameter().get(0).getDeclarationType(),
+		        funDecl.getParameters().get(0).getDeclarationType(),
 		        is(VariableDeclaration.DeclarationType.PARAMETER));
 		assertThat(
-		        procDecl.getParameter().get(0).getDeclarationType(),
+		        procDecl.getParameters().get(0).getDeclarationType(),
 		        is(VariableDeclaration.DeclarationType.PARAMETER));
 
 		assertThat(memberDecl.getDeclarationType(), is(VariableDeclaration.DeclarationType.ATTRIBUTE));
 		assertThat(memberInit.getDeclarationType(), is(VariableDeclaration.DeclarationType.ATTRIBUTE));
 		assertThat(
-		        memberProc.getParameter().get(0).getDeclarationType(),
+		        memberProc.getParameters().get(0).getDeclarationType(),
 		        is(VariableDeclaration.DeclarationType.PARAMETER));
 		assertThat(
-		        memberFun.getParameter().get(0).getDeclarationType(),
+		        memberFun.getParameters().get(0).getDeclarationType(),
 		        is(VariableDeclaration.DeclarationType.PARAMETER));
 
-		assertThat(memberProc.getDeclarationType(), is(ProcedureDeclaration.DeclarationType.METHOD));
-		assertThat(memberFun.getDeclarationType(), is(ProcedureDeclaration.DeclarationType.METHOD));
-		assertThat(funDecl.getDeclarationType(), is(ProcedureDeclaration.DeclarationType.UNBOUND));
-		assertThat(procDecl.getDeclarationType(), is(ProcedureDeclaration.DeclarationType.UNBOUND));
+		assertThat(memberProc.getDeclarationType(), is(FunctionDeclaration.DeclarationType.METHOD));
+		assertThat(memberFun.getDeclarationType(), is(FunctionDeclaration.DeclarationType.METHOD));
+		assertThat(funDecl.getDeclarationType(), is(FunctionDeclaration.DeclarationType.UNBOUND));
+		assertThat(procDecl.getDeclarationType(), is(FunctionDeclaration.DeclarationType.UNBOUND));
 
 	}
 
@@ -249,7 +252,7 @@ public class ASTBuilderTest {
 	}
 
 	private ModuleDeclaration buildAST(String fileName, MontyParser parser) {
-		ASTBuilder astBuilder = new ASTBuilder(fileName);
+		ASTBuilder astBuilder = new ASTBuilder(fileName, new TupleDeclarationFactory());
 		ASTNode rootNode = astBuilder.visitModuleDeclaration(parser.moduleDeclaration());
 		return (ModuleDeclaration) rootNode;
 	}

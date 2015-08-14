@@ -70,12 +70,12 @@ public class TypeConverter {
 		typeMap.put(CoreClasses.voidType(), voidType());
 	}
 
-	private LLVMPointer<LLVMFunctionType> convertType(ProcedureDeclaration type) {
+	private LLVMPointer<LLVMFunctionType> convertType(FunctionDeclaration type) {
 		List<LLVMType> parameter = new ArrayList<>();
-		if (type.getDeclarationType().equals(ProcedureDeclaration.DeclarationType.METHOD)) {
+		if (type.getDeclarationType().equals(FunctionDeclaration.DeclarationType.METHOD)) {
 			parameter.add(mapToLLVMType(type.getDefiningClass()));
 		}
-		for (VariableDeclaration varDecl : type.getParameter()) {
+		for (VariableDeclaration varDecl : type.getParameters()) {
 			parameter.add(mapToLLVMType(varDecl.getType()));
 		}
 		if (type.isFunction()) {
@@ -89,8 +89,8 @@ public class TypeConverter {
 	}
 
 	private <T extends LLVMType> T convertType(TypeDeclaration type) {
-		if (type instanceof ProcedureDeclaration) {
-			LLVMPointer<LLVMFunctionType> llvmFunctionTypeLLVMPointer = convertType((ProcedureDeclaration) type);
+		if (type instanceof FunctionDeclaration) {
+			LLVMPointer<LLVMFunctionType> llvmFunctionTypeLLVMPointer = convertType((FunctionDeclaration) type);
 			return (T) llvmFunctionTypeLLVMPointer;
 		}
 		return (T) convertType((ClassDeclaration) type);
@@ -159,12 +159,12 @@ public class TypeConverter {
 			}
 		}
 
-		for (ProcedureDeclaration procedure : classDecl.getVirtualMethodTable()) {
-			if (!procedure.isInitializer()) {
-				LLVMType signature = mapToLLVMType(procedure);
+		for (FunctionDeclaration function : classDecl.getVirtualMethodTable()) {
+			if (!function.isInitializer()) {
+				LLVMType signature = mapToLLVMType(function);
 				llvmVMTTypeDeclarations.add(signature);
 				llvmVMTDataInitializer.add(llvmIdentifierFactory.newGlobal(
-				        nameMangler.mangleProcedure(procedure),
+				        nameMangler.mangleFunction(function),
 				        signature));
 			}
 		}
@@ -186,7 +186,7 @@ public class TypeConverter {
 		return (LLVMPointer<LLVMStructType>) mapToLLVMType((TypeDeclaration) type);
 	}
 
-	public LLVMPointer<LLVMFunctionType> mapToLLVMType(ProcedureDeclaration type) {
+	public LLVMPointer<LLVMFunctionType> mapToLLVMType(FunctionDeclaration type) {
 		return (LLVMPointer<LLVMFunctionType>) mapToLLVMType((TypeDeclaration) type);
 	}
 

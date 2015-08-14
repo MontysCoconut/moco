@@ -42,10 +42,11 @@ import de.uni.bremen.monty.moco.antlr.MontyBaseVisitor;
 import de.uni.bremen.monty.moco.antlr.MontyParser;
 import de.uni.bremen.monty.moco.antlr.MontyParser.*;
 import de.uni.bremen.monty.moco.ast.declaration.*;
-import de.uni.bremen.monty.moco.ast.declaration.ProcedureDeclaration.DeclarationType;
+import de.uni.bremen.monty.moco.ast.declaration.FunctionDeclaration.DeclarationType;
 import de.uni.bremen.monty.moco.ast.expression.*;
 import de.uni.bremen.monty.moco.ast.expression.literal.*;
 import de.uni.bremen.monty.moco.ast.statement.*;
+import de.uni.bremen.monty.moco.util.FunctionWrapperFactory;
 import de.uni.bremen.monty.moco.util.TupleDeclarationFactory;
 import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.misc.NotNull;
@@ -58,7 +59,7 @@ public class ASTBuilder extends MontyBaseVisitor<ASTNode> {
 	private final String fileName;
 	private Stack<Block> currentBlocks;
 	private VariableDeclaration.DeclarationType currentVariableContext;
-	private ProcedureDeclaration.DeclarationType currentProcedureContext;
+	private FunctionDeclaration.DeclarationType currentFunctionContext;
 	private TupleDeclarationFactory tupleDeclarationFactory;
 
 	private static final Map<String, String> binaryOperatorMapping = new HashMap<String, String>() {
@@ -89,10 +90,10 @@ public class ASTBuilder extends MontyBaseVisitor<ASTNode> {
 		}
 	};
 
-	public ASTBuilder(String fileName) {
+	public ASTBuilder(String fileName, TupleDeclarationFactory tupleDeclarationFactory) {
 		this.fileName = fileName;
 		currentBlocks = new Stack<>();
-		tupleDeclarationFactory = new TupleDeclarationFactory();
+		this.tupleDeclarationFactory = tupleDeclarationFactory;
 	}
 
 	private Position position(Token idSymbol) {
@@ -123,9 +124,6 @@ public class ASTBuilder extends MontyBaseVisitor<ASTNode> {
 		}
 		addStatementsToBlock(block, ctx.statement());
 		currentBlocks.pop();
-		for (ClassDeclaration decl : tupleDeclarationFactory.getTupleTypes()) {
-			module.getBlock().addDeclaration(decl);
-		}
 		return module;
 	}
 
@@ -226,7 +224,7 @@ public class ASTBuilder extends MontyBaseVisitor<ASTNode> {
 		return func;
 	}
 
-	private void buildDefaultProcedures(boolean functionDeclaration, List<DefaultParameterContext> defaultParameter,
+	private void buildDefaultFunctions(boolean isFunction, List<DefaultParameterContext> defaultParameter,
 	        List<VariableDeclaration> allVariableDeclarations, List<VariableDeclaration> params,
 	        List<Expression> defaultExpression, List<VariableDeclaration> defaultVariableDeclaration,
 	        Identifier identifier, Token token, TypeContext typeContext, DeclarationType declarationTypeCopy) {
@@ -254,34 +252,32 @@ public class ASTBuilder extends MontyBaseVisitor<ASTNode> {
 			Expression expression =
 			        new FunctionCall(position(token), new ResolvableIdentifier(identifier.getSymbol()), l);
 
-			if (declarationTypeCopy == ProcedureDeclaration.DeclarationType.METHOD) {
+			if (declarationTypeCopy == FunctionDeclaration.DeclarationType.METHOD) {
 				expression = new MemberAccess(position(token), new SelfExpression(position(token)), expression);
 			}
 
-			ProcedureDeclaration procDecl1;
-			if (functionDeclaration) {
+			ResolvableIdentifier returnTypeIdent = null;
+			if (isFunction) {
 				block.addStatement(new ReturnStatement(new Position(), expression));
-				ResolvableIdentifier returnTypeIdent = convertResolvableIdentifier(typeContext);
+				returnTypeIdent = convertResolvableIdentifier(typeContext);
 				tupleDeclarationFactory.checkTupleType(returnTypeIdent);
-				procDecl1 =
-				        new ProcedureDeclaration(position(token), identifier, block, subParams, declarationTypeCopy,
-				                returnTypeIdent);
 			} else {
 				block.addStatement((Statement) expression);
 				block.addStatement(new ReturnStatement(new Position(), null));
-				procDecl1 =
-				        new ProcedureDeclaration(position(token), identifier, block, subParams, declarationTypeCopy,
-				                (TypeDeclaration) null);
 			}
-			currentBlocks.peek().addDeclaration(procDecl1);
+
+			FunctionDeclaration funDecl =
+			        new FunctionDeclaration(position(token), identifier, block, subParams, declarationTypeCopy,
+			                returnTypeIdent);
+
+			currentBlocks.peek().addDeclaration(funDecl);
 		}
 	}
 
-	private ProcedureDeclaration buildProcedures(boolean functionDeclaration,
-	        ParameterListContext parameterListContext, Token token, TypeContext typeContext,
-	        StatementBlockContext statementBlockContext, Identifier identifier) {
+	private FunctionDeclaration buildFunctions(boolean isFunction, ParameterListContext parameterListContext,
+	        Token token, TypeContext typeContext, StatementBlockContext statementBlockContext, Identifier identifier) {
 
-		ProcedureDeclaration.DeclarationType declarationTypeCopy = currentProcedureContext;
+		FunctionDeclaration.DeclarationType declarationTypeCopy = currentFunctionContext;
 		List<VariableDeclaration> params = parameterListToVarDeclList(parameterListContext);
 		List<DefaultParameterContext> defaultParameter = defaultParameterListToVarDeclList(parameterListContext);
 
@@ -296,8 +292,8 @@ public class ASTBuilder extends MontyBaseVisitor<ASTNode> {
 		allVariableDeclarations.addAll(params);
 		allVariableDeclarations.addAll(defaultVariableDeclaration);
 
-		buildDefaultProcedures(
-		        functionDeclaration,
+		buildDefaultFunctions(
+		        isFunction,
 		        defaultParameter,
 		        allVariableDeclarations,
 		        params,
@@ -308,23 +304,27 @@ public class ASTBuilder extends MontyBaseVisitor<ASTNode> {
 		        typeContext,
 		        declarationTypeCopy);
 
-		ProcedureDeclaration procDecl2;
+		FunctionDeclaration funDecl;
 
-		if (functionDeclaration) {
-			ResolvableIdentifier returnTypeIdent = convertResolvableIdentifier(typeContext);
+		ResolvableIdentifier returnTypeIdent = null;
+		if (isFunction) {
+			returnTypeIdent = convertResolvableIdentifier(typeContext);
 			tupleDeclarationFactory.checkTupleType(returnTypeIdent);
-			procDecl2 =
-			        new ProcedureDeclaration(position(token), identifier, (Block) visit(statementBlockContext),
-			                allVariableDeclarations, declarationTypeCopy, returnTypeIdent);
-		} else {
-			procDecl2 =
-			        new ProcedureDeclaration(position(token), identifier, (Block) visit(statementBlockContext),
-			                allVariableDeclarations, declarationTypeCopy, (TypeDeclaration) null);
 		}
-		return procDecl2;
+		funDecl =
+		        new FunctionDeclaration(position(token), identifier, (Block) visit(statementBlockContext),
+		                allVariableDeclarations, declarationTypeCopy, returnTypeIdent);
+		if (funDecl.isUnbound()) {
+			FunctionWrapperFactory.generateWrapperClass(funDecl, tupleDeclarationFactory);
+			currentBlocks.peek().addDeclaration(funDecl.getWrapperClass());
+			currentBlocks.peek().addDeclaration(funDecl.getWrapperFunctionObjectDeclaration());
+			currentBlocks.peek().addStatement(funDecl.getWrapperFunctionAssignment());
+		}
+
+		return funDecl;
 	}
 
-	private ProcedureDeclaration buildAbstractMethod(boolean functionDeclaration,
+	private FunctionDeclaration buildAbstractMethod(boolean functionDeclaration,
 	        ParameterListContext parameterListContext, Token token, TypeContext typeContext, Identifier identifier) {
 
 		List<VariableDeclaration> params = parameterListToVarDeclList(parameterListContext);
@@ -335,17 +335,30 @@ public class ASTBuilder extends MontyBaseVisitor<ASTNode> {
 			tupleDeclarationFactory.checkTupleType(typeIdent);
 		}
 
-		ProcedureDeclaration procDecl =
-		        new ProcedureDeclaration(position(token), identifier, new Block(position(token)), params,
-		                currentProcedureContext, typeIdent, true);
+		FunctionDeclaration procDecl =
+		        new FunctionDeclaration(position(token), identifier, new Block(position(token)), params,
+		                currentFunctionContext, typeIdent, true);
 		return procDecl;
 	}
 
 	@Override
 	public ASTNode visitFunctionDeclaration(FunctionDeclarationContext ctx) {
-		Identifier identifier = new Identifier(getText(ctx.Identifier()));
-
-		return buildProcedures(true, ctx.parameterList(), ctx.getStart(), ctx.type(), ctx.statementBlock(), identifier);
+		FunctionDeclaration proc =
+		        buildFunctions(
+		                ctx.type() != null,
+		                ctx.parameterList(),
+		                ctx.getStart(),
+		                ctx.type(),
+		                ctx.statementBlock(),
+		                new Identifier(getText(ctx.Identifier())));
+		// if the function does not have any return type, we have to add a return statement
+		if (ctx.type() == null) {
+			List<Statement> list = proc.getBody().getStatements();
+			if ((list.isEmpty()) || !(list.get(list.size() - 1) instanceof ReturnStatement)) {
+				list.add(new ReturnStatement(new Position(), null));
+			}
+		}
+		return proc;
 	}
 
 	@Override
@@ -378,7 +391,7 @@ public class ASTBuilder extends MontyBaseVisitor<ASTNode> {
 		currentBlocks.push(cl.getBlock());
 		for (MemberDeclarationContext member : ctx.memberDeclaration()) {
 			currentVariableContext = VariableDeclaration.DeclarationType.ATTRIBUTE;
-			currentProcedureContext = ProcedureDeclaration.DeclarationType.METHOD;
+			currentFunctionContext = FunctionDeclaration.DeclarationType.METHOD;
 			ASTNode astNode = visit(member);
 			if (astNode instanceof Declaration) {
 
@@ -416,19 +429,6 @@ public class ASTBuilder extends MontyBaseVisitor<ASTNode> {
 		        ctx.getStart(),
 		        ctx.type(),
 		        new Identifier(getText(ctx.Identifier())));
-	}
-
-	@Override
-	public ASTNode visitProcedureDeclaration(ProcedureDeclarationContext ctx) {
-		ProcedureDeclaration proc =
-		        buildProcedures(false, ctx.parameterList(), ctx.start, null, ctx.statementBlock(), new Identifier(
-		                getText(ctx.Identifier())));
-
-		List<Statement> list = proc.getBody().getStatements();
-		if ((list.isEmpty()) || !(list.get(list.size() - 1) instanceof ReturnStatement)) {
-			list.add(new ReturnStatement(new Position(), null));
-		}
-		return proc;
 	}
 
 	private List<VariableDeclaration> parameterListToVarDeclList(ParameterListContext parameter) {
@@ -512,7 +512,7 @@ public class ASTBuilder extends MontyBaseVisitor<ASTNode> {
 	public void addStatementsToBlock(Block block, List<StatementContext> statements) {
 		for (StatementContext stm : statements) {
 			currentVariableContext = VariableDeclaration.DeclarationType.VARIABLE;
-			currentProcedureContext = ProcedureDeclaration.DeclarationType.UNBOUND;
+			currentFunctionContext = FunctionDeclaration.DeclarationType.UNBOUND;
 			ASTNode node = visit(stm);
 			if (node instanceof Statement) {
 				block.addStatement((Statement) node);
@@ -527,8 +527,6 @@ public class ASTBuilder extends MontyBaseVisitor<ASTNode> {
 		ASTNode node;
 		if (ctx.functionDeclaration() != null) {
 			node = visit(ctx.functionDeclaration());
-		} else if (ctx.procedureDeclaration() != null) {
-			node = visit(ctx.procedureDeclaration());
 		} else {
 			node = visit(ctx.variableDeclaration());
 			if (ctx.expression() != null) {
@@ -687,8 +685,8 @@ public class ASTBuilder extends MontyBaseVisitor<ASTNode> {
 				elements.add((Expression) visit(eContext));
 			}
 			// generate a new tuple type if necessary
-			ClassDeclaration tupleType = tupleDeclarationFactory.getTupleType(elements.size());
-			TupleLiteral tuple = new TupleLiteral(position(ctx.getStart()), tupleType, elements);
+			tupleDeclarationFactory.checkTupleType(elements.size());
+			TupleLiteral tuple = new TupleLiteral(position(ctx.getStart()), elements);
 			return tuple;
 		} else {
 			return new BooleanLiteral(position(ctx.getStart()), Boolean.parseBoolean(ctx.BooleanLiteral().toString()));

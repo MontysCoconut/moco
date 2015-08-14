@@ -42,6 +42,7 @@ package de.uni.bremen.monty.moco.ast;
 import de.uni.bremen.monty.moco.antlr.MontyLexer;
 import de.uni.bremen.monty.moco.antlr.MontyParser;
 import de.uni.bremen.monty.moco.ast.declaration.ModuleDeclaration;
+import de.uni.bremen.monty.moco.util.TupleDeclarationFactory;
 import org.antlr.v4.runtime.ANTLRInputStream;
 import org.antlr.v4.runtime.CommonTokenStream;
 
@@ -51,6 +52,7 @@ import java.io.InputStream;
 import java.io.SequenceInputStream;
 
 public class AntlrAdapter {
+	private TupleDeclarationFactory tupleDeclarationFactory = new TupleDeclarationFactory();
 
 	public MontyParser createParser(final InputStream file) throws IOException {
 
@@ -71,8 +73,12 @@ public class AntlrAdapter {
 	public ModuleDeclaration parse(InputStream file, String fileName) throws IOException {
 		MontyParser parser = createParser(file);
 
-		ASTBuilder astBuilder = new ASTBuilder(fileName);
+		ASTBuilder astBuilder = new ASTBuilder(fileName, tupleDeclarationFactory);
 		ASTNode moduleNode = astBuilder.visit(parser.compilationUnit());
 		return (ModuleDeclaration) moduleNode;
+	}
+
+	public TupleDeclarationFactory getTupleDeclarationFactory() {
+		return tupleDeclarationFactory;
 	}
 }

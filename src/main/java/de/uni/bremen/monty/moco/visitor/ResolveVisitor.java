@@ -46,7 +46,6 @@ import de.uni.bremen.monty.moco.ast.statement.UnpackAssignment;
 import de.uni.bremen.monty.moco.exception.InvalidExpressionException;
 import de.uni.bremen.monty.moco.exception.TypeMismatchException;
 import de.uni.bremen.monty.moco.exception.UnknownIdentifierException;
-import de.uni.bremen.monty.moco.exception.UnknownTypeException;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -83,7 +82,7 @@ public class ResolveVisitor extends VisitOnceVisitor {
 
 	private void setVMT(ClassDeclaration node, List<TypeDeclaration> superClasses) {
 		int attributeIndex = 1;
-		List<ProcedureDeclaration> virtualMethodTable = node.getVirtualMethodTable();
+		List<FunctionDeclaration> virtualMethodTable = node.getVirtualMethodTable();
 		// This can only deal with single inheritance!
 		if (!superClasses.isEmpty()) {
 			TypeDeclaration type = superClasses.get(0);
@@ -101,12 +100,12 @@ public class ResolveVisitor extends VisitOnceVisitor {
 			if (decl instanceof VariableDeclaration) {
 				VariableDeclaration varDecl = (VariableDeclaration) decl;
 				varDecl.setAttributeIndex(attributeIndex++);
-			} else if (decl instanceof ProcedureDeclaration) {
-				ProcedureDeclaration procDecl = (ProcedureDeclaration) decl;
+			} else if (decl instanceof FunctionDeclaration) {
+				FunctionDeclaration procDecl = (FunctionDeclaration) decl;
 				if (!procDecl.isInitializer()) {
 					boolean foundEntry = false;
 					for (int i = 0; !foundEntry && i < virtualMethodTable.size(); i++) {
-						ProcedureDeclaration vmtEntry = virtualMethodTable.get(i);
+						FunctionDeclaration vmtEntry = virtualMethodTable.get(i);
 						if (procDecl.matchesType(vmtEntry)) {
 							virtualMethodTable.set(i, procDecl);
 							procDecl.setVMTIndex(vmtEntry.getVMTIndex());
@@ -282,14 +281,14 @@ public class ResolveVisitor extends VisitOnceVisitor {
 
 	/** {@inheritDoc} */
 	@Override
-	public void visit(ProcedureDeclaration node) {
+	public void visit(FunctionDeclaration node) {
 		if (node.isFunction()) {
 			Scope scope = node.getScope();
 			TypeDeclaration returnType = scope.resolveType(node.getReturnTypeIdentifier());
 			node.setReturnType(returnType);
 		} else {
 			if (node.isMethod() && node.getIdentifier().getSymbol().equals("initializer")) {
-				node.setDeclarationType(ProcedureDeclaration.DeclarationType.INITIALIZER);
+				node.setDeclarationType(FunctionDeclaration.DeclarationType.INITIALIZER);
 			}
 		}
 		super.visit(node);
@@ -314,19 +313,19 @@ public class ResolveVisitor extends VisitOnceVisitor {
 			ResolvableIdentifier identifier = node.getIdentifier();
 			if (classDecl.isAbstract()) {
 				throw new InvalidExpressionException(node, "The abstract class '" + identifier.toString()
-				        + "' may not be instantiated");
+				        + "' must not be instantiated");
 			}
 			node.setType(classDecl);
-			ProcedureDeclaration initializer = findMatchingInitializer(node, classDecl);
+			FunctionDeclaration initializer = findMatchingInitializer(node, classDecl);
 			initializer = (initializer != null) ? initializer : classDecl.getDefaultInitializer();
 			node.setDeclaration(initializer);
 		} else {
-			ProcedureDeclaration procedure = findMatchingProcedure(node, scope.resolveProcedure(node.getIdentifier()));
-			node.setDeclaration(procedure);
-			if (procedure.isFunction()) {
-				visitDoubleDispatched(procedure);
+			FunctionDeclaration function = findMatchingFunction(node, scope.resolveFunction(node.getIdentifier()));
+			node.setDeclaration(function);
+			if (function.isFunction()) {
+				visitDoubleDispatched(function);
 
-				node.setType(procedure.getReturnType());
+				node.setType(function.getReturnType());
 			} else {
 				node.setType(CoreClasses.voidType());
 			}
@@ -355,43 +354,43 @@ public class ResolveVisitor extends VisitOnceVisitor {
 	 * @param classDeclaration
 	 *            the class declaration searched for a matching initializer.
 	 * @return the matching initializer if one is found for the given function call or null otherwise */
-	private ProcedureDeclaration findMatchingInitializer(FunctionCall node, ClassDeclaration classDeclaration) {
+	private FunctionDeclaration findMatchingInitializer(FunctionCall node, ClassDeclaration classDeclaration) {
 
-		List<ProcedureDeclaration> procedures = new ArrayList<>();
+		List<FunctionDeclaration> functions = new ArrayList<>();
 
 		// iterate through the declarations of the given class
 		for (Declaration declaration : classDeclaration.getBlock().getDeclarations()) {
 			// find a matching declaration
 			if ("initializer".equals(declaration.getIdentifier().getSymbol())) {
 				// and verify that it is a procedure...
-				if (declaration instanceof ProcedureDeclaration) {
+				if (declaration instanceof FunctionDeclaration) {
 					// and not a function
-					if (!(((ProcedureDeclaration) declaration).isFunction())) {
-						procedures.add((ProcedureDeclaration) declaration);
+					if (!(((FunctionDeclaration) declaration).isFunction())) {
+						functions.add((FunctionDeclaration) declaration);
 					}
 				}
 			}
 		}
 
-		if (procedures.isEmpty()) {
+		if (functions.isEmpty()) {
 			return null;
 		} else {
-			return findMatchingProcedure(node, procedures);
+			return findMatchingFunction(node, functions);
 		}
 	}
 
-	/** Searches the given list of procedures in order to find one that matches the signature of the given function call.
+	/** Searches the given list of functions in order to find one that matches the signature of the given function call.
 	 *
 	 * @param node
 	 *            a function call node representing the function call
-	 * @param procedures
-	 *            the possible procedure declarations for this call
+	 * @param functions
+	 *            the possible function declarations for this call
 	 * @return the matching declaration if one is found for the given function call or the first in the list otherwise */
-	private ProcedureDeclaration findMatchingProcedure(FunctionCall node, List<ProcedureDeclaration> procedures) {
+	private FunctionDeclaration findMatchingFunction(FunctionCall node, List<FunctionDeclaration> functions) {
 
 		List<Expression> callParams = node.getArguments();
-		for (ProcedureDeclaration procedure : procedures) {
-			List<VariableDeclaration> procParams = procedure.getParameter();
+		for (FunctionDeclaration function : functions) {
+			List<VariableDeclaration> procParams = function.getParameters();
 
 			if (callParams.size() == procParams.size()) {
 				boolean allParamsMatch = true;
@@ -405,10 +404,10 @@ public class ResolveVisitor extends VisitOnceVisitor {
 					}
 				}
 				if (allParamsMatch) {
-					return procedure;
+					return function;
 				}
 			}
 		}
-		return procedures.get(0);
+		return functions.get(0);
 	}
 }

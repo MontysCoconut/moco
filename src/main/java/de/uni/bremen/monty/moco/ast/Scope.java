@@ -40,7 +40,7 @@ package de.uni.bremen.monty.moco.ast;
 
 import de.uni.bremen.monty.moco.ast.declaration.ClassDeclaration;
 import de.uni.bremen.monty.moco.ast.declaration.Declaration;
-import de.uni.bremen.monty.moco.ast.declaration.ProcedureDeclaration;
+import de.uni.bremen.monty.moco.ast.declaration.FunctionDeclaration;
 import de.uni.bremen.monty.moco.ast.declaration.TypeDeclaration;
 import de.uni.bremen.monty.moco.exception.RedeclarationException;
 import de.uni.bremen.monty.moco.exception.UnknownIdentifierException;
@@ -71,8 +71,8 @@ public class Scope {
 	/** The parent scope in nesting hierarchy. */
 	protected Scope parent;
 
-	/** The map to store the associations to procedure declarations. */
-	protected Map<Identifier, List<ProcedureDeclaration>> procedures;
+	/** The map to store the associations to function declarations. */
+	protected Map<Identifier, List<FunctionDeclaration>> functions;
 
 	/** The map to store the remaining associations. */
 	protected Map<Identifier, Declaration> members;
@@ -83,7 +83,7 @@ public class Scope {
 	 *            the parent scope in nesting hierarchy */
 	public Scope(Scope parent) {
 		this.parent = parent;
-		procedures = new HashMap<Identifier, List<ProcedureDeclaration>>();
+		functions = new HashMap<Identifier, List<FunctionDeclaration>>();
 		members = new HashMap<Identifier, Declaration>();
 	}
 
@@ -113,6 +113,14 @@ public class Scope {
 		if (parent != null) {
 			return parent.resolve(identifier);
 		}
+		// FIXME: das hier berücksichtigt noch nicht die richtige Reihenfolge...
+		if (functions.containsKey(identifier)) {
+			List<FunctionDeclaration> functionDeclarations = functions.get(identifier);
+			if (functionDeclarations.size() == 1) {
+				return functionDeclarations.get(0).getWrapperFunctionObjectDeclaration();
+			}
+		}
+
 		throw new UnknownIdentifierException(identifier);
 	}
 
@@ -126,7 +134,6 @@ public class Scope {
 			Declaration declaration = resolve(identifier);
 			if (declaration instanceof TypeDeclaration) {
 				return resolveGenericClass((TypeDeclaration) declaration, identifier);
-
 			}
 			throw new UnknownTypeException(identifier);
 		} catch (UnknownIdentifierException e) {
@@ -147,20 +154,20 @@ public class Scope {
 		}
 	}
 
-	/** Resolve an identifier for list of overloaded procedures or functions.
+	/** Resolve an identifier for list of overloaded functions.
 	 *
 	 * @param identifier
 	 *            the identifier to resolve
-	 * @return the list of procedure declarations */
-	public List<ProcedureDeclaration> resolveProcedure(ResolvableIdentifier identifier) {
-		List<ProcedureDeclaration> result = new ArrayList<ProcedureDeclaration>();
+	 * @return the list of function declarations */
+	public List<FunctionDeclaration> resolveFunction(ResolvableIdentifier identifier) {
+		List<FunctionDeclaration> result = new ArrayList<FunctionDeclaration>();
 
-		if (procedures.containsKey(identifier)) {
-			result.addAll(procedures.get(identifier));
+		if (functions.containsKey(identifier)) {
+			result.addAll(functions.get(identifier));
 		}
 		if (parent != null) {
 			try {
-				result.addAll(parent.resolveProcedure(identifier));
+				result.addAll(parent.resolveFunction(identifier));
 			} catch (UnknownIdentifierException e) {
 			}
 		}
@@ -172,8 +179,7 @@ public class Scope {
 
 	/** Associate an identifier with a declaration.
 	 *
-	 * This method uses define(Identifier, ProcedureDeclaration) if the given declaration is a procedure or function
-	 * declaration.
+	 * This method uses define(Identifier, FunctionDeclaration) if the given declaration is a function declaration.
 	 *
 	 * @param identifier
 	 *            the identifier
@@ -182,8 +188,8 @@ public class Scope {
 	 * @throws RedeclarationException
 	 *             if the identifier is already defined or this is invalid overloading */
 	public void define(Identifier identifier, Declaration declaration) throws RedeclarationException {
-		if (declaration instanceof ProcedureDeclaration) {
-			define(identifier, (ProcedureDeclaration) declaration);
+		if (declaration instanceof FunctionDeclaration) {
+			define(identifier, (FunctionDeclaration) declaration);
 		} else if (members.get(identifier) != null) {
 			throw new RedeclarationException(declaration, identifier.getSymbol());
 		} else {
@@ -204,7 +210,7 @@ public class Scope {
 		define(declaration.getIdentifier(), declaration);
 	}
 
-	/** Associate an identifier with a procedure or function declaration.
+	/** Associate an identifier with a function declaration.
 	 *
 	 * This takes overloading into account and throws a RedeclarationException if the declaration is an instance of
 	 * invalid overloading.
@@ -215,11 +221,11 @@ public class Scope {
 	 *            the declaration
 	 * @throws RedeclarationException
 	 *             if this is invalid overloading */
-	public void define(Identifier identifier, ProcedureDeclaration declaration) throws RedeclarationException {
-		if (!procedures.containsKey(identifier)) {
-			procedures.put(identifier, new ArrayList<ProcedureDeclaration>());
+	public void define(Identifier identifier, FunctionDeclaration declaration) throws RedeclarationException {
+		if (!functions.containsKey(identifier)) {
+			functions.put(identifier, new ArrayList<FunctionDeclaration>());
 		}
-		procedures.get(identifier).add(declaration);
+		functions.get(identifier).add(declaration);
 	}
 
 	private TypeDeclaration resolveGenericClass(TypeDeclaration originalType, ResolvableIdentifier genericIdentifier) {

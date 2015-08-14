@@ -1,1 +1,1 @@
-ResolveVisitor caught error in null: Identifier is not defined: square
+TypeCheckVisitor caught error in FunctionCall at file: neg_Function1.monty, line: 10, char: 0: Arguments of function call do not match declaration.

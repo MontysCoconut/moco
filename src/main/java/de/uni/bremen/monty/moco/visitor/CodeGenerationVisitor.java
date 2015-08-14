@@ -115,7 +115,7 @@ public class CodeGenerationVisitor extends BaseVisitor {
 		llvmIdentifierFactory.closeScope();
 	}
 
-	private List<LLVMIdentifier<? extends LLVMType>> buildLLVMParameter(ProcedureDeclaration node) {
+	private List<LLVMIdentifier<? extends LLVMType>> buildLLVMParameter(FunctionDeclaration node) {
 		List<LLVMIdentifier<? extends LLVMType>> llvmParameter = new ArrayList<>();
 
 		if (node.isMethod() || node.isInitializer()) {
@@ -125,7 +125,7 @@ public class CodeGenerationVisitor extends BaseVisitor {
 			llvmParameter.add(selfReference);
 		}
 
-		for (VariableDeclaration param : node.getParameter()) {
+		for (VariableDeclaration param : node.getParameters()) {
 			LLVMType llvmType = codeGenerator.mapToLLVMType(param.getType());
 			llvmType = llvmType instanceof LLVMStructType ? pointer(llvmType) : llvmType;
 			boolean resolvable = llvmType instanceof LLVMStructType;
@@ -137,25 +137,31 @@ public class CodeGenerationVisitor extends BaseVisitor {
 		return llvmParameter;
 	}
 
-	private void addFunction(ProcedureDeclaration node, TypeDeclaration returnType) {
+	private void addFunction(FunctionDeclaration node, TypeDeclaration returnType) {
 		List<LLVMIdentifier<? extends LLVMType>> llvmParameter = buildLLVMParameter(node);
-		String name = nameMangler.mangleProcedure(node);
+		String name = nameMangler.mangleFunction(node);
 		codeGenerator.addFunction(contextUtils.active(), returnType, llvmParameter, name);
 	}
 
-	private void addNativeFunction(ProcedureDeclaration node, TypeDeclaration returnType) {
+	private void addNativeFunction(FunctionDeclaration node, TypeDeclaration returnType) {
 		List<LLVMIdentifier<? extends LLVMType>> llvmParameter = buildLLVMParameter(node);
-		String name = nameMangler.mangleProcedure(node);
+		String name = nameMangler.mangleFunction(node);
 		codeGenerator.addNativeFunction(contextUtils.active(), returnType, llvmParameter, name);
 	}
 
 	private boolean isNative(ASTNode node) {
+		if ((node instanceof FunctionDeclaration) && (((FunctionDeclaration) node).isAbstract())) {
+			return false; // abstract methods are never native
+		}
 		while (node.getParentNode() != null) {
 			node = node.getParentNode();
 			if (node instanceof Package) {
 				if (((Package) node).isNativePackage()) {
 					return true;
 				}
+			} else if ((node instanceof ClassDeclaration) && (((ClassDeclaration) node).isFunctionWrapper())) {
+				return false; // function wrappers are never native,
+				              // because they are always automatically generated monty code
 			}
 		}
 		return false;
@@ -451,7 +457,7 @@ public class CodeGenerationVisitor extends BaseVisitor {
 		super.visit(node);
 
 		List<TypeDeclaration> expectedParameters = new ArrayList<>();
-		for (VariableDeclaration varDeclaration : node.getDeclaration().getParameter()) {
+		for (VariableDeclaration varDeclaration : node.getDeclaration().getParameters()) {
 			expectedParameters.add(varDeclaration.getType());
 		}
 		List<LLVMIdentifier<?>> arguments = new ArrayList<>(node.getArguments().size());
@@ -460,7 +466,7 @@ public class CodeGenerationVisitor extends BaseVisitor {
 		}
 		Collections.reverse(arguments);
 
-		ProcedureDeclaration declaration = node.getDeclaration();
+		FunctionDeclaration declaration = node.getDeclaration();
 
 		ClassDeclaration definingClass = declaration.getDefiningClass();
 		if (definingClass != null && definingClass.getParentNode() instanceof ClassDeclarationVariation) {
@@ -496,7 +502,7 @@ public class CodeGenerationVisitor extends BaseVisitor {
 					if (!declaration.isDefaultInitializer()) {
 						codeGenerator.callVoid(
 						        contextUtils.active(),
-						        nameMangler.mangleProcedure(definingClass.getDefaultInitializer()),
+						        nameMangler.mangleFunction(definingClass.getDefaultInitializer()),
 						        Arrays.<LLVMIdentifier<?>> asList(selfReference),
 						        Arrays.<TypeDeclaration> asList(definingClass));
 					}
@@ -519,7 +525,7 @@ public class CodeGenerationVisitor extends BaseVisitor {
 			if (declaration.isFunction()) {
 				stack.push((LLVMIdentifier<LLVMType>) codeGenerator.call(
 				        contextUtils.active(),
-				        nameMangler.mangleProcedure(declaration),
+				        nameMangler.mangleFunction(declaration),
 				        node.getType(),
 				        arguments,
 				        expectedParameters));
@@ -529,7 +535,7 @@ public class CodeGenerationVisitor extends BaseVisitor {
 				}
 				codeGenerator.callVoid(
 				        contextUtils.active(),
-				        nameMangler.mangleProcedure(declaration),
+				        nameMangler.mangleFunction(declaration),
 				        arguments,
 				        expectedParameters);
 			}
@@ -537,7 +543,7 @@ public class CodeGenerationVisitor extends BaseVisitor {
 	}
 
 	@Override
-	public void visit(ProcedureDeclaration node) {
+	public void visit(FunctionDeclaration node) {
 		if (node.isAbstract()) {
 			openNewFunctionScope();
 			if ((node.getReturnType() == null) || (node.getReturnType() == CoreClasses.voidType())) {
@@ -591,14 +597,14 @@ public class CodeGenerationVisitor extends BaseVisitor {
 		super.visit(node);
 		if (node.getParameter() != null) {
 			ASTNode parent = node;
-			while (!(parent instanceof ProcedureDeclaration)) {
+			while (!(parent instanceof FunctionDeclaration)) {
 				parent = parent.getParentNode();
 			}
 			LLVMIdentifier<LLVMType> returnValue = stack.pop();
 			codeGenerator.returnValue(
 			        contextUtils.active(),
 			        returnValue,
-			        ((ProcedureDeclaration) parent).getReturnType());
+			        ((FunctionDeclaration) parent).getReturnType());
 		} else {
 			codeGenerator.returnValue(
 			        contextUtils.active(),
