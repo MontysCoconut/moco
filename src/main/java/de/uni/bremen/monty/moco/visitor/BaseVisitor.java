@@ -334,11 +334,21 @@ public class BaseVisitor {
 
 	// Statements
 
-	/** Visitor method to visit a Assignment.
+	/** Visitor method to visit an Assignment.
 	 *
 	 * @param node
 	 *            the node to visit */
 	public void visit(Assignment node) {
+		onEnterChildrenEachNode(node);
+		node.visitChildren(this);
+		onExitChildrenEachNode(node);
+	}
+
+	/** Visitor method to visit an UnpackAssignment.
+	 *
+	 * @param node
+	 *            the node to visit */
+	public void visit(UnpackAssignment node) {
 		onEnterChildrenEachNode(node);
 		node.visitChildren(this);
 		onExitChildrenEachNode(node);
