@@ -8,63 +8,63 @@
 
 class SomeClass:
     + SomeClass _neg_():
-        print("operator_unary-")
+        println("_neg_")
         return self
 
     + SomeClass _add_(SomeClass other):
-        print("operator+")
+        println("_add_")
         return self
 
     + SomeClass _sub_(SomeClass other):
-        print("operator-")
+        println("_sub_")
         return self
 
     + SomeClass _mul_(SomeClass other):
-        print("operator*")
+        println("_mul_")
         return self
 
     + SomeClass _div_(SomeClass other):
-        print("operator/")
+        println("_div_")
         return self
 
     + SomeClass _mod_(SomeClass other):
-        print("operator%")
+        println("_mod_")
         return self
 
     + SomeClass _lt_(SomeClass other):
-        print("operator<")
+        println("_lt_")
         return self
 
     + SomeClass _gt_(SomeClass other):
-        print("operator>")
+        println("_gt_")
         return self
 
     + SomeClass _leq_(SomeClass other):
-        print("operator<=")
+        println("_leq_")
         return self
 
     + SomeClass _geq_(SomeClass other):
-        print("operator>=")
+        println("_geq_")
         return self
 
     + SomeClass _eq_(SomeClass other):
-        print("operator=")
+        println("_eq_")
         return self
 
     + SomeClass _neq_(SomeClass other):
-        print("operator!=")
+        println("_neq_")
         return self
 
     + SomeClass _not_():
-        print("operator_not")
+        println("_not_")
         return self
 
     + SomeClass _and_(SomeClass other):
-        print("operator_and")
+        println("_and_")
         return self
 
     + SomeClass _or_(SomeClass other):
-        print("operator_or")
+        println("_or_")
         return self
 
 SomeClass foo := SomeClass()
