@@ -46,7 +46,6 @@ import de.uni.bremen.monty.moco.ast.declaration.ProcedureDeclaration.Declaration
 import de.uni.bremen.monty.moco.ast.expression.*;
 import de.uni.bremen.monty.moco.ast.expression.literal.*;
 import de.uni.bremen.monty.moco.ast.statement.*;
-import de.uni.bremen.monty.moco.util.OperatorMapper;
 import de.uni.bremen.monty.moco.util.TupleDeclarationFactory;
 import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.misc.NotNull;
@@ -61,6 +60,34 @@ public class ASTBuilder extends MontyBaseVisitor<ASTNode> {
 	private VariableDeclaration.DeclarationType currentVariableContext;
 	private ProcedureDeclaration.DeclarationType currentProcedureContext;
 	private TupleDeclarationFactory tupleDeclarationFactory;
+
+	private static final Map<String, String> binaryOperatorMapping = new HashMap<String, String>() {
+		{
+			put("+", "_add_");
+			put("-", "_sub_");
+			put("*", "_mul_");
+			put("/", "_div_");
+			put("%", "_mod_");
+			put("^", "_pow_");
+			put("=", "_eq_");
+			put("!=", "_neq_");
+			put("<", "_lt_");
+			put(">", "_gt_");
+			put("<=", "_leq_");
+			put(">=", "_geq_");
+			put("in", "_contains_");
+			put("and", "_and_");
+			put("or", "_or_");
+			put("xor", "_xor_");
+		}
+	};
+
+	private static final Map<String, String> unaryOperatorMapping = new HashMap<String, String>() {
+		{
+			put("-", "_neg_");
+			put("not", "_not_");
+		}
+	};
 
 	public ASTBuilder(String fileName) {
 		this.fileName = fileName;
@@ -706,7 +733,7 @@ public class ASTBuilder extends MontyBaseVisitor<ASTNode> {
 	private MemberAccess unaryExpression(Position position, String operator, ExpressionContext expr) {
 		Expression self = (Expression) visit(expr);
 		FunctionCall operatorCall =
-		        new FunctionCall(position, new ResolvableIdentifier(OperatorMapper.methodFromUnaryOperator(operator)),
+		        new FunctionCall(position, new ResolvableIdentifier(unaryOperatorMapping.get(operator)),
 		                new ArrayList<Expression>());
 		return new MemberAccess(position, self, operatorCall);
 	}
@@ -715,7 +742,7 @@ public class ASTBuilder extends MontyBaseVisitor<ASTNode> {
 	        ExpressionContext right) {
 
 		Expression self = (Expression) visit(left);
-		String methodName = OperatorMapper.methodFromBinaryOperator(operator);
+		String methodName = binaryOperatorMapping.get(operator);
 		FunctionCall operatorCall;
 		// we have a special case for "a in x", which translates to "x._contains_(a)"
 		if (methodName.equals("_contains_")) {
