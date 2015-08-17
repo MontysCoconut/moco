@@ -1,1 +1,15 @@
-operator_unary-operator+operator-operator*operator/operator%operator<operator>operator<=operator>=operator=operator!=operator_notoperator_xoroperator_andoperator_or
+_neg_
+_add_
+_sub_
+_mul_
+_div_
+_mod_
+_lt_
+_gt_
+_leq_
+_geq_
+_eq_
+_neq_
+_not_
+_and_
+_or_

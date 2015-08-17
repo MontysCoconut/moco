@@ -64,7 +64,7 @@ typeList
 
 functionDeclaration
   : type
-    (Identifier | 'operator' binaryOperation)
+    Identifier
     Lparenthesis parameterList? Rparenthesis ':' EndOfLine
     statementBlock
   ;

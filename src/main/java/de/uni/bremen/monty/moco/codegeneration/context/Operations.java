@@ -43,7 +43,6 @@ import de.uni.bremen.monty.moco.ast.CoreClasses;
 import de.uni.bremen.monty.moco.ast.declaration.TypeDeclaration;
 import de.uni.bremen.monty.moco.codegeneration.Native;
 import de.uni.bremen.monty.moco.codegeneration.CodeGenerator;
-import de.uni.bremen.monty.moco.codegeneration.Native;
 import de.uni.bremen.monty.moco.codegeneration.context.CodeContext.FcmpOperand;
 import de.uni.bremen.monty.moco.codegeneration.context.CodeContext.IcmpOperand;
 import de.uni.bremen.monty.moco.codegeneration.identifier.LLVMIdentifier;
@@ -168,23 +167,23 @@ public class Operations {
 		        CoreClasses.stringType());
 	}
 
-	@Native("M.Int.C.Int.F.operator_plus$M.Int.C.Int$M.Int.C.Int")
+	@Native("M.Int.C.Int.F._add_$M.Int.C.Int$M.Int.C.Int")
 	public LLVMIdentifier<LLVMInt> add(CodeContext c, LLVMIdentifier<LLVMInt> arg1, LLVMIdentifier<LLVMInt> arg2) {
 		return c.binaryOperation("add", arg1, arg2, llvmIdentifierFactory.newLocal(arg1.getType(), false));
 	}
 
-	@Native("M.Float.C.Float.F.operator_plus$M.Float.C.Float$M.Float.C.Float")
+	@Native("M.Float.C.Float.F._add_$M.Float.C.Float$M.Float.C.Float")
 	public LLVMIdentifier<LLVMDouble> fadd(CodeContext c, LLVMIdentifier<LLVMDouble> arg1,
 	        LLVMIdentifier<LLVMDouble> arg2) {
 		return c.binaryOperation("fadd", arg1, arg2, llvmIdentifierFactory.newLocal(arg1.getType(), false));
 	}
 
-	@Native("M.Int.C.Int.F.operator_minus$M.Int.C.Int$M.Int.C.Int")
+	@Native("M.Int.C.Int.F._sub_$M.Int.C.Int$M.Int.C.Int")
 	public LLVMIdentifier<LLVMInt> sub(CodeContext c, LLVMIdentifier<LLVMInt> arg1, LLVMIdentifier<LLVMInt> arg2) {
 		return c.binaryOperation("sub", arg1, arg2, llvmIdentifierFactory.newLocal(arg1.getType(), false));
 	}
 
-	@Native("M.Int.C.Int.F.operator_minus$M.Int.C.Int")
+	@Native("M.Int.C.Int.F._neg_$M.Int.C.Int")
 	public LLVMIdentifier<LLVMInt> sub(CodeContext c, LLVMIdentifier<LLVMInt> arg1) {
 		return c.binaryOperation(
 		        "sub",
@@ -193,7 +192,7 @@ public class Operations {
 		        llvmIdentifierFactory.newLocal(arg1.getType(), false));
 	}
 
-	@Native("M.Float.C.Float.F.operator_minus$M.Float.C.Float")
+	@Native("M.Float.C.Float.F._neg_$M.Float.C.Float")
 	public LLVMIdentifier<LLVMDouble> fsub(CodeContext c, LLVMIdentifier<LLVMDouble> arg1) {
 		return c.binaryOperation(
 		        "fsub",
@@ -202,126 +201,126 @@ public class Operations {
 		        llvmIdentifierFactory.newLocal(arg1.getType(), false));
 	}
 
-	@Native("M.Float.C.Float.F.operator_minus$M.Float.C.Float$M.Float.C.Float")
+	@Native("M.Float.C.Float.F._sub_$M.Float.C.Float$M.Float.C.Float")
 	public LLVMIdentifier<LLVMDouble> fsub(CodeContext c, LLVMIdentifier<LLVMDouble> arg1,
 	        LLVMIdentifier<LLVMDouble> arg2) {
 		return c.binaryOperation("fsub", arg1, arg2, llvmIdentifierFactory.newLocal(arg1.getType(), false));
 	}
 
-	@Native("M.Int.C.Int.F.operator_mult$M.Int.C.Int$M.Int.C.Int")
+	@Native("M.Int.C.Int.F._mul_$M.Int.C.Int$M.Int.C.Int")
 	public LLVMIdentifier<LLVMInt> mul(CodeContext c, LLVMIdentifier<LLVMInt> arg1, LLVMIdentifier<LLVMInt> arg2) {
 		return c.binaryOperation("mul", arg1, arg2, llvmIdentifierFactory.newLocal(arg1.getType(), false));
 	}
 
-	@Native("M.Float.C.Float.F.operator_mult$M.Float.C.Float$M.Float.C.Float")
+	@Native("M.Float.C.Float.F._mul_$M.Float.C.Float$M.Float.C.Float")
 	public LLVMIdentifier<LLVMDouble> fmul(CodeContext c, LLVMIdentifier<LLVMDouble> arg1,
 	        LLVMIdentifier<LLVMDouble> arg2) {
 		return c.binaryOperation("fmul", arg1, arg2, llvmIdentifierFactory.newLocal(arg1.getType(), false));
 	}
 
-	@Native("M.Int.C.Int.F.operator_div$M.Int.C.Int$M.Int.C.Int")
+	@Native("M.Int.C.Int.F._div_$M.Int.C.Int$M.Int.C.Int")
 	public LLVMIdentifier<LLVMInt> sdiv(CodeContext c, LLVMIdentifier<LLVMInt> arg1, LLVMIdentifier<LLVMInt> arg2) {
 		return c.binaryOperation("sdiv", arg1, arg2, llvmIdentifierFactory.newLocal(arg1.getType(), false));
 	}
 
-	@Native("M.Float.C.Float.F.operator_div$M.Float.C.Float$M.Float.C.Float")
+	@Native("M.Float.C.Float.F._div_$M.Float.C.Float$M.Float.C.Float")
 	public LLVMIdentifier<LLVMDouble> fdiv(CodeContext c, LLVMIdentifier<LLVMDouble> arg1,
 	        LLVMIdentifier<LLVMDouble> arg2) {
 		return c.binaryOperation("fdiv", arg1, arg2, llvmIdentifierFactory.newLocal(arg1.getType(), false));
 	}
 
-	@Native("M.Int.C.Int.F.operator_equal$M.Bool.C.Bool$M.Int.C.Int")
+	@Native("M.Int.C.Int.F._eq_$M.Bool.C.Bool$M.Int.C.Int")
 	public LLVMIdentifier<LLVMBool> intEq(CodeContext c, LLVMIdentifier<LLVMInt> arg1, LLVMIdentifier<LLVMInt> arg2) {
 		return c.icmp(IcmpOperand.eq, arg1, arg2, llvmIdentifierFactory.newLocal(int1(), false));
 	}
 
-	@Native("M.Bool.C.Bool.F.operator_equal$M.Bool.C.Bool$M.Bool.C.Bool")
+	@Native("M.Bool.C.Bool.F._eq_$M.Bool.C.Bool$M.Bool.C.Bool")
 	public LLVMIdentifier<LLVMBool> boolEq(CodeContext c, LLVMIdentifier<LLVMBool> arg1, LLVMIdentifier<LLVMBool> arg2) {
 		return c.icmp(IcmpOperand.eq, arg1, arg2, llvmIdentifierFactory.newLocal(int1(), false));
 	}
 
-	@Native("M.Float.C.Float.F.operator_equal$M.Bool.C.Bool$M.Float.C.Float")
+	@Native("M.Float.C.Float.F._eq_$M.Bool.C.Bool$M.Float.C.Float")
 	public LLVMIdentifier<LLVMBool> floatEq(CodeContext c, LLVMIdentifier<LLVMDouble> arg1,
 	        LLVMIdentifier<LLVMDouble> arg2) {
 		return c.fcmp(FcmpOperand.oeq, arg1, arg2, llvmIdentifierFactory.newLocal(int1(), false));
 	}
 
-	@Native("M.Int.C.Int.F.operator_not_equal$M.Bool.C.Bool$M.Int.C.Int")
+	@Native("M.Int.C.Int.F._neq_$M.Bool.C.Bool$M.Int.C.Int")
 	public LLVMIdentifier<LLVMBool> intNe(CodeContext c, LLVMIdentifier<LLVMInt> arg1, LLVMIdentifier<LLVMInt> arg2) {
 		return c.icmp(IcmpOperand.ne, arg1, arg2, llvmIdentifierFactory.newLocal(int1(), false));
 	}
 
-	@Native("M.Bool.C.Bool.F.operator_not_equal$M.Bool.C.Bool$M.Bool.C.Bool")
+	@Native("M.Bool.C.Bool.F._neq_$M.Bool.C.Bool$M.Bool.C.Bool")
 	public LLVMIdentifier<LLVMBool> boolNe(CodeContext c, LLVMIdentifier<LLVMBool> arg1, LLVMIdentifier<LLVMBool> arg2) {
 		return c.icmp(IcmpOperand.ne, arg1, arg2, llvmIdentifierFactory.newLocal(int1(), false));
 	}
 
-	@Native("M.Float.C.Float.F.operator_not_equal$M.Bool.C.Bool$M.Float.C.Float")
+	@Native("M.Float.C.Float.F._neq_$M.Bool.C.Bool$M.Float.C.Float")
 	public LLVMIdentifier<LLVMBool> floatNe(CodeContext c, LLVMIdentifier<LLVMDouble> arg1,
 	        LLVMIdentifier<LLVMDouble> arg2) {
 		return c.fcmp(FcmpOperand.one, arg1, arg2, llvmIdentifierFactory.newLocal(int1(), false));
 	}
 
-	@Native("M.Int.C.Int.F.operator_lesser$M.Bool.C.Bool$M.Int.C.Int")
+	@Native("M.Int.C.Int.F._lt_$M.Bool.C.Bool$M.Int.C.Int")
 	public LLVMIdentifier<LLVMBool> intSlt(CodeContext c, LLVMIdentifier<LLVMInt> arg1, LLVMIdentifier<LLVMInt> arg2) {
 		return c.icmp(IcmpOperand.slt, arg1, arg2, llvmIdentifierFactory.newLocal(int1(), false));
 	}
 
-	@Native("M.Float.C.Float.F.operator_lesser$M.Bool.C.Bool$M.Float.C.Float")
+	@Native("M.Float.C.Float.F._lt_$M.Bool.C.Bool$M.Float.C.Float")
 	public LLVMIdentifier<LLVMBool> floatSlt(CodeContext c, LLVMIdentifier<LLVMDouble> arg1,
 	        LLVMIdentifier<LLVMDouble> arg2) {
 		return c.fcmp(FcmpOperand.olt, arg1, arg2, llvmIdentifierFactory.newLocal(int1(), false));
 	}
 
-	@Native("M.Int.C.Int.F.operator_lesser_equal$M.Bool.C.Bool$M.Int.C.Int")
+	@Native("M.Int.C.Int.F._leq_$M.Bool.C.Bool$M.Int.C.Int")
 	public LLVMIdentifier<LLVMBool> intSle(CodeContext c, LLVMIdentifier<LLVMInt> arg1, LLVMIdentifier<LLVMInt> arg2) {
 		return c.icmp(IcmpOperand.sle, arg1, arg2, llvmIdentifierFactory.newLocal(int1(), false));
 	}
 
-	@Native("M.Float.C.Float.F.operator_lesser_equal$M.Bool.C.Bool$M.Float.C.Float")
+	@Native("M.Float.C.Float.F._leq_$M.Bool.C.Bool$M.Float.C.Float")
 	public LLVMIdentifier<LLVMBool> floatSle(CodeContext c, LLVMIdentifier<LLVMDouble> arg1,
 	        LLVMIdentifier<LLVMDouble> arg2) {
 		return c.fcmp(FcmpOperand.ole, arg1, arg2, llvmIdentifierFactory.newLocal(int1(), false));
 	}
 
-	@Native("M.Int.C.Int.F.operator_greater$M.Bool.C.Bool$M.Int.C.Int")
+	@Native("M.Int.C.Int.F._gt_$M.Bool.C.Bool$M.Int.C.Int")
 	public LLVMIdentifier<LLVMBool> intSgt(CodeContext c, LLVMIdentifier<LLVMInt> arg1, LLVMIdentifier<LLVMInt> arg2) {
 		return c.icmp(IcmpOperand.sgt, arg1, arg2, llvmIdentifierFactory.newLocal(int1(), false));
 	}
 
-	@Native("M.Float.C.Float.F.operator_greater$M.Bool.C.Bool$M.Float.C.Float")
+	@Native("M.Float.C.Float.F._gt_$M.Bool.C.Bool$M.Float.C.Float")
 	public LLVMIdentifier<LLVMBool> floatSgt(CodeContext c, LLVMIdentifier<LLVMDouble> arg1,
 	        LLVMIdentifier<LLVMDouble> arg2) {
 		return c.fcmp(FcmpOperand.ogt, arg1, arg2, llvmIdentifierFactory.newLocal(int1(), false));
 	}
 
-	@Native("M.Int.C.Int.F.operator_greater_equal$M.Bool.C.Bool$M.Int.C.Int")
+	@Native("M.Int.C.Int.F._geq_$M.Bool.C.Bool$M.Int.C.Int")
 	public LLVMIdentifier<LLVMBool> intSge(CodeContext c, LLVMIdentifier<LLVMInt> arg1, LLVMIdentifier<LLVMInt> arg2) {
 		return c.icmp(IcmpOperand.sge, arg1, arg2, llvmIdentifierFactory.newLocal(int1(), false));
 	}
 
-	@Native("M.Float.C.Float.F.operator_greater_equal$M.Bool.C.Bool$M.Float.C.Float")
+	@Native("M.Float.C.Float.F._geq_$M.Bool.C.Bool$M.Float.C.Float")
 	public LLVMIdentifier<LLVMBool> floatSge(CodeContext c, LLVMIdentifier<LLVMDouble> arg1,
 	        LLVMIdentifier<LLVMDouble> arg2) {
 		return c.fcmp(FcmpOperand.oge, arg1, arg2, llvmIdentifierFactory.newLocal(int1(), false));
 	}
 
-	@Native("M.Bool.C.Bool.F.operator_and$M.Bool.C.Bool$M.Bool.C.Bool")
+	@Native("M.Bool.C.Bool.F._and_$M.Bool.C.Bool$M.Bool.C.Bool")
 	public LLVMIdentifier<LLVMBool> and(CodeContext c, LLVMIdentifier<LLVMBool> arg1, LLVMIdentifier<LLVMBool> arg2) {
 		return c.binaryOperation("and", arg1, arg2, llvmIdentifierFactory.newLocal(arg1.getType(), false));
 	}
 
-	@Native("M.Bool.C.Bool.F.operator_or$M.Bool.C.Bool$M.Bool.C.Bool")
+	@Native("M.Bool.C.Bool.F._or_$M.Bool.C.Bool$M.Bool.C.Bool")
 	public LLVMIdentifier<LLVMBool> or(CodeContext c, LLVMIdentifier<LLVMBool> arg1, LLVMIdentifier<LLVMBool> arg2) {
 		return c.binaryOperation("or", arg1, arg2, llvmIdentifierFactory.newLocal(arg1.getType(), false));
 	}
 
-	@Native("M.Bool.C.Bool.F.operator_xor$M.Bool.C.Bool$M.Bool.C.Bool")
+	@Native("M.Bool.C.Bool.F._xor_$M.Bool.C.Bool$M.Bool.C.Bool")
 	public LLVMIdentifier<LLVMBool> xor(CodeContext c, LLVMIdentifier<LLVMBool> arg1, LLVMIdentifier<LLVMBool> arg2) {
 		return c.binaryOperation("xor", arg1, arg2, llvmIdentifierFactory.newLocal(arg1.getType(), false));
 	}
 
-	@Native("M.Bool.C.Bool.F.operator_not$M.Bool.C.Bool")
+	@Native("M.Bool.C.Bool.F._not_$M.Bool.C.Bool")
 	public LLVMIdentifier<LLVMBool> not(CodeContext c, LLVMIdentifier<LLVMBool> arg1) {
 		return c.binaryOperation(
 		        "xor",
@@ -330,7 +329,7 @@ public class Operations {
 		        llvmIdentifierFactory.newLocal(arg1.getType(), false));
 	}
 
-	@Native("M.Int.C.Int.F.operator_rem$M.Int.C.Int$M.Int.C.Int")
+	@Native("M.Int.C.Int.F._mod_$M.Int.C.Int$M.Int.C.Int")
 	public LLVMIdentifier<LLVMInt> srem(CodeContext c, LLVMIdentifier<LLVMInt> arg1, LLVMIdentifier<LLVMInt> arg2) {
 		return c.binaryOperation("srem", arg1, arg2, llvmIdentifierFactory.newLocal(arg1.getType(), false));
 	}

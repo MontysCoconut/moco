@@ -2,35 +2,35 @@ class Float:
     + initializer(Float f):
         pass
 
-    + Float operator-():
+    + Float _neg_():
         pass
 
-    + Float operator+(Float other):
+    + Float _add_(Float other):
         pass
 
-    + Float operator-(Float other):
+    + Float _sub_(Float other):
         pass
 
-    + Float operator*(Float other):
+    + Float _mul_(Float other):
         pass
 
-    + Float operator/(Float other):
+    + Float _div_(Float other):
         pass
 
-    + Bool operator<(Float other):
+    + Bool _lt_(Float other):
         pass
 
-    + Bool operator>(Float other):
+    + Bool _gt_(Float other):
         pass
 
-    + Bool operator<=(Float other):
+    + Bool _leq_(Float other):
         pass
 
-    + Bool operator>=(Float other):
+    + Bool _geq_(Float other):
         pass
 
-    + Bool operator=(Float other):
+    + Bool _eq_(Float other):
         pass
 
-    + Bool operator!=(Float other):
+    + Bool _neq_(Float other):
         pass

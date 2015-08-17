@@ -2,20 +2,20 @@ class Bool:
     + initializer(Bool b):
         pass
 
-    + Bool operator_not():
+    + Bool _not_():
         pass
 
-    + Bool operator_xor(Bool other):
+    + Bool _xor_(Bool other):
         pass
 
-    + Bool operator_and(Bool other):
+    + Bool _and_(Bool other):
         pass
 
-    + Bool operator_or(Bool other):
+    + Bool _or_(Bool other):
         pass
 
-    + Bool operator=(Bool other):
+    + Bool _eq_(Bool other):
         pass
 
-    + Bool operator!=(Bool other):
+    + Bool _neq_(Bool other):
         pass

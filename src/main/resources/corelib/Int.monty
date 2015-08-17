@@ -2,38 +2,38 @@ class Int:
     + initializer(Int i):
         pass
 
-    + Int operator-():
+    + Int _neg_():
         pass
 
-    + Int operator+(Int other):
+    + Int _add_(Int other):
         pass
 
-    + Int operator-(Int other):
+    + Int _sub_(Int other):
         pass
 
-    + Int operator*(Int other):
+    + Int _mul_(Int other):
         pass
 
-    + Int operator/(Int other):
+    + Int _div_(Int other):
         pass
 
-    + Int operator%(Int other):
+    + Int _mod_(Int other):
         pass
 
-    + Bool operator<(Int other):
+    + Bool _lt_(Int other):
         pass
 
-    + Bool operator>(Int other):
+    + Bool _gt_(Int other):
         pass
 
-    + Bool operator<=(Int other):
+    + Bool _leq_(Int other):
         pass
 
-    + Bool operator>=(Int other):
+    + Bool _geq_(Int other):
         pass
 
-    + Bool operator=(Int other):
+    + Bool _eq_(Int other):
         pass
 
-    + Bool operator!=(Int other):
+    + Bool _neq_(Int other):
         pass

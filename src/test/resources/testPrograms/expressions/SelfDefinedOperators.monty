@@ -7,68 +7,64 @@
 //                  operator!=operator_notoperator_xoroperator_andoperator_or
 
 class SomeClass:
-    + SomeClass operator-():
-        print("operator_unary-")
+    + SomeClass _neg_():
+        println("_neg_")
         return self
 
-    + SomeClass operator+(SomeClass other):
-        print("operator+")
+    + SomeClass _add_(SomeClass other):
+        println("_add_")
         return self
 
-    + SomeClass operator-(SomeClass other):
-        print("operator-")
+    + SomeClass _sub_(SomeClass other):
+        println("_sub_")
         return self
 
-    + SomeClass operator*(SomeClass other):
-        print("operator*")
+    + SomeClass _mul_(SomeClass other):
+        println("_mul_")
         return self
 
-    + SomeClass operator/(SomeClass other):
-        print("operator/")
+    + SomeClass _div_(SomeClass other):
+        println("_div_")
         return self
 
-    + SomeClass operator%(SomeClass other):
-        print("operator%")
+    + SomeClass _mod_(SomeClass other):
+        println("_mod_")
         return self
 
-    + SomeClass operator<(SomeClass other):
-        print("operator<")
+    + SomeClass _lt_(SomeClass other):
+        println("_lt_")
         return self
 
-    + SomeClass operator>(SomeClass other):
-        print("operator>")
+    + SomeClass _gt_(SomeClass other):
+        println("_gt_")
         return self
 
-    + SomeClass operator<=(SomeClass other):
-        print("operator<=")
+    + SomeClass _leq_(SomeClass other):
+        println("_leq_")
         return self
 
-    + SomeClass operator>=(SomeClass other):
-        print("operator>=")
+    + SomeClass _geq_(SomeClass other):
+        println("_geq_")
         return self
 
-    + SomeClass operator=(SomeClass other):
-        print("operator=")
+    + SomeClass _eq_(SomeClass other):
+        println("_eq_")
         return self
 
-    + SomeClass operator!=(SomeClass other):
-        print("operator!=")
+    + SomeClass _neq_(SomeClass other):
+        println("_neq_")
         return self
 
-    + SomeClass operator_not():
-        print("operator_not")
+    + SomeClass _not_():
+        println("_not_")
         return self
 
-    + SomeClass operator_xor(SomeClass other):
-        print("operator_xor")
+    + SomeClass _and_(SomeClass other):
+        println("_and_")
         return self
 
-    + SomeClass operator_and(SomeClass other):
-        print("operator_and")
-        return self
-
-    + SomeClass operator_or(SomeClass other):
-        print("operator_or")
+    + SomeClass _or_(SomeClass other):
+        println("_or_")
         return self
 
 SomeClass foo := SomeClass()
@@ -88,6 +84,5 @@ result := foo >= bar
 result := foo = bar
 result := foo != bar
 result := not bar
-result := foo xor bar
 result := foo and bar
 result := foo or bar
