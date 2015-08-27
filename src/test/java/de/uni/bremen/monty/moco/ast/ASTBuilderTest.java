@@ -48,6 +48,7 @@ import de.uni.bremen.monty.moco.ast.expression.literal.IntegerLiteral;
 import de.uni.bremen.monty.moco.ast.expression.literal.StringLiteral;
 import de.uni.bremen.monty.moco.ast.statement.Assignment;
 import de.uni.bremen.monty.moco.ast.statement.ConditionalStatement;
+import de.uni.bremen.monty.moco.util.TupleDeclarationFactory;
 import org.antlr.v4.runtime.ANTLRInputStream;
 import org.antlr.v4.runtime.CommonTokenStream;
 import org.apache.commons.io.FileUtils;
@@ -249,7 +250,7 @@ public class ASTBuilderTest {
 	}
 
 	private ModuleDeclaration buildAST(String fileName, MontyParser parser) {
-		ASTBuilder astBuilder = new ASTBuilder(fileName);
+		ASTBuilder astBuilder = new ASTBuilder(fileName, new TupleDeclarationFactory());
 		ASTNode rootNode = astBuilder.visitModuleDeclaration(parser.moduleDeclaration());
 		return (ModuleDeclaration) rootNode;
 	}

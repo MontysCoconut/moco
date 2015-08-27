@@ -53,19 +53,10 @@ import java.util.*;
 
 /** This class bundles utilities for the automatic generation of types at compile-time */
 public class TupleDeclarationFactory {
-	private Map<Integer, ClassDeclaration> tupleTypes = new HashMap<>();
+	private Set<Integer> tupleTypes = new HashSet<>();
 
-	/** Introduces a new type TupleN if it was not already created. Returns the tuple type.
-	 *
-	 * @param n */
-	public ClassDeclaration getTupleType(int n) {
-		// lookup a TupleN, if it was not found, generate the class
-		ClassDeclaration tupleType = tupleTypes.get(n);
-		if (tupleType == null) {
-			tupleType = createTupleType(n);
-			tupleTypes.put(n, tupleType);
-		}
-		return tupleType;
+	public void checkTupleType(int n) {
+		tupleTypes.add(n);
 	}
 
 	/** This method checks whether the given Identifier is a tuple type. If yes, a new tuple type is introduced, given
@@ -77,7 +68,7 @@ public class TupleDeclarationFactory {
 		if (str.startsWith("Tuple")) {
 			String number = str.substring(5);
 			try {
-				getTupleType(Integer.parseInt(number));
+				checkTupleType(Integer.parseInt(number));
 			} catch (Exception e) {
 				// if the rest is not a number, we don't need to create a tuple type
 			}
@@ -144,7 +135,11 @@ public class TupleDeclarationFactory {
 		                new VariableAccess(new Position(), ResolvableIdentifier.convert(param.getIdentifier()))));
 	}
 
-	public Collection<ClassDeclaration> getTupleTypes() {
-		return tupleTypes.values();
+	public Collection<ClassDeclaration> generateNecessaryTupleTypes() {
+		Collection<ClassDeclaration> tupleClasses = new ArrayList<>(tupleTypes.size());
+		for (int n : tupleTypes) {
+			tupleClasses.add(createTupleType(n));
+		}
+		return tupleClasses;
 	}
 }

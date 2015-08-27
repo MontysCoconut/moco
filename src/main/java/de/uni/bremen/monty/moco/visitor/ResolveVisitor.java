@@ -314,7 +314,7 @@ public class ResolveVisitor extends VisitOnceVisitor {
 			ResolvableIdentifier identifier = node.getIdentifier();
 			if (classDecl.isAbstract()) {
 				throw new InvalidExpressionException(node, "The abstract class '" + identifier.toString()
-				        + "' may not be instantiated");
+				        + "' must not be instantiated");
 			}
 			node.setType(classDecl);
 			ProcedureDeclaration initializer = findMatchingInitializer(node, classDecl);

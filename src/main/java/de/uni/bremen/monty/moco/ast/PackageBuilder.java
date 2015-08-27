@@ -61,9 +61,9 @@ public class PackageBuilder {
 
 	private Package buildPackage(MontyResource inputFile) {
 		Package basePackage = new Package(new Identifier(""));
-		addCoreLib(basePackage);
 		Package subPackage = (inputFile.isDirectory()) ? createPackage(inputFile) : createPackageFromFile(inputFile);
 		basePackage.addSubPackage(subPackage);
+		addCoreLib(basePackage);
 		return basePackage;
 	}
 
@@ -79,6 +79,21 @@ public class PackageBuilder {
 		block.addDeclaration(CoreClasses.voidType());
 		corePackage.addModule(module);
 		setCoreClasses(corePackage);
+
+		ModuleDeclaration tupleModule = null;
+		for (ModuleDeclaration tmodule : corePackage.getModules()) {
+			if (tmodule.getIdentifier().getSymbol().equals("Tuple")) {
+				tupleModule = tmodule;
+				break;
+			}
+		}
+		if (tupleModule == null) {
+			throw new RuntimeException("Error, no Tuple module in core library!");
+		}
+
+		for (ClassDeclaration tupleDecl : antlrAdapter.getTupleDeclarationFactory().generateNecessaryTupleTypes()) {
+			tupleModule.getBlock().addDeclaration(tupleDecl);
+		}
 	}
 
 	private void setCoreClasses(Package corePackage) {
