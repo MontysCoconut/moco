@@ -89,10 +89,10 @@ public class ASTBuilder extends MontyBaseVisitor<ASTNode> {
 		}
 	};
 
-	public ASTBuilder(String fileName) {
+	public ASTBuilder(String fileName, TupleDeclarationFactory tupleDeclarationFactory) {
 		this.fileName = fileName;
 		currentBlocks = new Stack<>();
-		tupleDeclarationFactory = new TupleDeclarationFactory();
+		this.tupleDeclarationFactory = tupleDeclarationFactory;
 	}
 
 	private Position position(Token idSymbol) {
@@ -123,9 +123,6 @@ public class ASTBuilder extends MontyBaseVisitor<ASTNode> {
 		}
 		addStatementsToBlock(block, ctx.statement());
 		currentBlocks.pop();
-		for (ClassDeclaration decl : tupleDeclarationFactory.getTupleTypes()) {
-			module.getBlock().addDeclaration(decl);
-		}
 		return module;
 	}
 
@@ -687,8 +684,8 @@ public class ASTBuilder extends MontyBaseVisitor<ASTNode> {
 				elements.add((Expression) visit(eContext));
 			}
 			// generate a new tuple type if necessary
-			ClassDeclaration tupleType = tupleDeclarationFactory.getTupleType(elements.size());
-			TupleLiteral tuple = new TupleLiteral(position(ctx.getStart()), tupleType, elements);
+			tupleDeclarationFactory.checkTupleType(elements.size());
+			TupleLiteral tuple = new TupleLiteral(position(ctx.getStart()), elements);
 			return tuple;
 		} else {
 			return new BooleanLiteral(position(ctx.getStart()), Boolean.parseBoolean(ctx.BooleanLiteral().toString()));
