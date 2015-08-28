@@ -57,9 +57,15 @@ constantDeclaration
   : type ConstantIdentifier
   ;
 
+arrow
+  : '->'
+  ;
+
 type
   : ClassIdentifier ('<' typeList '>')?
-  | '(' type (',' type)+ ')'
+  | '(' (type (',' type)+)? ')'
+  | type arrow type
+  | '(' type arrow type ')'
   ;
 
 typeList
@@ -225,7 +231,7 @@ notOperator
   ;
 
 accessOperator
-  : operator=('.' | '->')
+  : operator='.'
   ;
 
 dotOperator

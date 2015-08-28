@@ -179,10 +179,15 @@ public class ASTBuilder extends MontyBaseVisitor<ASTNode> {
 		List<TypeContext> typeParameters = null;
 		// if there is no class identifier, we have to handle syntactic sugar here
 		if (type.ClassIdentifier() == null) {
-			// a tuple
-			typeParameters = type.type();
-			int n = typeParameters != null ? typeParameters.size() : 0;
-			typeName = "Tuple" + n;
+			if (type.arrow() != null) {
+				typeParameters = type.type();
+				typeName = "Function";
+			} else {
+				// a tuple
+				typeParameters = type.type();
+				int n = typeParameters != null ? typeParameters.size() : 0;
+				typeName = "Tuple" + n;
+			}
 		} else {
 			typeName = type.ClassIdentifier().toString();
 			if (type.typeList() != null) {
