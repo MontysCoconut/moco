@@ -177,7 +177,7 @@ expression
   | left=expression inOperator right=expression
   | left=expression andOperator right=expression
   | left=expression orOperator right=expression
-  | expr=expression asOperator ClassIdentifier
+  | expr=expression asOperator type
   | expr=expression isOperator ClassIdentifier
   ;
 

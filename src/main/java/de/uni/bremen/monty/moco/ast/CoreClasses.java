@@ -43,7 +43,6 @@ import de.uni.bremen.monty.moco.ast.declaration.ClassDeclaration;
 
 import java.util.Map;
 import java.util.HashMap;
-import java.util.Collection;
 import java.util.Collections;
 
 public class CoreClasses {
@@ -52,7 +51,8 @@ public class CoreClasses {
 
 	static {
 		// TODO find name for void that is not a valid identifier
-		String[] classNames = new String[] { "Object", "Char", "String", "Int", "Float", "Bool", "Array", "__void" };
+		String[] classNames =
+		        new String[] { "Object", "Char", "String", "Int", "Float", "Bool", "Array", "__void", "Function" };
 		for (String name : classNames) {
 			CoreClasses.setCoreClass(name, new ClassDeclaration(new Position("Dummy_" + name, 0, 0), new Identifier(
 			        name), Collections.<ResolvableIdentifier> emptyList(), new Block(
@@ -90,6 +90,10 @@ public class CoreClasses {
 
 	public static ClassDeclaration arrayType() {
 		return coreClasses.get("Array");
+	}
+
+	public static ClassDeclaration functionType() {
+		return coreClasses.get("Function");
 	}
 
 	public static ClassDeclaration voidType() {

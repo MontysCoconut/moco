@@ -150,4 +150,22 @@ public class TupleDeclarationFactory {
 		}
 		return tupleClasses;
 	}
+
+	public static boolean isTuple(ClassDeclaration type) {
+		String strIdent = type.getIdentifier().getSymbol();
+		if (strIdent.startsWith("Tuple")) {
+			int n;
+			try {
+				n = Integer.parseInt(strIdent.substring(5));
+			} catch (Exception e) {
+				return false;
+			}
+			if (type instanceof ClassDeclarationVariation) {
+				if (((ClassDeclarationVariation) type).getConcreteGenericTypes().size() == n) {
+					return true;
+				}
+			}
+		}
+		return false;
+	}
 }

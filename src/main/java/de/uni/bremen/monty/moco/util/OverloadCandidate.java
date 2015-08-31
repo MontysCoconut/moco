@@ -36,34 +36,28 @@
  * You should have received a copy of the GNU General Public
  * License along with this library.
  */
+package de.uni.bremen.monty.moco.util;
 
-package de.uni.bremen.monty.moco.ast.expression.literal;
+import de.uni.bremen.monty.moco.ast.declaration.Declaration;
 
-import de.uni.bremen.monty.moco.ast.*;
-import de.uni.bremen.monty.moco.ast.declaration.*;
-import de.uni.bremen.monty.moco.ast.expression.*;
+public class OverloadCandidate {
+	private Declaration declaration;
+	private int score;
 
-import java.util.ArrayList;
-import java.util.List;
-
-public class TupleLiteral extends FunctionCall {
-	/** Constructor.
-	 *
-	 * @param position
-	 *            Position of this node
-	 * @param entries */
-	public TupleLiteral(Position position, List<Expression> entries) {
-		super(position, new ResolvableIdentifier("Tuple" + entries.size(), new ArrayList<ResolvableIdentifier>(
-		        entries.size())), entries);
+	public OverloadCandidate(Declaration declaration, int score) {
+		this.declaration = declaration;
+		this.score = score;
 	}
 
-	public void setConcreteTupleType() {
-		for (Expression entry : arguments) {
-			if (entry.getType() instanceof ClassDeclaration) {
-				getIdentifier().getGenericTypes().add(ResolvableIdentifier.convert(entry.getType().getIdentifier()));
-			} else {
-				throw new RuntimeException("TYPE:: " + entry.getType());
-			}
-		}
+	public int getScore() {
+		return score;
+	}
+
+	public void setScore(int score) {
+		this.score = score;
+	}
+
+	public Declaration getDeclaration() {
+		return declaration;
 	}
 }

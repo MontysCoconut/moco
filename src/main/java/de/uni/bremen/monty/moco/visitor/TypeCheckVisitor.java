@@ -162,7 +162,7 @@ public class TypeCheckVisitor extends BaseVisitor {
 				        node.getLeft().getClass().getSimpleName()));
 			}
 		} else if (!(node.getRight() instanceof FunctionCall) && !(node.getRight() instanceof VariableAccess)
-		        && !(node.getRight() instanceof MemberAccess)) {
+		        && !(node.getRight() instanceof WrappedFunctionCall) && !(node.getRight() instanceof MemberAccess)) {
 			throw new TypeMismatchException(node, String.format(
 			        "Invalid right part %s on member access.",
 			        node.getLeft().getClass().getSimpleName()));

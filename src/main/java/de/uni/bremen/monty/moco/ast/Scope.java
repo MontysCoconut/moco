@@ -42,6 +42,7 @@ import de.uni.bremen.monty.moco.ast.declaration.ClassDeclaration;
 import de.uni.bremen.monty.moco.ast.declaration.Declaration;
 import de.uni.bremen.monty.moco.ast.declaration.FunctionDeclaration;
 import de.uni.bremen.monty.moco.ast.declaration.TypeDeclaration;
+import de.uni.bremen.monty.moco.exception.InvalidExpressionException;
 import de.uni.bremen.monty.moco.exception.RedeclarationException;
 import de.uni.bremen.monty.moco.exception.UnknownIdentifierException;
 import de.uni.bremen.monty.moco.exception.UnknownTypeException;
@@ -110,15 +111,18 @@ public class Scope {
 		if (declaration != null) {
 			return declaration;
 		}
-		if (parent != null) {
-			return parent.resolve(identifier);
-		}
-		// FIXME: das hier berücksichtigt noch nicht die richtige Reihenfolge...
 		if (functions.containsKey(identifier)) {
 			List<FunctionDeclaration> functionDeclarations = functions.get(identifier);
 			if (functionDeclarations.size() == 1) {
 				return functionDeclarations.get(0).getWrapperFunctionObjectDeclaration();
+			} else if (functionDeclarations.size() > 1) {
+				throw new InvalidExpressionException(null, "Accessing the identifier '" + identifier.getSymbol()
+				        + "' without a cast is ambiguous, since there are " + functionDeclarations.size()
+				        + " overloaded versions of this function.");
 			}
+		}
+		if (parent != null) {
+			return parent.resolve(identifier);
 		}
 
 		throw new UnknownIdentifierException(identifier);
@@ -151,6 +155,8 @@ public class Scope {
 			return resolveType(identifier);
 		} catch (UnknownTypeException e) {
 			return null;
+		} catch (InvalidExpressionException e) {
+			return null;
 		}
 	}
 
@@ -159,11 +165,14 @@ public class Scope {
 	 * @param identifier
 	 *            the identifier to resolve
 	 * @return the list of function declarations */
-	public List<FunctionDeclaration> resolveFunction(ResolvableIdentifier identifier) {
-		List<FunctionDeclaration> result = new ArrayList<FunctionDeclaration>();
+	public List<Declaration> resolveFunction(ResolvableIdentifier identifier) {
+		List<Declaration> result = new ArrayList<Declaration>();
 
 		if (functions.containsKey(identifier)) {
 			result.addAll(functions.get(identifier));
+		}
+		if (members.containsKey(identifier)) {
+			result.add(members.get(identifier));
 		}
 		if (parent != null) {
 			try {
@@ -190,7 +199,8 @@ public class Scope {
 	public void define(Identifier identifier, Declaration declaration) throws RedeclarationException {
 		if (declaration instanceof FunctionDeclaration) {
 			define(identifier, (FunctionDeclaration) declaration);
-		} else if (members.get(identifier) != null) {
+		} else if ((members.get(identifier) != null)
+		        || ((functions.get(identifier) != null) && (!functions.get(identifier).isEmpty()))) {
 			throw new RedeclarationException(declaration, identifier.getSymbol());
 		} else {
 			members.put(identifier, declaration);

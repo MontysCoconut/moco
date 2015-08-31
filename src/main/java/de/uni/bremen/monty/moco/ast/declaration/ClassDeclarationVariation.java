@@ -144,4 +144,47 @@ public class ClassDeclarationVariation extends ClassDeclaration {
 	public void addVariation(ClassDeclarationVariation variation) {
 		baseClass.addVariation(variation);
 	}
+
+	/** this method checks whether the type parameters match exactly
+	 *
+	 * @param other
+	 * @return true if all params have the same type */
+	protected boolean doTypeParamsMatch(TypeDeclaration other) {
+		if (other instanceof ClassDeclarationVariation) {
+			List<ClassDeclaration> otherGenerics = ((ClassDeclarationVariation) other).getConcreteGenericTypes();
+			List<ClassDeclaration> ownGenerics = getConcreteGenericTypes();
+			if (otherGenerics.size() == ownGenerics.size()) {
+				for (int i = 0; i < ownGenerics.size(); i++) {
+					// invariant behavior for generic classes
+					if (!ownGenerics.get(i).matchesTypeExactly(otherGenerics.get(i))) {
+						return false;
+					}
+				}
+				return true;
+			}
+		}
+		return false;
+	}
+
+	@Override
+	public int getTypeDist(TypeDeclaration other, int dist) {
+		if (doTypeParamsMatch(other)) { // currently we only support invariance
+			return super.getTypeDist(other, dist);
+		} else { // but if the other one does not have any type parameters, super types of it could do so...
+			if (other instanceof ClassDeclaration) {
+				List<TypeDeclaration> superTypes = ((ClassDeclaration) other).getSuperClassDeclarations();
+				int minScore = Integer.MAX_VALUE;
+				for (TypeDeclaration superType : superTypes) {
+					int score = getTypeDist(superType);
+					if (score < minScore) {
+						minScore = score;
+					}
+				}
+				if ((dist < Integer.MAX_VALUE) && (minScore < Integer.MAX_VALUE)) {
+					return dist + minScore;
+				}
+			}
+		}
+		return Integer.MAX_VALUE;
+	}
 }

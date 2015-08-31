@@ -1,1 +1,1 @@
-TypeCheckVisitor caught error in FunctionCall at file: neg_Procedure2.monty, line: 13, char: 0: Arguments of function call do not match declaration.
+ResolveVisitor caught error in FunctionCall at file: neg_Procedure2.monty, line: 13, char: 0: Arguments of function call do not match declaration.

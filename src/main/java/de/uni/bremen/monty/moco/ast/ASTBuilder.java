@@ -226,7 +226,7 @@ public class ASTBuilder extends MontyBaseVisitor<ASTNode> {
 				}
 			}
 		}
-		return func;
+		return new WrappedFunctionCall(position(ctx.getStart()), func);
 	}
 
 	private void buildDefaultFunctions(boolean isFunction, List<DefaultParameterContext> defaultParameter,
@@ -763,7 +763,7 @@ public class ASTBuilder extends MontyBaseVisitor<ASTNode> {
 	}
 
 	private CastExpression visitCastExpression(ExpressionContext ctx) {
-		ResolvableIdentifier type = new ResolvableIdentifier(getText(ctx.ClassIdentifier()));
+		ResolvableIdentifier type = convertResolvableIdentifier(ctx.type());
 		tupleDeclarationFactory.checkTupleType(type);
 		return new CastExpression(position(ctx.getStart()), (Expression) visit(ctx.expr), type);
 	}

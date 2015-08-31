@@ -493,8 +493,13 @@ public class CodeGenerationVisitor extends BaseVisitor {
 			if (declaration.isMethod()) {
 				arguments.add(0, stack.pop());
 			} else if (declaration.isInitializer()) {
-				if ((node.getParentNode() instanceof MemberAccess)
-				        && (((MemberAccess) node.getParentNode()).getRight() == node)) {
+				ASTNode parentNode = node.getParentNode();
+				ASTNode rightMember = node;
+				if (parentNode instanceof WrappedFunctionCall) {
+					rightMember = parentNode;
+					parentNode = parentNode.getParentNode();
+				}
+				if ((parentNode instanceof MemberAccess) && (((MemberAccess) parentNode).getRight() == rightMember)) {
 					arguments.add(0, stack.pop());
 				} else {
 					LLVMIdentifier<LLVMType> selfReference =

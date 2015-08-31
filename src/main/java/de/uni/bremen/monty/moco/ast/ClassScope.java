@@ -146,8 +146,8 @@ public class ClassScope extends Scope {
 	 *            the identifier to resolve
 	 * @return the list of function declarations */
 	@Override
-	public List<FunctionDeclaration> resolveFunction(ResolvableIdentifier identifier) {
-		List<FunctionDeclaration> result = new ArrayList<FunctionDeclaration>();
+	public List<Declaration> resolveFunction(ResolvableIdentifier identifier) {
+		List<Declaration> result = new ArrayList<>();
 		result.addAll(resolveFunctionMember(identifier));
 		if (parent != null) {
 			try {
