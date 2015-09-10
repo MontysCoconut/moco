@@ -1,0 +1,78 @@
+// Testing: Best-Fit Algorithm
+//
+// The algorithm must find the best fit, not the first one
+//
+// Expected output: A VW Beatle  : HB : BT : 112
+//                  A VW         : HB : VW : 123
+//                  A Porsche 911: HB : PS : 911
+//                  A Porsche    : HB : PS : 100
+
+class Car:
+    String registrationNumber
+
+    initializer(String registrationNumber):
+        self.registrationNumber := registrationNumber
+
+    String getRegistrationNumber():
+        return self.registrationNumber
+
+class Porsche inherits Car:
+    initializer(String registrationNumber):
+        parent(Car).initializer(registrationNumber)
+
+    String getRegistrationNumber():
+        return self.registrationNumber
+
+class PorscheCayenne inherits Porsche:
+    initializer(String registrationNumber):
+        parent(Porsche).initializer(registrationNumber)
+
+    String getRegistrationNumber():
+        return self.registrationNumber
+
+class Porsche911 inherits Porsche:
+    initializer(String registrationNumber):
+        parent(Porsche).initializer(registrationNumber)
+
+    String getRegistrationNumber():
+        return self.registrationNumber
+
+class Volkswagen inherits Car:
+    initializer(String registrationNumber):
+        parent(Car).initializer(registrationNumber)
+
+    String getRegistrationNumber():
+        return self.registrationNumber
+
+class Beatle inherits Volkswagen:
+    initializer(String registrationNumber):
+        parent(Volkswagen).initializer(registrationNumber)
+
+    String getRegistrationNumber():
+        return self.registrationNumber
+
+
+printCar(Car car):
+    print("A generic car: ")
+    println(car.getRegistrationNumber())
+
+printCar(Porsche car):
+    print("A Porsche    : ")
+    println(car.getRegistrationNumber())
+
+printCar(Porsche911 car):
+    print("A Porsche 911: ")
+    println(car.getRegistrationNumber())
+
+printCar(Beatle car):
+    print("A VW Beatle  : ")
+    println(car.getRegistrationNumber())
+
+printCar(Volkswagen car):
+    print("A VW         : ")
+    println(car.getRegistrationNumber())
+
+printCar(Beatle("HB : BT : 112"))
+printCar(Volkswagen("HB : VW : 123"))
+printCar(Porsche911("HB : PS : 911 "))
+printCar(Porsche("HB : PS : 100"))
