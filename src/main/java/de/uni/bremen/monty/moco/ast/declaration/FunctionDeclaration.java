@@ -39,9 +39,14 @@
 package de.uni.bremen.monty.moco.ast.declaration;
 
 import de.uni.bremen.monty.moco.ast.*;
+import de.uni.bremen.monty.moco.ast.expression.Expression;
+import de.uni.bremen.monty.moco.ast.expression.FunctionCall;
+import de.uni.bremen.monty.moco.ast.expression.WrappedFunctionCall;
 import de.uni.bremen.monty.moco.ast.statement.Assignment;
+import de.uni.bremen.monty.moco.ast.statement.ReturnStatement;
 import de.uni.bremen.monty.moco.visitor.BaseVisitor;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /** A FunctionDeclaration represents the declaration of a function in the AST.
@@ -72,6 +77,8 @@ public class FunctionDeclaration extends TypeDeclaration {
 	private TypeDeclaration returnType;
 
 	private final boolean abstractMethod;
+
+	private boolean returnTypeMustBeInferred = false;
 
 	/** Constructor.
 	 *
@@ -105,6 +112,12 @@ public class FunctionDeclaration extends TypeDeclaration {
 		this.vmtIndex = -1;
 		this.returnTypeIdentifier = returnTypeIdentifier;
 		this.abstractMethod = isAbstract;
+	}
+
+	public FunctionDeclaration(Position position, Identifier identifier, Block body,
+	        List<VariableDeclaration> parameters) {
+		this(position, identifier, body, parameters, DeclarationType.UNBOUND, (ResolvableIdentifier) null);
+		returnTypeMustBeInferred = true;
 	}
 
 	public FunctionDeclaration(Position position, Identifier identifier, Block body,
@@ -162,6 +175,10 @@ public class FunctionDeclaration extends TypeDeclaration {
 	public void setReturnType(TypeDeclaration returnType) {
 		if (this.returnType != null) return;
 		this.returnType = returnType;
+	}
+
+	protected void setReturnTypeIdentifier(ResolvableIdentifier identifier) {
+		this.returnTypeIdentifier = identifier;
 	}
 
 	/** Get the body block.
@@ -309,5 +326,71 @@ public class FunctionDeclaration extends TypeDeclaration {
 
 	public void setWrapperFunctionAssignment(Assignment wrapperFunctionAssignment) {
 		this.wrapperFunctionAssignment = wrapperFunctionAssignment;
+	}
+
+	public boolean isReturnTypeToBeInferred() {
+		return returnTypeMustBeInferred;
+	}
+
+	public void setInferredReturnType(TypeDeclaration type) {
+		returnType = type;
+		returnTypeIdentifier = ResolvableIdentifier.convert(type.getIdentifier());
+
+		ResolvableIdentifier retIdent = returnTypeIdentifier;
+		FunctionDeclaration applyMethod = wrapperClass.getMethods().get(0);
+
+		if (CoreClasses.voidType().equals(type)) {
+			returnTypeIdentifier = null;
+			retIdent = new ResolvableIdentifier("Tuple0");
+			applyMethod.setReturnTypeIdentifier(retIdent);
+			applyMethod.setReturnType(getScope().resolveType(retIdent));
+
+			splitReturnStatement(false);
+			applyMethod.splitReturnStatement(true);
+
+		} else {
+			applyMethod.setReturnTypeIdentifier(returnTypeIdentifier);
+			applyMethod.setReturnType(type);
+		}
+
+		// exchange the return type of the wrapper class
+		ResolvableIdentifier genericWrapper = wrapperClass.getSuperClassIdentifiers().get(0);
+		genericWrapper.getGenericTypes().remove(1);
+		genericWrapper.getGenericTypes().add(retIdent);
+	}
+
+	protected void splitReturnStatement(boolean tupleInsteadOfVoid) {
+		ReturnStatement oldRet = (ReturnStatement) getBody().getStatements().get(getBody().getStatements().size() - 1);
+
+		// create a new return statement
+		ReturnStatement newRet;
+		if (tupleInsteadOfVoid) {
+			FunctionCall emptyTuple =
+			        new FunctionCall(oldRet.getPosition(), new ResolvableIdentifier("Tuple0"),
+			                new ArrayList<Expression>());
+			newRet = new ReturnStatement(oldRet.getPosition(), emptyTuple);
+			newRet.setScope(oldRet.getScope());
+			newRet.setParentNode(oldRet.getParentNode());
+			emptyTuple.setScope(newRet.getScope());
+			emptyTuple.setParentNode(newRet.getParentNode());
+		} else {
+			newRet = new ReturnStatement(oldRet.getPosition(), null);
+			newRet.setScope(oldRet.getScope());
+			newRet.setParentNode(oldRet.getParentNode());
+		}
+
+		// remove the old one
+		getBody().getStatements().remove(getBody().getStatements().size() - 1);
+		// add the new ones
+		Expression oldCall = oldRet.getParameter();
+		oldCall.setParentNode(getBody());
+		if (oldCall instanceof FunctionCall) {
+			getBody().addStatement((FunctionCall) oldCall);
+		} else if (oldCall instanceof WrappedFunctionCall) {
+			getBody().addStatement((WrappedFunctionCall) oldCall);
+		} else {
+			throw new RuntimeException("invalid AST!");
+		}
+		getBody().addStatement(newRet);
 	}
 }

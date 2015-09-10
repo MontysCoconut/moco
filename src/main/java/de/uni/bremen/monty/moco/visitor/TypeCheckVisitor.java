@@ -39,6 +39,7 @@
 package de.uni.bremen.monty.moco.visitor;
 
 import de.uni.bremen.monty.moco.ast.ASTNode;
+import de.uni.bremen.monty.moco.ast.Block;
 import de.uni.bremen.monty.moco.ast.CoreClasses;
 import de.uni.bremen.monty.moco.ast.declaration.*;
 import de.uni.bremen.monty.moco.ast.expression.*;

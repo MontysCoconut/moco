@@ -88,6 +88,10 @@ parameterList
   | variableDeclaration (',' variableDeclaration)*  (',' defaultParameter)*
   ;
 
+parameterListWithoutDefaults
+  : variableDeclaration (',' variableDeclaration)*
+  ;
+
 statementBlock
   : Indent
       (statement+ | 'pass' EndOfLine)
@@ -166,6 +170,7 @@ expressionList
 expression
   : functionCall
   | primary
+  | functionExpression
   | ifExprThen=expression 'if' ifExpCondition=expression 'else' ifExprElse=expression
   | left=expression accessOperator right=expression
   | <assoc=right> (plusMinusOperator | notOperator) singleExpression=expression
@@ -180,6 +185,10 @@ expression
   | expr=expression asOperator type
   | expr=expression isOperator ClassIdentifier
   ;
+
+functionExpression
+ : Lparenthesis parameterListWithoutDefaults? Rparenthesis arrow expression
+ ;
 
 primary
   : Lparenthesis singleExpression=expression Rparenthesis

@@ -47,6 +47,7 @@ import de.uni.bremen.monty.moco.ast.expression.*;
 import de.uni.bremen.monty.moco.ast.expression.literal.*;
 import de.uni.bremen.monty.moco.ast.statement.*;
 import de.uni.bremen.monty.moco.util.FunctionWrapperFactory;
+import de.uni.bremen.monty.moco.util.TmpIdentifierFactory;
 import de.uni.bremen.monty.moco.util.TupleDeclarationFactory;
 import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.misc.NotNull;
@@ -367,6 +368,33 @@ public class ASTBuilder extends MontyBaseVisitor<ASTNode> {
 	}
 
 	@Override
+	public ASTNode visitFunctionExpression(FunctionExpressionContext ctx) {
+		ArrayList<VariableDeclaration> parameterList = new ArrayList<>();
+		ParameterListWithoutDefaultsContext plist = ctx.parameterListWithoutDefaults();
+		if (plist != null) {
+			currentVariableContext = VariableDeclaration.DeclarationType.PARAMETER;
+			for (VariableDeclarationContext var : plist.variableDeclaration()) {
+				parameterList.add((VariableDeclaration) visit(var));
+			}
+		}
+
+		Block body = new Block(position(ctx.expression().getStart()));
+		body.addStatement(new ReturnStatement(body.getPosition(), (Expression) visit(ctx.expression())));
+		FunctionDeclaration funDecl =
+		        new FunctionDeclaration(position(ctx.getStart()), TmpIdentifierFactory.getUniqueIdentifier(), body,
+		                parameterList);
+
+		FunctionWrapperFactory.generateWrapperClass(funDecl, tupleDeclarationFactory);
+		currentBlocks.peek().addDeclaration(funDecl);
+		currentBlocks.peek().addDeclaration(funDecl.getWrapperClass());
+		Declaration wrapperObject = funDecl.getWrapperFunctionObjectDeclaration();
+		currentBlocks.peek().addDeclaration(wrapperObject);
+		currentBlocks.peek().addStatement(funDecl.getWrapperFunctionAssignment());
+
+		return new VariableAccess(funDecl.getPosition(), ResolvableIdentifier.convert(wrapperObject.getIdentifier()));
+	}
+
+	@Override
 	public ASTNode visitClassDeclaration(ClassDeclarationContext ctx) {
 		List<ResolvableIdentifier> superClasses = new ArrayList<>();
 		if (ctx.typeList() != null) {
@@ -593,13 +621,12 @@ public class ASTBuilder extends MontyBaseVisitor<ASTNode> {
 		if (ctx.primary() != null) {
 			return visit(ctx.primary());
 		} else if (ctx.ifExpCondition != null && ctx.ifExprElse != null && ctx.ifExprThen != null) {
-
 			return visitTernary(ctx);
 		} else if (ctx.functionCall() != null) {
-
 			return visit(ctx.functionCall());
+		} else if (ctx.functionExpression() != null) {
+			return visit(ctx.functionExpression());
 		} else if (ctx.accessOperator() != null) {
-
 			return visitMemberAccessExpr(ctx);
 		} else if (ctx.plusMinusOperator() != null && ctx.singleExpression != null) {
 

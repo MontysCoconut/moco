@@ -42,13 +42,14 @@ import de.uni.bremen.monty.moco.ast.*;
 import de.uni.bremen.monty.moco.ast.declaration.*;
 import de.uni.bremen.monty.moco.ast.expression.*;
 import de.uni.bremen.monty.moco.ast.expression.literal.*;
+import de.uni.bremen.monty.moco.ast.statement.ReturnStatement;
+import de.uni.bremen.monty.moco.ast.statement.Statement;
 import de.uni.bremen.monty.moco.ast.statement.UnpackAssignment;
-import de.uni.bremen.monty.moco.exception.InvalidExpressionException;
-import de.uni.bremen.monty.moco.exception.TypeMismatchException;
-import de.uni.bremen.monty.moco.exception.UnknownIdentifierException;
+import de.uni.bremen.monty.moco.exception.*;
 import de.uni.bremen.monty.moco.util.OverloadCandidate;
 import de.uni.bremen.monty.moco.util.TupleDeclarationFactory;
 
+import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -310,16 +311,26 @@ public class ResolveVisitor extends VisitOnceVisitor {
 	/** {@inheritDoc} */
 	@Override
 	public void visit(FunctionDeclaration node) {
-		if (node.isFunction()) {
-			Scope scope = node.getScope();
-			TypeDeclaration returnType = scope.resolveType(node.getReturnTypeIdentifier());
-			node.setReturnType(returnType);
-		} else {
-			if (node.isMethod() && node.getIdentifier().getSymbol().equals("initializer")) {
-				node.setDeclarationType(FunctionDeclaration.DeclarationType.INITIALIZER);
+		if (node.isReturnTypeToBeInferred()) {
+			super.visit(node);
+			Statement returnStatement = node.getBody().getStatements().get(node.getBody().getStatements().size() - 1);
+			if (returnStatement instanceof ReturnStatement) {
+				node.setInferredReturnType(((ReturnStatement) returnStatement).getParameter().getType());
+			} else {
+				throw new MontyBaseException(node, "can not infer return type!");
 			}
+		} else {
+			if (node.isFunction()) {
+				Scope scope = node.getScope();
+				TypeDeclaration returnType = scope.resolveType(node.getReturnTypeIdentifier());
+				node.setReturnType(returnType);
+			} else {
+				if (node.isMethod() && node.getIdentifier().getSymbol().equals("initializer")) {
+					node.setDeclarationType(FunctionDeclaration.DeclarationType.INITIALIZER);
+				}
+			}
+			super.visit(node);
 		}
-		super.visit(node);
 	}
 
 	/** {@inheritDoc} */
@@ -372,7 +383,7 @@ public class ResolveVisitor extends VisitOnceVisitor {
 				TupleLiteral tuple = null;
 				// if there are more than one arguments, we have to pack them into a tuple...
 				List<Expression> arguments = node.getArguments();
-				if (arguments.size() > 1) {
+				if (arguments.size() != 1) {
 					arguments = new ArrayList<>(1);
 					tuple = new TupleLiteral(node.getPosition(), node.getArguments());
 					arguments.add(tuple);
@@ -461,10 +472,11 @@ public class ResolveVisitor extends VisitOnceVisitor {
 		List<OverloadCandidate> candidates = new ArrayList<>();
 		for (Declaration declaration : functions) {
 			if (declaration instanceof FunctionDeclaration) {
-				if (((FunctionDeclaration) declaration).getParameters().size() == arguments.size()) {
+				FunctionDeclaration funDecl = (FunctionDeclaration) declaration;
+				if (funDecl.getParameters().size() == arguments.size()) {
 					int score = 0;
 					int argIndex = 0;
-					for (VariableDeclaration param : ((FunctionDeclaration) declaration).getParameters()) {
+					for (VariableDeclaration param : funDecl.getParameters()) {
 						visitDoubleDispatched(param);
 						int typeDist = param.getType().getTypeDist(arguments.get(argIndex));
 						if ((typeDist < Integer.MAX_VALUE) && (score < Integer.MAX_VALUE)) {
@@ -478,6 +490,11 @@ public class ResolveVisitor extends VisitOnceVisitor {
 					if (score != Integer.MAX_VALUE) {
 						candidates.add(new OverloadCandidate(declaration, score));
 					}
+					// special case for functions without parameters
+				} else if ((arguments.size() == 0) && (funDecl.getParameters().size() == 1)
+				        && (funDecl.getParameters().get(0).getType() != null)
+				        && (funDecl.getParameters().get(0).getType().getIdentifier().getSymbol().equals("Tuple0"))) {
+					candidates.add(new OverloadCandidate(declaration, 0));
 				}
 			} else if (declaration instanceof VariableDeclaration) {
 				ClassDeclarationVariation typedecl =
@@ -493,7 +510,6 @@ public class ResolveVisitor extends VisitOnceVisitor {
 							paramTypes.add(concreteParamType);
 						}
 						if (paramTypes.size() == arguments.size()) {
-
 							int score = 0;
 							int argIndex = 0;
 							for (ClassDeclaration genericType : paramTypes) {
@@ -509,7 +525,10 @@ public class ResolveVisitor extends VisitOnceVisitor {
 							if (score != Integer.MAX_VALUE) {
 								candidates.add(new OverloadCandidate(declaration, score));
 							}
-
+						}
+						// special case for functions without parameters
+						else if ((arguments.size() == 0) && (paramTypes.size() == 1)
+						        && (paramTypes.get(0).getIdentifier().getSymbol().equals("Tuple0"))) {
 							candidates.add(new OverloadCandidate(declaration, 0));
 						}
 					}

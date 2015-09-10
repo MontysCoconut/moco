@@ -129,8 +129,8 @@ public class FunctionWrapperFactory {
 			localVariables = new ArrayList<>();
 		}
 
-		// either return the real return value (if function has a return value)
-		if (function.isFunction()) {
+		// either return the real return value (if function has a return value or if the return type must be inferred)
+		if ((function.isFunction()) || (function.isReturnTypeToBeInferred())) {
 			body.addStatement(new ReturnStatement(pos, new FunctionCall(pos,
 			        ResolvableIdentifier.convert(function.getIdentifier()), localVariables)));
 		}
