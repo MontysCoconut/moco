@@ -49,7 +49,6 @@ import de.uni.bremen.monty.moco.exception.*;
 import de.uni.bremen.monty.moco.util.OverloadCandidate;
 import de.uni.bremen.monty.moco.util.TupleDeclarationFactory;
 
-import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -148,28 +147,9 @@ public class ResolveVisitor extends VisitOnceVisitor {
 		Declaration declaration = null;
 
 		Scope scope = node.getScope();
-		TypeDeclaration castedTo = null;
 		// if the variable access is casted into something else, right away...
 		if (node.getParentNode() instanceof CastExpression) {
-			CastExpression cast = (CastExpression) node.getParentNode();
-			castedTo = cast.getScope().resolveType(cast.getCastIdentifier());
-			if (castedTo.matchesType(CoreClasses.functionType())) {
-
-				ClassDeclaration paramType = ((ClassDeclarationVariation) castedTo).getConcreteGenericTypes().get(0);
-				List<TypeDeclaration> params = new ArrayList<>();
-				if (TupleDeclarationFactory.isTuple(paramType)) {
-					params.addAll(((ClassDeclarationVariation) paramType).getConcreteGenericTypes());
-				} else {
-					params.add(paramType);
-				}
-				declaration = overloadResolution(params, scope.resolveFunction(node.getIdentifier()));
-				if (declaration instanceof FunctionDeclaration) {
-					declaration = ((FunctionDeclaration) declaration).getWrapperFunctionObjectDeclaration();
-				}
-				if (declaration == null) {
-					throw new UnknownIdentifierException(node, ResolvableIdentifier.convert(node.getIdentifier()));
-				}
-			}
+			declaration = overloadResolutionForVariableAccess(node);
 		}
 		if (declaration == null) {
 			declaration = scope.resolve(node.getIdentifier());
@@ -187,6 +167,36 @@ public class ResolveVisitor extends VisitOnceVisitor {
 				}
 			}
 		}
+	}
+
+	/** If a variable access is casted into a function, we can do overload resolution just like for function calls e.g.
+	 * "Int -> Int myFunction := square as (Int -> Int)" will look for the implementation of square with the correct
+	 * signature.
+	 *
+	 * @param node
+	 * @return */
+	protected Declaration overloadResolutionForVariableAccess(VariableAccess node) {
+		CastExpression cast = (CastExpression) node.getParentNode();
+		TypeDeclaration castedTo = cast.getScope().resolveType(cast.getCastIdentifier());
+		Declaration declaration = null;
+		if (castedTo.matchesType(CoreClasses.functionType())) {
+
+			ClassDeclaration paramType = ((ClassDeclarationVariation) castedTo).getConcreteGenericTypes().get(0);
+			List<TypeDeclaration> params = new ArrayList<>();
+			if (TupleDeclarationFactory.isTuple(paramType)) {
+				params.addAll(((ClassDeclarationVariation) paramType).getConcreteGenericTypes());
+			} else {
+				params.add(paramType);
+			}
+			declaration = overloadResolution(params, node.getScope().resolveFunction(node.getIdentifier()));
+			if (declaration instanceof FunctionDeclaration) {
+				declaration = ((FunctionDeclaration) declaration).getWrapperFunctionObjectDeclaration();
+			}
+			if (declaration == null) {
+				throw new UnknownIdentifierException(node, ResolvableIdentifier.convert(node.getIdentifier()));
+			}
+		}
+		return declaration;
 	}
 
 	/** {@inheritDoc} */
@@ -347,6 +357,7 @@ public class ResolveVisitor extends VisitOnceVisitor {
 
 		declaration = scope.tryToResolveType(node.getIdentifier());
 
+		// constructor call
 		if (declaration instanceof ClassDeclaration) {
 			ClassDeclaration classDecl = (ClassDeclaration) declaration;
 			ResolvableIdentifier identifier = node.getIdentifier();
@@ -376,40 +387,48 @@ public class ResolveVisitor extends VisitOnceVisitor {
 					node.setType(CoreClasses.voidType());
 				}
 			} else if (callableDeclaration instanceof VariableDeclaration) {
-				VariableAccess varAccess =
-				        new VariableAccess(node.getPosition(),
-				                ResolvableIdentifier.convert(callableDeclaration.getIdentifier()));
-
-				TupleLiteral tuple = null;
-				// if there are more than one arguments, we have to pack them into a tuple...
-				List<Expression> arguments = node.getArguments();
-				if (arguments.size() != 1) {
-					arguments = new ArrayList<>(1);
-					tuple = new TupleLiteral(node.getPosition(), node.getArguments());
-					arguments.add(tuple);
-				}
-				FunctionCall functionCall =
-				        new FunctionCall(node.getPosition(), new ResolvableIdentifier("_apply_"), arguments);
-				MemberAccess memberAccess = new MemberAccess(node.getPosition(), varAccess, functionCall);
-				memberAccess.setScope(node.getScope());
-				functionCall.setParentNode(memberAccess);
-				varAccess.setParentNode(memberAccess);
-				functionCall.setScope(node.getScope());
-				varAccess.setScope(node.getScope());
-				if (tuple != null) {
-					tuple.setParentNode(functionCall);
-					tuple.setScope(functionCall.getScope());
-				}
-
-				WrappedFunctionCall wrapper = (WrappedFunctionCall) node.getParentNode();
-				wrapper.setMemberAccess(memberAccess);
-				memberAccess.setParentNode(wrapper);
-				wrapper.setFunctionCall(null);
-				visit(wrapper);
+				callVariable(node, callableDeclaration);
 			} else {
 				throw new TypeMismatchException(node, "Arguments of function call do not match declaration.");
 			}
 		}
+	}
+
+	/** this method does the wrapping logic for function objects
+	 *
+	 * @param node
+	 * @param callableDeclaration */
+	protected void callVariable(FunctionCall node, Declaration callableDeclaration) {
+		VariableAccess varAccess =
+		        new VariableAccess(node.getPosition(),
+		                ResolvableIdentifier.convert(callableDeclaration.getIdentifier()));
+
+		TupleLiteral tuple = null;
+		// if there are more than one arguments, we have to pack them into a tuple...
+		List<Expression> arguments = node.getArguments();
+		if (arguments.size() != 1) {
+			arguments = new ArrayList<>(1);
+			tuple = new TupleLiteral(node.getPosition(), node.getArguments());
+			arguments.add(tuple);
+		}
+		FunctionCall functionCall =
+		        new FunctionCall(node.getPosition(), new ResolvableIdentifier("_apply_"), arguments);
+		MemberAccess memberAccess = new MemberAccess(node.getPosition(), varAccess, functionCall);
+		memberAccess.setScope(node.getScope());
+		functionCall.setParentNode(memberAccess);
+		varAccess.setParentNode(memberAccess);
+		functionCall.setScope(node.getScope());
+		varAccess.setScope(node.getScope());
+		if (tuple != null) {
+			tuple.setParentNode(functionCall);
+			tuple.setScope(functionCall.getScope());
+		}
+
+		WrappedFunctionCall wrapper = (WrappedFunctionCall) node.getParentNode();
+		wrapper.setMemberAccess(memberAccess);
+		memberAccess.setParentNode(wrapper);
+		wrapper.setFunctionCall(null);
+		visit(wrapper);
 	}
 
 	/** Find an enclosing class of this node.
@@ -472,84 +491,24 @@ public class ResolveVisitor extends VisitOnceVisitor {
 		List<OverloadCandidate> candidates = new ArrayList<>();
 		for (Declaration declaration : functions) {
 			if (declaration instanceof FunctionDeclaration) {
-				FunctionDeclaration funDecl = (FunctionDeclaration) declaration;
-				if (funDecl.getParameters().size() == arguments.size()) {
-					int score = 0;
-					int argIndex = 0;
-					for (VariableDeclaration param : funDecl.getParameters()) {
-						visitDoubleDispatched(param);
-						int typeDist = param.getType().getTypeDist(arguments.get(argIndex));
-						if ((typeDist < Integer.MAX_VALUE) && (score < Integer.MAX_VALUE)) {
-							score += typeDist;
-							argIndex++;
-						} else {
-							score = Integer.MAX_VALUE;
-							break;
-						}
-					}
-					if (score != Integer.MAX_VALUE) {
-						candidates.add(new OverloadCandidate(declaration, score));
-					}
-					// special case for functions without parameters
-				} else if ((arguments.size() == 0) && (funDecl.getParameters().size() == 1)
-				        && (funDecl.getParameters().get(0).getType() != null)
-				        && (funDecl.getParameters().get(0).getType().getIdentifier().getSymbol().equals("Tuple0"))) {
-					candidates.add(new OverloadCandidate(declaration, 0));
-				}
+				handleOverloadedFunction(arguments, declaration, candidates);
 			} else if (declaration instanceof VariableDeclaration) {
-				ClassDeclarationVariation typedecl =
-				        getClassDeclarationVariationFromTypeDecl(((VariableDeclaration) declaration).getType());
-				if (typedecl != null) {
-					if (typedecl.getConcreteGenericTypes().size() == 2) {
-						ClassDeclaration concreteParamType = typedecl.getConcreteGenericTypes().get(0);
-						List<ClassDeclaration> paramTypes;
-						if (TupleDeclarationFactory.isTuple(concreteParamType)) {
-							paramTypes = ((ClassDeclarationVariation) concreteParamType).getConcreteGenericTypes();
-						} else {
-							paramTypes = new ArrayList<>(1);
-							paramTypes.add(concreteParamType);
-						}
-						if (paramTypes.size() == arguments.size()) {
-							int score = 0;
-							int argIndex = 0;
-							for (ClassDeclaration genericType : paramTypes) {
-								int typeDist = genericType.getTypeDist(arguments.get(argIndex));
-								if ((typeDist < Integer.MAX_VALUE) && (score < Integer.MAX_VALUE)) {
-									score += typeDist;
-									argIndex++;
-								} else {
-									score = Integer.MAX_VALUE;
-									break;
-								}
-							}
-							if (score != Integer.MAX_VALUE) {
-								candidates.add(new OverloadCandidate(declaration, score));
-							}
-						}
-						// special case for functions without parameters
-						else if ((arguments.size() == 0) && (paramTypes.size() == 1)
-						        && (paramTypes.get(0).getIdentifier().getSymbol().equals("Tuple0"))) {
-							candidates.add(new OverloadCandidate(declaration, 0));
-						}
-					}
-				}
+				handleOverloadedVariable(arguments, declaration, candidates);
 			} else {
 				throw new RuntimeException("Invalid declaration type for overload resolution: '"
 				        + declaration.getIdentifier() + "'!");
 			}
 		}
+		Declaration result = null;
+		// find out the minimum type distance
 		int minScore = Integer.MAX_VALUE;
 		for (OverloadCandidate candidate : candidates) {
 			if (candidate.getScore() < minScore) {
 				minScore = candidate.getScore();
+				result = candidate.getDeclaration();
 			}
 		}
-		for (OverloadCandidate candidate : candidates) {
-			if (candidate.getScore() == minScore) {
-				return candidate.getDeclaration();
-			}
-		}
-		return null;
+		return result;
 	}
 
 	/** this is a helper method which finds out whether a typeDeclaration is a classdeclarationvariation or a subtype of
@@ -571,5 +530,83 @@ public class ResolveVisitor extends VisitOnceVisitor {
 			}
 		}
 		return null;
+	}
+
+	/** adds 'declaration' to 'candidates' if the signature of it matches 'arguments'
+	 *
+	 * @param arguments
+	 * @param declaration
+	 * @param candidates */
+	protected void handleOverloadedFunction(List<TypeDeclaration> arguments, Declaration declaration,
+	        List<OverloadCandidate> candidates) {
+		FunctionDeclaration funDecl = (FunctionDeclaration) declaration;
+		if (funDecl.getParameters().size() == arguments.size()) {
+			int score = 0;
+			int argIndex = 0;
+			for (VariableDeclaration param : funDecl.getParameters()) {
+				visitDoubleDispatched(param);
+				int typeDist = param.getType().getTypeDist(arguments.get(argIndex));
+				if ((typeDist < Integer.MAX_VALUE) && (score < Integer.MAX_VALUE)) {
+					score += typeDist;
+					argIndex++;
+				} else {
+					score = Integer.MAX_VALUE;
+					break;
+				}
+			}
+			if (score != Integer.MAX_VALUE) {
+				candidates.add(new OverloadCandidate(declaration, score));
+			}
+			// special case for functions without parameters
+		} else if ((arguments.size() == 0) && (funDecl.getParameters().size() == 1)
+		        && (funDecl.getParameters().get(0).getType() != null)
+		        && (funDecl.getParameters().get(0).getType().getIdentifier().getSymbol().equals("Tuple0"))) {
+			candidates.add(new OverloadCandidate(declaration, 0));
+		}
+	}
+
+	/** does the same as handleOverloadedFunction, but for function objects stored in variables
+	 *
+	 * @param arguments
+	 * @param declaration
+	 * @param candidates */
+	protected void handleOverloadedVariable(List<TypeDeclaration> arguments, Declaration declaration,
+	        List<OverloadCandidate> candidates) {
+		ClassDeclarationVariation typedecl =
+		        getClassDeclarationVariationFromTypeDecl(((VariableDeclaration) declaration).getType());
+		if (typedecl != null) {
+			if (typedecl.getConcreteGenericTypes().size() == 2) {
+				ClassDeclaration concreteParamType = typedecl.getConcreteGenericTypes().get(0);
+				List<ClassDeclaration> paramTypes;
+				if (TupleDeclarationFactory.isTuple(concreteParamType)) {
+					paramTypes = ((ClassDeclarationVariation) concreteParamType).getConcreteGenericTypes();
+				} else {
+					paramTypes = new ArrayList<>(1);
+					paramTypes.add(concreteParamType);
+				}
+				if (paramTypes.size() == arguments.size()) {
+					int score = 0;
+					int argIndex = 0;
+					for (ClassDeclaration genericType : paramTypes) {
+						int typeDist = genericType.getTypeDist(arguments.get(argIndex));
+						if ((typeDist < Integer.MAX_VALUE) && (score < Integer.MAX_VALUE)) {
+							score += typeDist;
+							argIndex++;
+						} else {
+							score = Integer.MAX_VALUE;
+							break;
+						}
+					}
+					if (score != Integer.MAX_VALUE) {
+						candidates.add(new OverloadCandidate(declaration, score));
+					}
+				}
+				// special case for functions without parameters
+				else if ((arguments.size() == 0) && (paramTypes.size() == 1)
+				        && (paramTypes.get(0).getIdentifier().getSymbol().equals("Tuple0"))) {
+					candidates.add(new OverloadCandidate(declaration, 0));
+				}
+			}
+		}
 	}
 }
