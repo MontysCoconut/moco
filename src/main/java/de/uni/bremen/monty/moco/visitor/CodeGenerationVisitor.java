@@ -97,6 +97,7 @@ public class CodeGenerationVisitor extends BaseVisitor {
 	public CodeGenerationVisitor() {
 		nameMangler = new NameMangler();
 		TypeConverter typeConverter = new TypeConverter(llvmIdentifierFactory, contextUtils.constant(), nameMangler);
+		nameMangler.setTypeConverter(typeConverter);
 		this.codeGenerator = new CodeGenerator(typeConverter, llvmIdentifierFactory, nameMangler);
 	}
 
@@ -119,7 +120,8 @@ public class CodeGenerationVisitor extends BaseVisitor {
 		List<LLVMIdentifier<? extends LLVMType>> llvmParameter = new ArrayList<>();
 
 		if (node.isMethod() || node.isInitializer()) {
-			ClassDeclaration typeDeclaration = node.getDefiningClass();
+			ClassDeclaration typeDeclaration =
+			        (ClassDeclaration) codeGenerator.mapAbstractGenericToConcreteIfApplicable(node.getDefiningClass());
 			LLVMType selfType = codeGenerator.mapToLLVMType(typeDeclaration);
 			LLVMIdentifier<LLVMType> selfReference = llvmIdentifierFactory.newLocal("self", selfType, false);
 			llvmParameter.add(selfReference);
@@ -203,6 +205,9 @@ public class CodeGenerationVisitor extends BaseVisitor {
 
 	@Override
 	public void visit(ClassDeclaration node) {
+		if (node instanceof ClassDeclarationVariation) {
+			codeGenerator.pushClassDeclarationVariation((ClassDeclarationVariation) node);
+		}
 		onEnterChildrenEachNode(node);
 		if (node.getAbstractGenericTypes().isEmpty() || node instanceof ClassDeclarationVariation) {
 			if (node != CoreClasses.voidType()) {
@@ -213,12 +218,13 @@ public class CodeGenerationVisitor extends BaseVisitor {
 			visitDoubleDispatched(node.getBlock());
 		} else {
 			for (ClassDeclarationVariation variation : node.getVariations()) {
-				node.setParentNode(variation);
 				visit(variation);
-				node.setParentNode(variation.getParentNode());
 			}
 		}
 		onExitChildrenEachNode(node);
+		if (node instanceof ClassDeclarationVariation) {
+			codeGenerator.popClassDeclarationVariation();
+		}
 	}
 
 	@Override
@@ -245,10 +251,14 @@ public class CodeGenerationVisitor extends BaseVisitor {
 
 		VariableDeclaration varDeclaration = (VariableDeclaration) node.getDeclaration();
 
+		TypeDeclaration type = node.getType();
+		if (type instanceof ClassDeclaration) {
+			type = codeGenerator.mapAbstractGenericToConcreteIfApplicable((ClassDeclaration) type);
+		}
+
 		LLVMIdentifier<LLVMType> llvmIdentifier;
 		if (varDeclaration.getIsGlobal()) {
-			llvmIdentifier =
-			        codeGenerator.resolveGlobalVarName(nameMangler.mangleVariable(varDeclaration), node.getType());
+			llvmIdentifier = codeGenerator.resolveGlobalVarName(nameMangler.mangleVariable(varDeclaration), type);
 		} else if (varDeclaration.isAttribute()) {
 			LLVMIdentifier<?> leftIdentifier = stack.pop();
 			llvmIdentifier =
@@ -256,25 +266,35 @@ public class CodeGenerationVisitor extends BaseVisitor {
 			                contextUtils.active(),
 			                (LLVMIdentifier<LLVMPointer<LLVMType>>) leftIdentifier,
 			                varDeclaration.getAttributeIndex(),
-			                node.getType(),
+			                type,
 			                !node.getLValue());
 		} else {
 			llvmIdentifier =
 			        codeGenerator.resolveLocalVarName(
 			                nameMangler.mangleVariable(varDeclaration),
-			                node.getType(),
+			                type,
 			                !varDeclaration.isParameter());
 		}
 		stack.push(llvmIdentifier);
 	}
 
+	/** this method finds out whether the given class is a generic class. If yes, it is replaced by its equivalent
+	 * ClassDeclarationVariation.
+	 *
+	 * @param type
+	 * @return */
+	private TypeDeclaration useClassVariationIfApplicable(TypeDeclaration type) {
+		if ((!(type instanceof ClassDeclarationVariation)) && (type instanceof ClassDeclaration)
+		        && (!((ClassDeclaration) type).getAbstractGenericTypes().isEmpty())) {
+			return codeGenerator.mapAbstractGenericToConcreteIfApplicable((ClassDeclaration) type);
+		}
+		return type;
+	}
+
 	@SuppressWarnings("unchecked")
 	@Override
 	public void visit(SelfExpression node) {
-		TypeDeclaration type = node.getType();
-		if (type.getParentNode() instanceof ClassDeclarationVariation) {
-			type = (TypeDeclaration) type.getParentNode();
-		}
+		TypeDeclaration type = useClassVariationIfApplicable(node.getType());
 		stack.push(codeGenerator.resolveLocalVarName("self", type, false));
 	}
 
@@ -468,10 +488,8 @@ public class CodeGenerationVisitor extends BaseVisitor {
 
 		FunctionDeclaration declaration = node.getDeclaration();
 
-		ClassDeclaration definingClass = declaration.getDefiningClass();
-		if (definingClass != null && definingClass.getParentNode() instanceof ClassDeclarationVariation) {
-			definingClass = (ClassDeclaration) definingClass.getParentNode();
-		}
+		ClassDeclaration definingClass =
+		        (ClassDeclaration) useClassVariationIfApplicable(declaration.getDefiningClass());
 
 		List<ClassDeclaration> treatSpecial =
 		        Arrays.asList(
@@ -549,40 +567,42 @@ public class CodeGenerationVisitor extends BaseVisitor {
 
 	@Override
 	public void visit(FunctionDeclaration node) {
+		TypeDeclaration returnType = node.getReturnType();
+		if (returnType instanceof ClassDeclaration) {
+			codeGenerator.mapAbstractGenericToConcreteIfApplicable((ClassDeclaration) returnType);
+		}
 		if (node.isAbstract()) {
 			openNewFunctionScope();
-			if ((node.getReturnType() == null) || (node.getReturnType() == CoreClasses.voidType())) {
+			if ((returnType == null) || (returnType == CoreClasses.voidType())) {
 				addFunction(node, CoreClasses.voidType());
 				codeGenerator.returnValue(
 				        contextUtils.active(),
 				        (LLVMIdentifier<LLVMType>) (LLVMIdentifier<?>) llvmIdentifierFactory.voidId(),
 				        CoreClasses.voidType());
 			} else {
-				addFunction(node, node.getReturnType());
+				addFunction(node, returnType);
 				codeGenerator.returnValue(
 				        contextUtils.active(),
-				        (LLVMIdentifier<LLVMType>) (LLVMIdentifier<?>) llvmIdentifierFactory.constantNull((LLVMPointer) codeGenerator.mapToLLVMType(node.getReturnType())),
-				        node.getReturnType());
+				        (LLVMIdentifier<LLVMType>) (LLVMIdentifier<?>) llvmIdentifierFactory.constantNull((LLVMPointer) codeGenerator.mapToLLVMType(returnType)),
+				        returnType);
 			}
 			closeFunctionContext();
 		} else {
 			if (node.isFunction()) {
 				openNewFunctionScope();
 				if (isNative(node)) {
-					addNativeFunction(node, node.getReturnType());
+					addNativeFunction(node, returnType);
 				} else {
-					addFunction(node, node.getReturnType());
+					addFunction(node, returnType);
 					visitDoubleDispatched(node.getBody());
 				}
 				closeFunctionContext();
 			} else {
 				openNewFunctionScope();
 				if (isNative(node) && !node.isInitializer()) {
-					// addNativeFunction(node, CoreClasses.voidType());
-					addNativeFunction(node, node.getReturnType());
+					addNativeFunction(node, returnType);
 				} else {
-					// addFunction(node, CoreClasses.voidType());
-					addFunction(node, node.getReturnType());
+					addFunction(node, returnType);
 
 					visitDoubleDispatched(node.getBody());
 					if (node.isInitializer()) {
@@ -601,15 +621,14 @@ public class CodeGenerationVisitor extends BaseVisitor {
 	public void visit(ReturnStatement node) {
 		super.visit(node);
 		if (node.getParameter() != null) {
-			ASTNode parent = node;
-			while (!(parent instanceof FunctionDeclaration)) {
-				parent = parent.getParentNode();
-			}
+			ASTNode parent = node.getParentNodeByType(FunctionDeclaration.class);
 			LLVMIdentifier<LLVMType> returnValue = stack.pop();
-			codeGenerator.returnValue(
-			        contextUtils.active(),
-			        returnValue,
-			        ((FunctionDeclaration) parent).getReturnType());
+			TypeDeclaration returnType = ((FunctionDeclaration) parent).getReturnType();
+			if (returnType instanceof ClassDeclaration) {
+				returnType = codeGenerator.mapAbstractGenericToConcreteIfApplicable((ClassDeclaration) returnType);
+			}
+
+			codeGenerator.returnValue(contextUtils.active(), returnValue, returnType);
 		} else {
 			codeGenerator.returnValue(
 			        contextUtils.active(),

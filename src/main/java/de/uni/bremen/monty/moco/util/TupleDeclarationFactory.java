@@ -67,7 +67,7 @@ public class TupleDeclarationFactory {
 		if (type == null) {
 			return;
 		}
-		String str = type.toString();
+		String str = type.getSymbol();
 		if (str.startsWith("Tuple")) {
 			String number = str.substring(5);
 			try {

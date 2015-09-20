@@ -40,6 +40,7 @@ package de.uni.bremen.monty.moco.codegeneration;
 
 import de.uni.bremen.monty.moco.ast.ASTNode;
 import de.uni.bremen.monty.moco.ast.CoreClasses;
+import de.uni.bremen.monty.moco.ast.declaration.ClassDeclarationVariation;
 import de.uni.bremen.monty.moco.ast.expression.literal.StringLiteral;
 import de.uni.bremen.monty.moco.ast.declaration.ClassDeclaration;
 import de.uni.bremen.monty.moco.ast.declaration.FunctionDeclaration;
@@ -188,7 +189,10 @@ public class CodeGenerator {
 	private LLVMIdentifier<LLVMPointer<LLVMFunctionType>> getFunctionPointer(CodeContext c,
 	        LLVMIdentifier<LLVMPointer<LLVMType>> selfReference, FunctionDeclaration declaration) {
 		LLVMIdentifier<LLVMPointer<LLVMType>> vmtPointer =
-		        getVMTPointer(c, selfReference, declaration.getDefiningClass());
+		        getVMTPointer(
+		                c,
+		                selfReference,
+		                (ClassDeclaration) mapAbstractGenericToConcreteIfApplicable(declaration.getDefiningClass()));
 
 		LLVMPointer<LLVMFunctionType> functionType = mapToLLVMType(declaration);
 		LLVMIdentifier<LLVMPointer<LLVMFunctionType>> functionPointer = llvmIdentifierFactory.newLocal(functionType);
@@ -575,5 +579,21 @@ public class CodeGenerator {
 
 		c.load(sourcePointer, targetPointer);
 		return targetPointer;
+	}
+
+	public void pushClassDeclarationVariation(ClassDeclarationVariation var) {
+		typeConverter.pushClassDeclarationVariation(var);
+	}
+
+	public ClassDeclarationVariation getCurrentClassDeclarationVariation() {
+		return typeConverter.getCurrentClassDeclarationVariation();
+	}
+
+	public void popClassDeclarationVariation() {
+		typeConverter.popClassDeclarationVariation();
+	}
+
+	public TypeDeclaration mapAbstractGenericToConcreteIfApplicable(ClassDeclaration classDecl) {
+		return typeConverter.mapAbstractGenericToConcreteIfApplicable(classDecl);
 	}
 }

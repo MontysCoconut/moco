@@ -225,13 +225,7 @@ public class FunctionDeclaration extends TypeDeclaration {
 
 	public ClassDeclaration getDefiningClass() {
 		if (isMethod() || isInitializer()) {
-			ASTNode parentNode = getParentNode().getParentNode();
-
-			if (parentNode.getParentNode() instanceof ClassDeclarationVariation) {
-				parentNode = parentNode.getParentNode();
-			}
-
-			return (ClassDeclaration) parentNode;
+			return (ClassDeclaration) getParentNodeByType(ClassDeclaration.class);
 		}
 		return null;
 	}

@@ -31,12 +31,14 @@ public class AbstractGenericType extends TypeDeclaration {
 
 	}
 
-	@Override
-	public void setParentNode(ASTNode parentNode) {
-		super.setParentNode(parentNode);
-	}
-
 	public ClassDeclaration getDefinedIn() {
 		return definedIn;
+	}
+
+	public boolean equals(Object other) {
+		if (other instanceof AbstractGenericType) {
+			return ((AbstractGenericType) other).getIdentifier().equals(getIdentifier());
+		}
+		return false;
 	}
 }
