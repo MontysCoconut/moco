@@ -1,0 +1,39 @@
+for i in Range(0,5):
+    print(i)
+    print(" ")
+print("\n")
+
+for i in Range(13,27):
+    print(i)
+    print(" ")
+print("\n")
+
+
+class Week inherits Iterator<String>:
+    - Int dayNo := 0
+
+    + Bool hasNext():
+        return self.dayNo < 7
+
+    + String getNext():
+        String dayname
+        if self.dayNo = 0:
+            dayname := "Monday"
+        elif self.dayNo = 1:
+            dayname := "Tuesday"
+        elif self.dayNo = 2:
+            dayname := "Wednesday"
+        elif self.dayNo = 3:
+            dayname := "Thursday"
+        elif self.dayNo = 4:
+            dayname := "Friday"
+        elif self.dayNo = 5:
+            dayname := "Saturday"
+        else:
+            dayname := "Sunday"
+        self.dayNo += 1
+        return dayname
+
+for day in Week():
+    print("Today is ")
+    println(day)
