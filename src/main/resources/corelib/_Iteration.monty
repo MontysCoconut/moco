@@ -1,0 +1,28 @@
+abstract class Iterator<Type> inherits Iterable<Type>:
+    + abstract Type getNext()
+    + abstract Bool hasNext()
+    + Iterator<Type> getIterator():
+        return self
+
+
+abstract class Iterable<Type>:
+    + abstract Iterator<Type> getIterator()
+
+
+class Range inherits Iterator<Int>:
+    - Int current
+    - Int max
+
+    + initializer(Int start, Int end):
+        self.current := start
+        self.max := end
+
+    + initializer(Int end):
+        self.initializer(0, end)
+
+    + Int getNext():
+        self.current += 1
+        return self.current -1
+
+    + Bool hasNext():
+        return self.current != self.max

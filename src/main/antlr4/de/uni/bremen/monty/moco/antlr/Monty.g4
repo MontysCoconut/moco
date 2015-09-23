@@ -100,6 +100,7 @@ statementBlock
 
 statement
   : whileStatement                                                  #whileStm
+  | forStatement                                                    #forStm
   | ifStatement                                                     #ifStm
   | tryStatement                                                    #tryStm
   | declaration                                                     #declStm
@@ -117,6 +118,11 @@ statement
 /* while loop: The expression must be a condition (i.e. Boolean expression). */
 whileStatement
   : 'while' expression ':' EndOfLine statementBlock
+  ;
+
+/* for loop: The expression must be of type Iterable<T>. */
+forStatement
+  : 'for' Identifier 'in' expression ':' EndOfLine statementBlock
   ;
 
 ifStatement

@@ -157,6 +157,11 @@ public class CodeGenerationVisitor extends BaseVisitor {
 		}
 		while (node.getParentNode() != null) {
 			node = node.getParentNode();
+			if (node instanceof ModuleDeclaration) {
+				if (!((ModuleDeclaration) node).isNative()) {
+					return false;
+				}
+			}
 			if (node instanceof Package) {
 				if (((Package) node).isNativePackage()) {
 					return true;

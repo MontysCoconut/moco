@@ -485,6 +485,41 @@ public class ASTBuilder extends MontyBaseVisitor<ASTNode> {
 	}
 
 	@Override
+	public ASTNode visitForStatement(ForStatementContext ctx) {
+		Identifier ident = new Identifier(getText(ctx.Identifier()));
+		Position pos = position(ctx.getStart());
+
+		// get the iterator object
+		Expression iterableExpression =
+		        new MemberAccess(pos, (Expression) visit(ctx.expression()), new FunctionCall(pos,
+		                new ResolvableIdentifier("getIterator"), new ArrayList<Expression>()));
+		ResolvableIdentifier iterableIdentifier = TmpIdentifierFactory.getUniqueIdentifier();
+		VariableDeclaration iterableDeclaration = new VariableDeclaration(pos, iterableIdentifier, iterableExpression);
+		Assignment iterableAssignment =
+		        new Assignment(pos, new VariableAccess(pos, iterableIdentifier), iterableExpression);
+		// add the declaration and the assignment to the current block
+		currentBlocks.peek().addDeclaration(iterableDeclaration);
+		currentBlocks.peek().addStatement(iterableAssignment);
+
+		// the condition for the generated while loop
+		Expression condition =
+		        new MemberAccess(pos, new VariableAccess(pos, iterableIdentifier), new FunctionCall(pos,
+		                new ResolvableIdentifier("hasNext"), new ArrayList<Expression>()));
+
+		// add the indexing variable to the loop's body
+		Block body = (Block) visit(ctx.statementBlock());
+		Expression callGetNext =
+		        new MemberAccess(pos, new VariableAccess(pos, iterableIdentifier), new FunctionCall(pos,
+		                new ResolvableIdentifier("getNext"), new ArrayList<Expression>()));
+		body.addDeclaration(new VariableDeclaration(pos, ident, callGetNext));
+		body.getStatements().add(
+		        0,
+		        new Assignment(pos, new VariableAccess(pos, ResolvableIdentifier.convert(ident)), callGetNext));
+		WhileLoop loop = new WhileLoop(position(ctx.getStart()), condition, body);
+		return loop;
+	}
+
+	@Override
 	public ASTNode visitWhileStatement(WhileStatementContext ctx) {
 		ASTNode expr = visit(ctx.expression());
 		WhileLoop loop =
