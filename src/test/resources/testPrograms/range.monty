@@ -1,0 +1,6 @@
+
+for i in [11..5]:
+    println(i)
+
+for i in [5..11]:
+    println(i)

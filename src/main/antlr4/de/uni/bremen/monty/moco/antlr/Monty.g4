@@ -260,7 +260,12 @@ literal
   | StringLiteral
   | BooleanLiteral
   | arrayLiteral
+  | rangeLiteral
   | tupleLiteral
+  ;
+
+rangeLiteral
+  : Lbracket expression '..' expression Rbracket
   ;
 
 arrayLiteral

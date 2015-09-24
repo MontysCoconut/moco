@@ -12,17 +12,23 @@ abstract class Iterable<Type>:
 class Range inherits Iterator<Int>:
     - Int current
     - Int max
+    - Int direction
 
     + initializer(Int start, Int end):
         self.current := start
         self.max := end
 
+        if start <= end:
+            self.direction := 1
+        else:
+            self.direction := -1
+
     + initializer(Int end):
         self.initializer(0, end)
 
     + Int getNext():
-        self.current += 1
-        return self.current -1
+        self.current += self.direction
+        return self.current - self.direction
 
     + Bool hasNext():
         return self.current != self.max

@@ -746,6 +746,12 @@ public class ASTBuilder extends MontyBaseVisitor<ASTNode> {
 				elements.add((Expression) visit(eContext));
 			}
 			return new ArrayLiteral(position(ctx.getStart()), elements);
+		} else if (ctx.rangeLiteral() != null) {
+			ArrayList<Expression> parameters = new ArrayList<>();
+			for (ExpressionContext eContext : ctx.rangeLiteral().expression()) {
+				parameters.add((Expression) visit(eContext));
+			}
+			return new FunctionCall(position(ctx.getStart()), new ResolvableIdentifier("Range"), parameters);
 		} else if (ctx.tupleLiteral() != null) {
 			ArrayList<Expression> elements = new ArrayList<>();
 			for (ExpressionContext eContext : ctx.tupleLiteral().expression()) {
