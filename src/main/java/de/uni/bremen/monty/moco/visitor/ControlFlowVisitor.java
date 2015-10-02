@@ -43,13 +43,8 @@ import de.uni.bremen.monty.moco.ast.Block;
 import de.uni.bremen.monty.moco.ast.Package;
 import de.uni.bremen.monty.moco.ast.declaration.Declaration;
 import de.uni.bremen.monty.moco.ast.declaration.FunctionDeclaration;
-import de.uni.bremen.monty.moco.ast.statement.BreakStatement;
-import de.uni.bremen.monty.moco.ast.statement.ConditionalStatement;
-import de.uni.bremen.monty.moco.ast.statement.ContinueStatement;
-import de.uni.bremen.monty.moco.ast.statement.ReturnStatement;
-import de.uni.bremen.monty.moco.ast.statement.SkipStatement;
-import de.uni.bremen.monty.moco.ast.statement.Statement;
-import de.uni.bremen.monty.moco.ast.statement.WhileLoop;
+import de.uni.bremen.monty.moco.ast.declaration.GeneratorFunctionDeclaration;
+import de.uni.bremen.monty.moco.ast.statement.*;
 import de.uni.bremen.monty.moco.exception.InvalidControlFlowException;
 
 /** This visitor must traverse the entire AST to validate the intended AST-structure. */
@@ -161,12 +156,17 @@ public class ControlFlowVisitor extends BaseVisitor {
 	public void visit(ReturnStatement node) {
 		super.visit(node);
 		needsReturnStatement = false;
-		for (ASTNode currentNode = node; currentNode != null; currentNode = currentNode.getParentNode()) {
-			if (currentNode instanceof FunctionDeclaration) {
-				return;
-			}
-		}
 
+		FunctionDeclaration parentNode = (FunctionDeclaration) node.getParentNodeByType(FunctionDeclaration.class);
+		if (parentNode != null) {
+			if (node instanceof YieldStatement) {
+				if (!(parentNode instanceof GeneratorFunctionDeclaration)) {
+					throw new InvalidControlFlowException(node,
+					        "yield statements may only occur inside generator declarations.");
+				}
+			}
+			return;
+		}
 		throw new InvalidControlFlowException(node, "Unable to find enclosing function declaration.");
 	}
 }

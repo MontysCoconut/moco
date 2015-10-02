@@ -50,10 +50,7 @@ import de.uni.bremen.monty.moco.codegeneration.context.CodeContext;
 import de.uni.bremen.monty.moco.codegeneration.context.ContextUtils;
 import de.uni.bremen.monty.moco.codegeneration.identifier.LLVMIdentifier;
 import de.uni.bremen.monty.moco.codegeneration.identifier.LLVMIdentifierFactory;
-import de.uni.bremen.monty.moco.codegeneration.types.LLVMPointer;
-import de.uni.bremen.monty.moco.codegeneration.types.LLVMStructType;
-import de.uni.bremen.monty.moco.codegeneration.types.LLVMType;
-import de.uni.bremen.monty.moco.codegeneration.types.TypeConverter;
+import de.uni.bremen.monty.moco.codegeneration.types.*;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -143,6 +140,54 @@ public class CodeGenerationVisitor extends BaseVisitor {
 		List<LLVMIdentifier<? extends LLVMType>> llvmParameter = buildLLVMParameter(node);
 		String name = nameMangler.mangleFunction(node);
 		codeGenerator.addFunction(contextUtils.active(), returnType, llvmParameter, name);
+
+		if (node instanceof GeneratorFunctionDeclaration) {
+			addGeneratorJumpHeader((GeneratorFunctionDeclaration) node);
+		}
+	}
+
+	private void addGeneratorJumpHeader(GeneratorFunctionDeclaration node) {
+		TypeDeclaration selfType = useClassVariationIfApplicable(node.getDefiningClass());
+		LLVMIdentifier<LLVMPointer<LLVMType>> self = codeGenerator.resolveLocalVarName("self", selfType, false);
+
+		LLVMIdentifier<LLVMType> pointervar =
+		        codeGenerator.accessGeneratorJumpPointer(contextUtils.active(), self, node.getDefiningClass(), 0, false); // no
+		                                                                                                                  // LValue
+
+		// get the actual attribute
+		LLVMType jumpPrtType = LLVMTypeFactory.pointer(LLVMTypeFactory.int8());
+		LLVMIdentifier<LLVMType> pointercontentvar = llvmIdentifierFactory.newLocal(jumpPrtType, false);
+		contextUtils.active().load(llvmIdentifierFactory.pointerTo(pointervar), pointercontentvar);
+
+		// get all possible target labels:
+		String labels = "label %startGenerator";
+		for (int i = 0; i < node.getYieldStatements().size(); i++) {
+			labels += ", label %yield" + i;
+		}
+		// jump to the label which is stored in that attribute
+		contextUtils.active().appendLine("indirectbr " + pointercontentvar + ", [ " + labels + " ]");
+		contextUtils.active().label("startGenerator");
+	}
+
+	private void setGeneratorLabel(ClassDeclaration classDecl, String label) {
+		TypeDeclaration selfType = useClassVariationIfApplicable(classDecl);
+		LLVMIdentifier<LLVMPointer<LLVMType>> self = codeGenerator.resolveLocalVarName("self", selfType, false);
+
+		LLVMIdentifier<LLVMType> pointervar =
+		        codeGenerator.accessGeneratorJumpPointer(contextUtils.active(), self, classDecl, 0, true); // used as
+		                                                                                                   // lvalue
+		FunctionDeclaration inFunction = null;
+		for (FunctionDeclaration fun : classDecl.getMethods()) {
+			if (fun.getIdentifier().getSymbol().equals("getNext")) {
+				inFunction = fun;
+				break;
+			}
+		}
+
+		String funName = nameMangler.mangleFunction(inFunction);
+		contextUtils.active().appendLine(
+		        "store i8* blockaddress(@" + funName + ", %" + label + "), "
+		                + llvmIdentifierFactory.pointerTo(pointervar));
 	}
 
 	private void addNativeFunction(FunctionDeclaration node, TypeDeclaration returnType) {
@@ -241,7 +286,9 @@ public class CodeGenerationVisitor extends BaseVisitor {
 				        contextUtils.constant(),
 				        nameMangler.mangleVariable(node),
 				        node.getType());
-			} else {
+			} else if (!(node.getParentNodeByType(FunctionDeclaration.class) instanceof GeneratorFunctionDeclaration)) {
+				// only do sth. if the enclosing function is not a generator function.
+				// if it is, the declaration is already made somewhere else...
 				codeGenerator.declareLocalVariable(
 				        contextUtils.active(),
 				        nameMangler.mangleVariable(node),
@@ -261,9 +308,26 @@ public class CodeGenerationVisitor extends BaseVisitor {
 			type = codeGenerator.mapAbstractGenericToConcreteIfApplicable((ClassDeclaration) type);
 		}
 
+		FunctionDeclaration functionParent =
+		        (FunctionDeclaration) varDeclaration.getParentNodeByType(FunctionDeclaration.class);
+		GeneratorFunctionDeclaration generatorParent = null;
+		if (functionParent instanceof GeneratorFunctionDeclaration) {
+			generatorParent =
+			        (GeneratorFunctionDeclaration) varDeclaration.getParentNodeByType(GeneratorFunctionDeclaration.class);
+		}
+
 		LLVMIdentifier<LLVMType> llvmIdentifier;
 		if (varDeclaration.getIsGlobal()) {
 			llvmIdentifier = codeGenerator.resolveGlobalVarName(nameMangler.mangleVariable(varDeclaration), type);
+		} else if (generatorParent != null) {
+			llvmIdentifier =
+			        codeGenerator.accessContextMember(
+			                contextUtils.active(),
+			                (ClassDeclaration) useClassVariationIfApplicable(generatorParent.getDefiningClass()),
+			                varDeclaration,
+			                node,
+			                type);
+
 		} else if (varDeclaration.isAttribute()) {
 			LLVMIdentifier<?> leftIdentifier = stack.pop();
 			llvmIdentifier =
@@ -611,6 +675,9 @@ public class CodeGenerationVisitor extends BaseVisitor {
 
 					visitDoubleDispatched(node.getBody());
 					if (node.isInitializer()) {
+						if (node.getDefiningClass().isGenerator()) {
+							setGeneratorLabel(node.getDefiningClass(), "startGenerator");
+						}
 						codeGenerator.returnValue(
 						        contextUtils.active(),
 						        (LLVMIdentifier<LLVMType>) (LLVMIdentifier<?>) llvmIdentifierFactory.voidId(),
@@ -625,6 +692,12 @@ public class CodeGenerationVisitor extends BaseVisitor {
 	@Override
 	public void visit(ReturnStatement node) {
 		super.visit(node);
+		// if we have a yield statement here, we have to set the generator jump destination to this label
+		if (node instanceof YieldStatement) {
+			setGeneratorLabel((ClassDeclaration) node.getParentNodeByType(ClassDeclaration.class), "yield"
+			        + ((YieldStatement) node).getYieldStatementIndex());
+		}
+
 		if (node.getParameter() != null) {
 			ASTNode parent = node.getParentNodeByType(FunctionDeclaration.class);
 			LLVMIdentifier<LLVMType> returnValue = stack.pop();
@@ -639,6 +712,11 @@ public class CodeGenerationVisitor extends BaseVisitor {
 			        contextUtils.active(),
 			        (LLVMIdentifier<LLVMType>) (LLVMIdentifier<?>) llvmIdentifierFactory.voidId(),
 			        CoreClasses.voidType());
+		}
+		// if we have a yield statement here, we have to add a label to jump to
+		if (node instanceof YieldStatement) {
+			String yieldLabel = "yield" + ((YieldStatement) node).getYieldStatementIndex();
+			contextUtils.active().label(yieldLabel);
 		}
 	}
 

@@ -17,6 +17,7 @@ importLine
 declaration
   : independentDeclaration
   | classDeclaration
+  | generatorDeclaration
   ;
 
 independentDeclaration
@@ -79,6 +80,13 @@ functionDeclaration
     statementBlock
   ;
 
+generatorDeclaration
+    : 'generator' type
+      ClassIdentifier
+      Lparenthesis parameterList? Rparenthesis ':' EndOfLine
+      statementBlock
+    ;
+
 defaultParameter
   : variableDeclaration ':=' expression
   ;
@@ -108,6 +116,7 @@ statement
   | assignment                                                      #assignStm
   | compoundAssignment                                              #compoundAssign
   | command='return' expression? EndOfLine                          #returnStm
+  | command='yield' expression? EndOfLine                           #yieldStm
   | command='raise' expression? EndOfLine                           #raiseStm
   | command='skip' EndOfLine                                        #skipStm
   | command='break' EndOfLine                                       #breakStm

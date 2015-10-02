@@ -45,6 +45,7 @@ import de.uni.bremen.monty.moco.ast.expression.literal.*;
 import de.uni.bremen.monty.moco.ast.statement.ReturnStatement;
 import de.uni.bremen.monty.moco.ast.statement.Statement;
 import de.uni.bremen.monty.moco.ast.statement.UnpackAssignment;
+import de.uni.bremen.monty.moco.ast.statement.YieldStatement;
 import de.uni.bremen.monty.moco.exception.*;
 import de.uni.bremen.monty.moco.util.OverloadCandidate;
 import de.uni.bremen.monty.moco.util.TupleDeclarationFactory;
@@ -138,6 +139,12 @@ public class ResolveVisitor extends VisitOnceVisitor {
 			type = scope.resolveType(node.getTypeIdentifier());
 		}
 		node.setType(type);
+
+		// variable declarations in a generator must be registered
+		ASTNode generatorFun = node.getParentNodeByType(FunctionDeclaration.class);
+		if (generatorFun instanceof GeneratorFunctionDeclaration) {
+			((GeneratorFunctionDeclaration) generatorFun).addVariableDeclaration(node);
+		}
 	}
 
 	/** {@inheritDoc} */
@@ -217,6 +224,9 @@ public class ResolveVisitor extends VisitOnceVisitor {
 	/** {@inheritDoc} */
 	@Override
 	public void visit(CastExpression node) {
+		if (node.typeParameterMustBeInferred()) {
+			node.inferTypeParameter();
+		}
 		super.visit(node);
 		node.setType(node.getScope().resolveType(node.getCastIdentifier()));
 	}
@@ -606,6 +616,19 @@ public class ResolveVisitor extends VisitOnceVisitor {
 				        && (paramTypes.get(0).getIdentifier().getSymbol().equals("Tuple0"))) {
 					candidates.add(new OverloadCandidate(declaration, 0));
 				}
+			}
+		}
+	}
+
+	/** {@inheritDoc} */
+	@Override
+	public void visit(ReturnStatement node) {
+		super.visit(node);
+
+		if (node instanceof YieldStatement) {
+			FunctionDeclaration parentNode = (FunctionDeclaration) node.getParentNodeByType(FunctionDeclaration.class);
+			if (parentNode instanceof GeneratorFunctionDeclaration) {
+				((GeneratorFunctionDeclaration) parentNode).addYieldStatement((YieldStatement) node);
 			}
 		}
 	}

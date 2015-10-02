@@ -387,4 +387,13 @@ public class FunctionDeclaration extends TypeDeclaration {
 		}
 		getBody().addStatement(newRet);
 	}
+
+	public String toString() {
+		String params = "";
+		for (VariableDeclaration param : parameters) {
+			params += param.getTypeIdentifier().toString();
+			params += " " + param.getIdentifier().toString() + ", ";
+		}
+		return String.format("%s(%s)", getIdentifier().toString(), params);
+	}
 }

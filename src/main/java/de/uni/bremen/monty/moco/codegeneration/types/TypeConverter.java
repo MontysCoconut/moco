@@ -159,6 +159,13 @@ public class TypeConverter {
 			}
 		}
 
+		if (classDecl.isGenerator()) {
+			// create the structure
+			LLVMType contextStruct = addGeneratorContext(classDecl, mangledNodeName);
+			// add context struct as the last index to the class declaration
+			llvmClassTypeDeclarations.add(contextStruct);
+		}
+
 		for (FunctionDeclaration function : classDecl.getVirtualMethodTable()) {
 			if (!function.isInitializer()) {
 				LLVMType signature = mapToLLVMType(function);
@@ -180,6 +187,31 @@ public class TypeConverter {
 		        llvmVMTDataIdentifier,
 		        true,
 		        llvmIdentifierFactory.constant(llvmVMTType, llvmVMTDataInitializer));
+	}
+
+	protected LLVMType addGeneratorContext(ClassDeclaration classDecl, String mangledNodeName) {
+		GeneratorFunctionDeclaration inFunction = null;
+		for (FunctionDeclaration fun : classDecl.getMethods()) {
+			if (fun.getIdentifier().getSymbol().equals("getNext")) {
+				inFunction = (GeneratorFunctionDeclaration) fun;
+				break;
+			}
+		}
+
+		// declaration types inside the struct
+		List<LLVMType> llvmStructTypeDeclarations = new ArrayList<>();
+
+		// add state i8 pointer to context structure
+		llvmStructTypeDeclarations.add(LLVMTypeFactory.pointer(LLVMTypeFactory.int8()));
+		// add the variable declarations inside the generator to the struct
+		for (VariableDeclaration decl : inFunction.getVariableDeclarations()) {
+			llvmStructTypeDeclarations.add(mapToLLVMType(decl.getType()));
+		}
+
+		LLVMStructType llvmStructType = struct(mangledNodeName + "_context");
+		constantContext.type(llvmStructType, llvmStructTypeDeclarations);
+
+		return llvmStructType;
 	}
 
 	public LLVMPointer<LLVMStructType> mapToLLVMType(ClassDeclaration type) {

@@ -81,6 +81,8 @@ public class ClassDeclaration extends TypeDeclaration {
 
 	private boolean abstractClass = false;
 
+	private boolean _isGenerator = false;
+
 	/** Constructor.
 	 *
 	 * @param position
@@ -261,5 +263,13 @@ public class ClassDeclaration extends TypeDeclaration {
 
 	public void setWrappedFunction(FunctionDeclaration functionWrapper) {
 		this.wrappedFunction = functionWrapper;
+	}
+
+	public boolean isGenerator() {
+		return _isGenerator;
+	}
+
+	public void setGenerator(boolean gen) {
+		_isGenerator = gen;
 	}
 }
