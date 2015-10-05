@@ -97,7 +97,7 @@ public class ResolvableIdentifier extends Identifier {
 		if (getGenericTypes().size() > 0) {
 			generics = "<";
 			for (ResolvableIdentifier generic : getGenericTypes()) {
-				generics += generic.toString() + ", ";
+				generics += generic != null ? generic.toString() + ", " : "?, ";
 			}
 			generics += ">";
 		}

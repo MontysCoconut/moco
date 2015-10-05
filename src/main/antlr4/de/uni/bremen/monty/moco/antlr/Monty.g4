@@ -199,6 +199,7 @@ expression
   | left=expression orOperator right=expression
   | expr=expression asOperator type
   | expr=expression isOperator ClassIdentifier
+  | listComprehension
   ;
 
 functionExpression
@@ -283,4 +284,16 @@ arrayLiteral
 
 tupleLiteral
   : Lparenthesis (expression (',' expression)+)? Rparenthesis
+  ;
+
+listComprehension
+  : Lbracket type expression '|' listGenerator ( ',' listGenerator)? Rbracket
+  ;
+
+listGenerator
+  : Identifier 'in' expression listFilter?
+  ;
+
+listFilter
+  : 'if' expression
   ;
