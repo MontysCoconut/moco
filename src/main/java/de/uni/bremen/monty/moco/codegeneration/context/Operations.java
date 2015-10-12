@@ -167,6 +167,11 @@ public class Operations {
 		        CoreClasses.stringType());
 	}
 
+	@Native("M.Object.C.Object.F._eq_$M.Bool.C.Bool$M.Object.C.Object")
+	public LLVMIdentifier<LLVMBool> objEq(CodeContext c, LLVMIdentifier<LLVMInt> arg1, LLVMIdentifier<LLVMInt> arg2) {
+		return c.icmp(IcmpOperand.eq, arg1, arg2, llvmIdentifierFactory.newLocal(int1(), false));
+	}
+
 	@Native("M.Int.C.Int.F._add_$M.Int.C.Int$M.Int.C.Int")
 	public LLVMIdentifier<LLVMInt> add(CodeContext c, LLVMIdentifier<LLVMInt> arg1, LLVMIdentifier<LLVMInt> arg2) {
 		return c.binaryOperation("add", arg1, arg2, llvmIdentifierFactory.newLocal(arg1.getType(), false));
