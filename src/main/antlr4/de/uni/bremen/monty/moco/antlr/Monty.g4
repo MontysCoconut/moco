@@ -122,6 +122,7 @@ statement
   | command='break' EndOfLine                                       #breakStm
   | functionCall EndOfLine                                          #funcCallStm
   | left=expression operator='.' right=functionCall EndOfLine       #MemberAccessStmt
+  | caseStatement                                                   #caseStm
   ;
 
 /* while loop: The expression must be a condition (i.e. Boolean expression). */
@@ -296,4 +297,37 @@ listGenerator
 
 listFilter
   : 'if' expression
+  ;
+
+
+/* pattern matching */
+
+caseStatement
+  : 'case' expression 'of' ':' EndOfLine caseBlock
+  ;
+
+caseBlock
+  : Indent
+      (pattern ':' EndOfLine statementBlock)+
+    Dedent
+  ;
+
+pattern
+  : typedPattern
+  | compoundPattern
+  | '_'
+  | expression
+  ;
+
+typedPattern
+  : type Identifier
+  | type '_'
+  ;
+
+compoundPattern
+  : type? '(' parameterList? ')'
+  ;
+
+patternList
+  : pattern (',' pattern )*
   ;

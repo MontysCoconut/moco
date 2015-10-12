@@ -1040,4 +1040,76 @@ public class ASTBuilder extends MontyBaseVisitor<ASTNode> {
 		return new WrappedFunctionCall(pos, new FunctionCall(pos,
 		        ResolvableIdentifier.convert(generator.getIdentifier()), new ArrayList<Expression>()));
 	}
+
+	/* ---- Pattern matching ---- */
+
+	@Override
+	public ASTNode visitCaseStatement(CaseStatementContext ctx) {
+		// extract the expression and make a new temporary variable for it...
+		Expression subject = (Expression) visit(ctx.expression());
+		ResolvableIdentifier subjectIdent = TmpIdentifierFactory.getUniqueIdentifier();
+		VariableDeclaration subjectVar = new VariableDeclaration(subject.getPosition(), subjectIdent, subject);
+		Assignment subjectAss =
+		        new Assignment(subject.getPosition(), new VariableAccess(subject.getPosition(), subjectIdent), subject);
+		currentBlocks.peek().addDeclaration(subjectVar);
+		currentBlocks.peek().addStatement(subjectAss);
+
+		// convert the different cases into an if-else-orgy
+		List<PatternContext> patterns = ctx.caseBlock().pattern();
+		List<StatementBlockContext> blocks = ctx.caseBlock().statementBlock();
+
+		return createPatternIfElifs(patterns, blocks, subjectIdent);
+	}
+
+	public Statement createPatternIfElifs(List<PatternContext> patterns, List<StatementBlockContext> blocks,
+	        ResolvableIdentifier subject) {
+		if (patterns.size() > 0) {
+			Position patternPos = position(patterns.get(0).getStart());
+			Block stmBlock = (Block) visit(blocks.get(0));
+			Expression condition = handlePattern(patterns.get(0), subject, stmBlock);
+
+			Block elseBlock = new Block(patternPos);
+			Statement stm = new ConditionalStatement(patternPos, condition, stmBlock, elseBlock);
+			patterns.remove(0);
+			blocks.remove(0);
+			Statement nextPattern = createPatternIfElifs(patterns, blocks, subject);
+			if (nextPattern != null) {
+				elseBlock.addStatement(nextPattern);
+			}
+			return stm;
+		}
+		return null;
+	}
+
+	public Expression handlePattern(PatternContext ctx, ResolvableIdentifier subject, Block block) {
+		Position pos = position(ctx.getStart());
+		Expression condition;
+		if (ctx.compoundPattern() != null) {
+			throw new RuntimeException("AAAAAAAAAAAAAAAHHHHHHHH!!! ... this is still unimplemented!");
+		} else if (ctx.expression() != null) {
+			// if the pattern is an expression, we simply check the subject and the pattern expression for equality
+			Expression expression = (Expression) visitExpression(ctx.expression());
+			condition =
+			        new MemberAccess(pos, new VariableAccess(pos, subject), new FunctionCall(pos,
+			                new ResolvableIdentifier("_eq_"), Arrays.asList(expression)));
+		} else if (ctx.typedPattern() != null) {
+			// a typed pattern matches everything that is an instance of "type"
+			ResolvableIdentifier type = convertResolvableIdentifier(ctx.typedPattern().type());
+			tupleDeclarationFactory.checkTupleType(type);
+			condition = new IsExpression(position(ctx.getStart()), new VariableAccess(pos, subject), type);
+			// if the identifier is not the wildcard '_', the value is bound to that identifier
+			if (ctx.typedPattern().Identifier() != null) {
+				ResolvableIdentifier localDecl = new ResolvableIdentifier(getText(ctx.typedPattern().Identifier()));
+				block.addDeclaration(new VariableDeclaration(pos, localDecl, type));
+				block.getStatements().add(
+				        0,
+				        new Assignment(pos, new VariableAccess(pos, localDecl), new CastExpression(pos,
+				                new VariableAccess(pos, subject), type)));
+			}
+		} else {
+			// _ matches everything, but binds nothing
+			condition = new BooleanLiteral(pos, true);
+		}
+		return condition;
+	}
 }
