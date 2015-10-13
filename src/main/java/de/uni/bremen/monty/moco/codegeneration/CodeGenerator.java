@@ -462,6 +462,13 @@ public class CodeGenerator {
 		return castIfNeeded(c, pointer, (LLVMPointer<LLVMType>) mapToLLVMType(resultType));
 	}
 
+	public LLVMIdentifier<LLVMPointer<LLVMType>> castClassUnchecked(CodeContext c,
+	        LLVMIdentifier<LLVMPointer<LLVMType>> pointer, ClassDeclaration sourceType, ClassDeclaration resultType) {
+
+		pointer = resolveIfNeeded(c, pointer);
+		return castIfNeeded(c, pointer, (LLVMPointer<LLVMType>) mapToLLVMType(resultType));
+	}
+
 	public LLVMIdentifier<LLVMBool> isClass(CodeContext c, LLVMIdentifier<LLVMPointer<LLVMType>> pointer,
 	        ClassDeclaration sourceType, ClassDeclaration resultType) {
 

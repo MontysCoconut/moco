@@ -46,6 +46,8 @@ public class CastExpression extends Expression {
 	private Expression expression;
 	private ResolvableIdentifier castIdentifier;
 	private Expression inferTypeParameterFrom;
+	private Expression inferTypeFrom;
+	private boolean unchecked = false;
 
 	public CastExpression(Position position, Expression expression, ResolvableIdentifier castIdentifier) {
 		super(position);
@@ -60,6 +62,19 @@ public class CastExpression extends Expression {
 		this.expression = expression;
 		this.castIdentifier = castIdentifier;
 		this.inferTypeParameterFrom = inferTypeParameterFrom;
+	}
+
+	public CastExpression(Position position, Expression expression, Expression inferTypeFrom) {
+		super(position);
+		this.expression = expression;
+		this.inferTypeFrom = inferTypeFrom;
+	}
+
+	public CastExpression(Position position, Expression expression, Expression inferTypeFrom, boolean unchecked) {
+		super(position);
+		this.expression = expression;
+		this.inferTypeFrom = inferTypeFrom;
+		this.unchecked = unchecked;
 	}
 
 	public ResolvableIdentifier getCastIdentifier() {
@@ -84,6 +99,19 @@ public class CastExpression extends Expression {
 		}
 	}
 
+	public boolean typeMustBeInferred() {
+		return inferTypeFrom != null;
+	}
+
+	public Expression getExpressionToInferFrom() {
+		return inferTypeFrom;
+	}
+
+	public void inferType() {
+		setType(inferTypeFrom.getType());
+		castIdentifier = ResolvableIdentifier.convert(getType().getIdentifier());
+	}
+
 	@Override
 	public void visit(BaseVisitor visitor) {
 		visitor.visit(this);
@@ -92,5 +120,9 @@ public class CastExpression extends Expression {
 	@Override
 	public void visitChildren(BaseVisitor visitor) {
 		visitor.visitDoubleDispatched(expression);
+	}
+
+	public boolean isUnchecked() {
+		return unchecked;
 	}
 }

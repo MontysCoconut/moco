@@ -386,13 +386,23 @@ public class CodeGenerationVisitor extends BaseVisitor {
 	public void visit(CastExpression node) {
 		super.visit(node);
 		LLVMIdentifier<?> object = stack.pop();
-		LLVMIdentifier<?> result =
-		        codeGenerator.castClass(
-		                contextUtils.active(),
-		                (LLVMIdentifier<LLVMPointer<LLVMType>>) object,
-		                (ClassDeclaration) node.getExpression().getType(),
-		                (ClassDeclaration) node.getType(),
-		                codeGenerator.createLabelPrefix("cast", node));
+		LLVMIdentifier<?> result;
+		if (node.isUnchecked()) {
+			result =
+			        codeGenerator.castClassUnchecked(
+			                contextUtils.active(),
+			                (LLVMIdentifier<LLVMPointer<LLVMType>>) object,
+			                (ClassDeclaration) node.getExpression().getType(),
+			                (ClassDeclaration) node.getType());
+		} else {
+			result =
+			        codeGenerator.castClass(
+			                contextUtils.active(),
+			                (LLVMIdentifier<LLVMPointer<LLVMType>>) object,
+			                (ClassDeclaration) node.getExpression().getType(),
+			                (ClassDeclaration) node.getType(),
+			                codeGenerator.createLabelPrefix("cast", node));
+		}
 		stack.push((LLVMIdentifier<LLVMType>) result);
 	}
 

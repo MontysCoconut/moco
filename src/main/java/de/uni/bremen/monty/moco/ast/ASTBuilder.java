@@ -1108,8 +1108,13 @@ public class ASTBuilder extends MontyBaseVisitor<ASTNode> {
 			// if the pattern is an expression, we simply check the subject and the pattern expression for equality
 			Expression expression = (Expression) visitExpression(ctx.expression());
 			condition =
-			        new MemberAccess(pos, new VariableAccess(pos, subject), new FunctionCall(pos,
-			                new ResolvableIdentifier("_eq_"), Arrays.asList(expression)));
+			        createAndExpression(
+			                pos,
+			                new IsExpression(pos, new VariableAccess(pos, subject), expression),
+			                new MemberAccess(pos, new CastExpression(pos, new VariableAccess(pos, subject), expression,
+			                        true),
+			                // new VariableAccess(pos, subject),
+			                        new FunctionCall(pos, new ResolvableIdentifier("_eq_"), Arrays.asList(expression))));
 		} else if (ctx.typedPattern() != null) {
 			// a typed pattern matches everything that is an instance of "type"
 			ResolvableIdentifier type = convertResolvableIdentifier(ctx.typedPattern().type());

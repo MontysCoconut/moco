@@ -227,6 +227,10 @@ public class ResolveVisitor extends VisitOnceVisitor {
 		if (node.typeParameterMustBeInferred()) {
 			node.inferTypeParameter();
 		}
+		if (node.typeMustBeInferred()) {
+			visitDoubleDispatched(node.getExpressionToInferFrom());
+			node.inferType();
+		}
 		super.visit(node);
 		node.setType(node.getScope().resolveType(node.getCastIdentifier()));
 	}
@@ -235,7 +239,12 @@ public class ResolveVisitor extends VisitOnceVisitor {
 	@Override
 	public void visit(IsExpression node) {
 		super.visit(node);
-		node.setToType(node.getScope().resolveType(node.getIsIdentifier()));
+		if (node.typeMustBeInferred()) {
+			visitDoubleDispatched(node.getExpressionToInferFrom());
+			node.inferType();
+		} else {
+			node.setToType(node.getScope().resolveType(node.getIsIdentifier()));
+		}
 		node.setType(CoreClasses.boolType());
 	}
 

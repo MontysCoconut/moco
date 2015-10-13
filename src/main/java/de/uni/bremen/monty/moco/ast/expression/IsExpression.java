@@ -47,11 +47,18 @@ public class IsExpression extends Expression {
 	private Expression expression;
 	private ResolvableIdentifier isIdentifier;
 	private TypeDeclaration toType;
+	private Expression inferTypeFrom;
 
 	public IsExpression(Position position, Expression expression, ResolvableIdentifier isIdentifier) {
 		super(position);
 		this.expression = expression;
 		this.isIdentifier = isIdentifier;
+	}
+
+	public IsExpression(Position position, Expression expression, Expression inferTypeFrom) {
+		super(position);
+		this.expression = expression;
+		this.inferTypeFrom = inferTypeFrom;
 	}
 
 	public ResolvableIdentifier getIsIdentifier() {
@@ -68,6 +75,19 @@ public class IsExpression extends Expression {
 
 	public TypeDeclaration getToType() {
 		return toType;
+	}
+
+	public boolean typeMustBeInferred() {
+		return inferTypeFrom != null;
+	}
+
+	public Expression getExpressionToInferFrom() {
+		return inferTypeFrom;
+	}
+
+	public void inferType() {
+		toType = inferTypeFrom.getType();
+		isIdentifier = ResolvableIdentifier.convert(toType.getIdentifier());
 	}
 
 	@Override
