@@ -1,0 +1,14 @@
+// Testing: The _eq_ method of the String class
+//
+// Expected output: 101010
+
+String flubb := "flubb"
+String flubber := "flubber"
+Object flubb2 := "flubb"
+
+print("Hello" = "Hello")
+print("Hello" = "Hallo")
+print(flubb = flubb)
+print(flubb = flubber)
+print(flubb = flubb2)
+print(flubb2 = flubber)

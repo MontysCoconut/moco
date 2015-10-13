@@ -172,6 +172,15 @@ public class Operations {
 		return c.icmp(IcmpOperand.eq, arg1, arg2, llvmIdentifierFactory.newLocal(int1(), false));
 	}
 
+	@Native("M.String.C.String.F._eq_$M.Bool.C.Bool$M.String.C.String")
+	public LLVMIdentifier<LLVMBool> strEq(CodeContext c, LLVMIdentifier<LLVMPointer> arg1,
+	        LLVMIdentifier<LLVMPointer> arg2) {
+
+		LLVMIdentifier<LLVMBool> scmp = llvmIdentifierFactory.newGlobal("scmp", int1());
+		LLVMIdentifier<LLVMBool> resultPointer = llvmIdentifierFactory.newLocal(scmp.getType());
+		return c.call((LLVMIdentifier<LLVMType>) (LLVMIdentifier<?>) scmp, resultPointer, arg1, arg2);
+	}
+
 	@Native("M.Int.C.Int.F._add_$M.Int.C.Int$M.Int.C.Int")
 	public LLVMIdentifier<LLVMInt> add(CodeContext c, LLVMIdentifier<LLVMInt> arg1, LLVMIdentifier<LLVMInt> arg2) {
 		return c.binaryOperation("add", arg1, arg2, llvmIdentifierFactory.newLocal(arg1.getType(), false));

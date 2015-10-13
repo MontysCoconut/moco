@@ -1,3 +1,6 @@
 class String:
     + initializer(String s):
         pass
+
+    + Bool _eq_(String other):
+        pass
