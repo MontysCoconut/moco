@@ -81,9 +81,6 @@ public class ASTBuilder extends MontyBaseVisitor<ASTNode> {
 			put("<=", "_leq_");
 			put(">=", "_geq_");
 			put("in", "_contains_");
-			put("and", "_and_");
-			put("or", "_or_");
-			put("xor", "_xor_");
 		}
 	};
 
@@ -822,10 +819,10 @@ public class ASTBuilder extends MontyBaseVisitor<ASTNode> {
 			return binaryExpression(position(ctx.getStart()), ctx.inOperator().getText(), ctx.left, ctx.right);
 		} else if (ctx.andOperator() != null) {
 
-			return binaryExpression(position(ctx.getStart()), ctx.andOperator().getText(), ctx.left, ctx.right);
+			return booleanExpression(position(ctx.getStart()), ctx.andOperator().getText(), ctx.left, ctx.right);
 		} else if (ctx.orOperator() != null) {
 
-			return binaryExpression(position(ctx.getStart()), ctx.orOperator().getText(), ctx.left, ctx.right);
+			return booleanExpression(position(ctx.getStart()), ctx.orOperator().getText(), ctx.left, ctx.right);
 		} else if (ctx.asOperator() != null) {
 			return visitCastExpression(ctx);
 		} else if (ctx.isOperator() != null) {
@@ -960,6 +957,27 @@ public class ASTBuilder extends MontyBaseVisitor<ASTNode> {
 			return new MemberAccess(position, self, operatorCall);
 		}
 
+	}
+
+	private Expression booleanExpression(Position position, String operator, ExpressionContext left,
+	        ExpressionContext right) {
+		Expression leftExp = (Expression) visit(left);
+		Expression rightExp = (Expression) visit(right);
+		if (operator.equals("and")) {
+			return createAndExpression(position, leftExp, rightExp);
+		} else {
+			return createOrExpression(position, leftExp, rightExp);
+		}
+	}
+
+	private ConditionalExpression createAndExpression(Position position, Expression left, Expression right) {
+		// (x and y) ==> y if x else false
+		return new ConditionalExpression(position, left, right, new BooleanLiteral(position, false));
+	}
+
+	private ConditionalExpression createOrExpression(Position position, Expression left, Expression right) {
+		// (x or y) ==> true if x else y
+		return new ConditionalExpression(position, left, new BooleanLiteral(position, true), right);
 	}
 
 	private CastExpression visitCastExpression(ExpressionContext ctx) {

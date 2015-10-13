@@ -5,15 +5,6 @@ class Bool:
     + Bool _not_():
         pass
 
-    + Bool _xor_(Bool other):
-        pass
-
-    + Bool _and_(Bool other):
-        pass
-
-    + Bool _or_(Bool other):
-        pass
-
     + Bool _eq_(Bool other):
         pass
 

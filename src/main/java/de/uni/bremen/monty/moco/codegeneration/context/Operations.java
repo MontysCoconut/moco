@@ -319,21 +319,6 @@ public class Operations {
 		return c.fcmp(FcmpOperand.oge, arg1, arg2, llvmIdentifierFactory.newLocal(int1(), false));
 	}
 
-	@Native("M.Bool.C.Bool.F._and_$M.Bool.C.Bool$M.Bool.C.Bool")
-	public LLVMIdentifier<LLVMBool> and(CodeContext c, LLVMIdentifier<LLVMBool> arg1, LLVMIdentifier<LLVMBool> arg2) {
-		return c.binaryOperation("and", arg1, arg2, llvmIdentifierFactory.newLocal(arg1.getType(), false));
-	}
-
-	@Native("M.Bool.C.Bool.F._or_$M.Bool.C.Bool$M.Bool.C.Bool")
-	public LLVMIdentifier<LLVMBool> or(CodeContext c, LLVMIdentifier<LLVMBool> arg1, LLVMIdentifier<LLVMBool> arg2) {
-		return c.binaryOperation("or", arg1, arg2, llvmIdentifierFactory.newLocal(arg1.getType(), false));
-	}
-
-	@Native("M.Bool.C.Bool.F._xor_$M.Bool.C.Bool$M.Bool.C.Bool")
-	public LLVMIdentifier<LLVMBool> xor(CodeContext c, LLVMIdentifier<LLVMBool> arg1, LLVMIdentifier<LLVMBool> arg2) {
-		return c.binaryOperation("xor", arg1, arg2, llvmIdentifierFactory.newLocal(arg1.getType(), false));
-	}
-
 	@Native("M.Bool.C.Bool.F._not_$M.Bool.C.Bool")
 	public LLVMIdentifier<LLVMBool> not(CodeContext c, LLVMIdentifier<LLVMBool> arg1) {
 		return c.binaryOperation(
