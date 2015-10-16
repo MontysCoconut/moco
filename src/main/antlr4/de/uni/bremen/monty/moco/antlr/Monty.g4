@@ -314,18 +314,18 @@ caseBlock
 
 pattern
   : typedPattern
-  | compoundPattern
   | '_'
+  | compoundPattern
   | expression
   ;
 
 typedPattern
   : type Identifier
-  | type '_'
+  | type ('_')?
   ;
 
 compoundPattern
-  : type? '(' parameterList? ')'
+  : type? '(' patternList? ')'
   ;
 
 patternList

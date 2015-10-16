@@ -1063,6 +1063,7 @@ public class ASTBuilder extends MontyBaseVisitor<ASTNode> {
 
 	@Override
 	public ASTNode visitCaseStatement(CaseStatementContext ctx) {
+		Position pos = position(ctx.getStart());
 		// extract the expression and make a new temporary variable for it...
 		Expression subject = (Expression) visit(ctx.expression());
 		ResolvableIdentifier subjectIdent = TmpIdentifierFactory.getUniqueIdentifier();
@@ -1072,67 +1073,148 @@ public class ASTBuilder extends MontyBaseVisitor<ASTNode> {
 		currentBlocks.peek().addDeclaration(subjectVar);
 		currentBlocks.peek().addStatement(subjectAss);
 
+		// add a boolean variable in order to indicate, whether a match was successful (more flexible than nesting else)
+		ResolvableIdentifier alreadyMatchedIdent = TmpIdentifierFactory.getUniqueIdentifier();
+		VariableDeclaration alreadyMatchedDecl =
+		        new VariableDeclaration(pos, alreadyMatchedIdent, new ResolvableIdentifier("Bool"));
+		currentBlocks.peek().addDeclaration(alreadyMatchedDecl);
+		currentBlocks.peek().addStatement(setAlreadyMatched(pos, alreadyMatchedIdent, false));
+
 		// convert the different cases into an if-else-orgy
 		List<PatternContext> patterns = ctx.caseBlock().pattern();
 		List<StatementBlockContext> blocks = ctx.caseBlock().statementBlock();
-
-		return createPatternIfElifs(patterns, blocks, subjectIdent);
+		return createPatternIfElifs(patterns, blocks, new VariableAccess(pos, subjectIdent), alreadyMatchedIdent);
 	}
 
 	public Statement createPatternIfElifs(List<PatternContext> patterns, List<StatementBlockContext> blocks,
-	        ResolvableIdentifier subject) {
-		if (patterns.size() > 0) {
-			Position patternPos = position(patterns.get(0).getStart());
-			Block stmBlock = (Block) visit(blocks.get(0));
-			Expression condition = handlePattern(patterns.get(0), subject, stmBlock);
+	        Expression subject, ResolvableIdentifier alreadyMatchedIdent) {
+		Block outermostBlock = new Block(new Position());
+		Block currentBlock = outermostBlock;
+		int i = 0;
+		for (PatternContext pattern : patterns) {
+			Position patternPos = position(pattern.getStart());
+			Block patternBlock = (Block) visit(blocks.get(i));
+			// at the end of every case block, we have to set the alreadyMatched variable to true
+			patternBlock.addStatement(setAlreadyMatched(patternPos, alreadyMatchedIdent, true));
 
-			Block elseBlock = new Block(patternPos);
-			Statement stm = new ConditionalStatement(patternPos, condition, stmBlock, elseBlock);
-			patterns.remove(0);
-			blocks.remove(0);
-			Statement nextPattern = createPatternIfElifs(patterns, blocks, subject);
-			if (nextPattern != null) {
-				elseBlock.addStatement(nextPattern);
-			}
+			currentBlock.addStatement(handlePattern(pattern, subject, patternBlock));
+			Block insteadOfElseBlock = new Block(patternPos);
+			currentBlock.addStatement(ifNotAlreadyMatched(
+			        patternPos,
+			        alreadyMatchedIdent,
+			        insteadOfElseBlock,
+			        new Block(patternPos)));
+			currentBlock = insteadOfElseBlock;
+			i++;
+		}
+		currentBlocks.peek().addStatement(outermostBlock.getStatements().get(0));
+		return outermostBlock.getStatements().get(1);
+	}
+
+	public ConditionalStatement handlePattern(PatternContext ctx, Expression subject, Block patternBlock) {
+		if (ctx.compoundPattern() != null) {
+			return handleCompoundPattern(ctx.compoundPattern(), subject, patternBlock);
+		} else if (ctx.expression() != null) {
+			return handleExpressionPattern(ctx, subject, patternBlock);
+		} else if (ctx.typedPattern() != null) {
+			return handleTypedPattern(ctx, subject, patternBlock);
+		} else {
+			return handleWildcardPattern(ctx, subject, patternBlock);
+		}
+	}
+
+	protected ConditionalStatement handleCompoundPattern(CompoundPatternContext ctx, Expression subject,
+	        Block patternBlock) {
+		Position pos = position(ctx.getStart());
+		Block outermostBlock = new Block(pos);
+		Block currentBlock = outermostBlock;
+		// if there was no type specified, the pattern matches tuples, thus we assume that the value is already
+		// a tuple and there is no need for type checks or type casts. Further, tuples don't have to be decomposed.
+		if (ctx.type() != null) {
+			ResolvableIdentifier type = convertResolvableIdentifier(ctx.type());
+			tupleDeclarationFactory.checkTupleType(type);
+			Expression castedArg = new CastExpression(pos, subject, type, true);
+			ResolvableIdentifier decomposedIdent = TmpIdentifierFactory.getUniqueIdentifier();
+
+			Block thenBlock = new Block(pos);
+			ConditionalStatement stm =
+			        new ConditionalStatement(pos, new IsExpression(pos, subject, type), thenBlock, new Block(pos));
+			currentBlock.addStatement(stm);
+			Expression decomposeExpr =
+			        new FunctionCall(pos, new ResolvableIdentifier("decompose"), Arrays.asList(castedArg));
+			thenBlock.addDeclaration(new VariableDeclaration(pos, decomposedIdent, decomposeExpr));
+			thenBlock.addStatement(new Assignment(pos, new VariableAccess(pos, decomposedIdent), decomposeExpr));
+			subject = new VariableAccess(pos, decomposedIdent);
+			// TODO: patternList may be NULL! (empty pattern list)
+			thenBlock.addStatement(processNestedCompoundPattern(ctx.patternList().pattern(), subject, 1, patternBlock));
 			return stm;
 		}
-		return null;
+		return processNestedCompoundPattern(ctx.patternList().pattern(), subject, 1, patternBlock);
 	}
 
-	public Expression handlePattern(PatternContext ctx, ResolvableIdentifier subject, Block block) {
+	protected ConditionalStatement processNestedCompoundPattern(List<PatternContext> patterns, Expression subject,
+	        int i, Block patternBlock) {
+		PatternContext pattern = patterns.get(0);
+		patterns.remove(0);
+		Position subPatternPos = position(pattern.getStart());
+		Expression subjectPart =
+		        new MemberAccess(subPatternPos, subject, new VariableAccess(subPatternPos, new ResolvableIdentifier("_"
+		                + i)));
+
+		Block thenBlock;
+		if (patterns.size() > 0) {
+			thenBlock = new Block(subPatternPos);
+			thenBlock.addStatement(processNestedCompoundPattern(patterns, subject, i + 1, patternBlock));
+		} else {
+			thenBlock = patternBlock;
+		}
+		return handlePattern(pattern, subjectPart, thenBlock);
+	}
+
+	protected ConditionalStatement handleWildcardPattern(PatternContext ctx, Expression subject, Block patternBlock) {
+		// _ matches everything, but binds nothing
+		Position pos = position(ctx.getStart());
+		return new ConditionalStatement(pos, new BooleanLiteral(pos, true), patternBlock, new Block(pos));
+	}
+
+	protected ConditionalStatement handleTypedPattern(PatternContext ctx, Expression subject, Block patternBlock) {
 		Position pos = position(ctx.getStart());
 		Expression condition;
-		if (ctx.compoundPattern() != null) {
-			throw new RuntimeException("AAAAAAAAAAAAAAAHHHHHHHH!!! ... this is still unimplemented!");
-		} else if (ctx.expression() != null) {
-			// if the pattern is an expression, we simply check the subject and the pattern expression for equality
-			Expression expression = (Expression) visitExpression(ctx.expression());
-			condition =
-			        createAndExpression(
-			                pos,
-			                new IsExpression(pos, new VariableAccess(pos, subject), expression),
-			                new MemberAccess(pos, new CastExpression(pos, new VariableAccess(pos, subject), expression,
-			                        true),
-			                // new VariableAccess(pos, subject),
-			                        new FunctionCall(pos, new ResolvableIdentifier("_eq_"), Arrays.asList(expression))));
-		} else if (ctx.typedPattern() != null) {
-			// a typed pattern matches everything that is an instance of "type"
-			ResolvableIdentifier type = convertResolvableIdentifier(ctx.typedPattern().type());
-			tupleDeclarationFactory.checkTupleType(type);
-			condition = new IsExpression(position(ctx.getStart()), new VariableAccess(pos, subject), type);
-			// if the identifier is not the wildcard '_', the value is bound to that identifier
-			if (ctx.typedPattern().Identifier() != null) {
-				ResolvableIdentifier localDecl = new ResolvableIdentifier(getText(ctx.typedPattern().Identifier()));
-				block.addDeclaration(new VariableDeclaration(pos, localDecl, type));
-				block.getStatements().add(
-				        0,
-				        new Assignment(pos, new VariableAccess(pos, localDecl), new CastExpression(pos,
-				                new VariableAccess(pos, subject), type)));
-			}
-		} else {
-			// _ matches everything, but binds nothing
-			condition = new BooleanLiteral(pos, true);
+		// a typed pattern matches everything that is an instance of "type"
+		ResolvableIdentifier type = convertResolvableIdentifier(ctx.typedPattern().type());
+		tupleDeclarationFactory.checkTupleType(type);
+		condition = new IsExpression(position(ctx.getStart()), subject, type);
+		// if the identifier is not the wildcard '_', the value is bound to that identifier
+		if (ctx.typedPattern().Identifier() != null) {
+			ResolvableIdentifier localDecl = new ResolvableIdentifier(getText(ctx.typedPattern().Identifier()));
+			patternBlock.addDeclaration(new VariableDeclaration(pos, localDecl, type));
+			patternBlock.getStatements().add(
+			        0,
+			        new Assignment(pos, new VariableAccess(pos, localDecl), new CastExpression(pos, subject, type)));
 		}
-		return condition;
+		return new ConditionalStatement(pos, condition, patternBlock, new Block(pos));
 	}
+
+	protected ConditionalStatement handleExpressionPattern(PatternContext ctx, Expression subject, Block patternBlock) {
+		Position pos = position(ctx.getStart());
+		// if the pattern is an expression, we simply check the subject and the pattern expression for equality
+		Expression expression = (Expression) visitExpression(ctx.expression());
+		return new ConditionalStatement(pos, createAndExpression(
+		        pos,
+		        new IsExpression(pos, subject, expression),
+		        new MemberAccess(pos, new CastExpression(pos, subject, expression, true), new FunctionCall(pos,
+		                new ResolvableIdentifier("_eq_"), Arrays.asList(expression)))), patternBlock, new Block(pos));
+	}
+
+	protected Statement setAlreadyMatched(Position pos, ResolvableIdentifier alreadyMatchedIdent, boolean value) {
+		return new Assignment(pos, new VariableAccess(pos, alreadyMatchedIdent), new BooleanLiteral(pos, value));
+	}
+
+	protected ConditionalStatement ifNotAlreadyMatched(Position pos, ResolvableIdentifier alreadyMatchedIdent,
+	        Block thenBlock, Block elseBlock) {
+		return new ConditionalStatement(pos, new MemberAccess(pos, new VariableAccess(pos, alreadyMatchedIdent),
+		        new FunctionCall(pos, new ResolvableIdentifier("_not_"), new ArrayList<Expression>())), thenBlock,
+		        elseBlock);
+	}
+
 }

@@ -64,6 +64,14 @@ public class CastExpression extends Expression {
 		this.inferTypeParameterFrom = inferTypeParameterFrom;
 	}
 
+	public CastExpression(Position position, Expression expression, ResolvableIdentifier castIdentifier,
+	        boolean unchecked) {
+		super(position);
+		this.expression = expression;
+		this.castIdentifier = castIdentifier;
+		this.unchecked = unchecked;
+	}
+
 	public CastExpression(Position position, Expression expression, Expression inferTypeFrom) {
 		super(position);
 		this.expression = expression;
