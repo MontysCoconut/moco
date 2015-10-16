@@ -109,7 +109,7 @@ public class ResolveVisitor extends VisitOnceVisitor {
 					boolean foundEntry = false;
 					for (int i = 0; !foundEntry && i < virtualMethodTable.size(); i++) {
 						FunctionDeclaration vmtEntry = virtualMethodTable.get(i);
-						if (procDecl.matchesType(vmtEntry)) {
+						if (procDecl.overridesFunction(vmtEntry)) {
 							virtualMethodTable.set(i, procDecl);
 							procDecl.setVMTIndex(vmtEntry.getVMTIndex());
 							foundEntry = true;
@@ -184,6 +184,11 @@ public class ResolveVisitor extends VisitOnceVisitor {
 	 * @return */
 	protected Declaration overloadResolutionForVariableAccess(VariableAccess node) {
 		CastExpression cast = (CastExpression) node.getParentNode();
+		// if the cast type is inferred, we can not resolve this one
+		if (cast.getCastIdentifier() == null) {
+			return null;
+		}
+
 		TypeDeclaration castedTo = cast.getScope().resolveType(cast.getCastIdentifier());
 		Declaration declaration = null;
 		if (castedTo.matchesType(CoreClasses.functionType())) {

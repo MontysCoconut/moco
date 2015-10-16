@@ -1,6 +1,6 @@
 // Testing: The _eq_ method of the String class
 //
-// Expected output: 101010
+// Expected output: 101000
 
 String flubb := "flubb"
 String flubber := "flubber"
