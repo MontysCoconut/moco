@@ -39,27 +39,37 @@
 package de.uni.bremen.monty.moco.ast.declaration;
 
 import de.uni.bremen.monty.moco.ast.*;
+import de.uni.bremen.monty.moco.ast.expression.Expression;
+import de.uni.bremen.monty.moco.ast.expression.FunctionCall;
+import de.uni.bremen.monty.moco.ast.expression.WrappedFunctionCall;
+import de.uni.bremen.monty.moco.ast.statement.Assignment;
+import de.uni.bremen.monty.moco.ast.statement.ReturnStatement;
 import de.uni.bremen.monty.moco.visitor.BaseVisitor;
 
+import java.util.ArrayList;
 import java.util.List;
 
-/** A ProcedureDeclaration represents the declaration of a procedure in the AST.
+/** A FunctionDeclaration represents the declaration of a function in the AST.
  * <p>
  * It can be used as a type. */
-public class ProcedureDeclaration extends TypeDeclaration {
+public class FunctionDeclaration extends TypeDeclaration {
 	public enum DeclarationType {
 		INITIALIZER, DEFAULT_INITIALIZER, METHOD, UNBOUND
 	}
+
+	ClassDeclaration wrapperClass = null;
+	VariableDeclaration wrapperFunctionObjectDeclaration = null;
+	Assignment wrapperFunctionAssignment = null;
 
 	/** The declarations and statements within this declaration. */
 	private final Block body;
 
 	/** The parameters of this declaration. */
-	private final List<VariableDeclaration> parameter;
+	private final List<VariableDeclaration> parameters;
 
 	private DeclarationType declarationType;
 
-	/** Index of the procedure in the vmt if it is a procedure in the class struct */
+	/** Index of the function in the vmt if it is a function in the class struct */
 	private int vmtIndex;
 
 	/** The return returnType. */
@@ -68,6 +78,8 @@ public class ProcedureDeclaration extends TypeDeclaration {
 
 	private final boolean abstractMethod;
 
+	private boolean returnTypeMustBeInferred = false;
+
 	/** Constructor.
 	 *
 	 * @param position
@@ -75,36 +87,42 @@ public class ProcedureDeclaration extends TypeDeclaration {
 	 * @param identifier
 	 *            the identifier
 	 * @param body
-	 *            the body of this procedure
-	 * @param parameter
-	 *            the parameter of this procedure */
-	public ProcedureDeclaration(Position position, Identifier identifier, Block body,
-	        List<VariableDeclaration> parameter, DeclarationType declarationType,
+	 *            the body of this function
+	 * @param parameters
+	 *            the parameters of this function */
+	public FunctionDeclaration(Position position, Identifier identifier, Block body,
+	        List<VariableDeclaration> parameters, DeclarationType declarationType,
 	        ResolvableIdentifier returnTypeIdentifier) {
 		super(position, identifier);
 		this.body = body;
-		this.parameter = parameter;
+		this.parameters = parameters;
 		this.declarationType = declarationType;
 		this.vmtIndex = -1;
 		this.returnTypeIdentifier = returnTypeIdentifier;
 		this.abstractMethod = false;
 	}
 
-	public ProcedureDeclaration(Position position, Identifier identifier, Block body,
-	        List<VariableDeclaration> parameter, DeclarationType declarationType,
+	public FunctionDeclaration(Position position, Identifier identifier, Block body,
+	        List<VariableDeclaration> parameters, DeclarationType declarationType,
 	        ResolvableIdentifier returnTypeIdentifier, boolean isAbstract) {
 		super(position, identifier);
 		this.body = body;
-		this.parameter = parameter;
+		this.parameters = parameters;
 		this.declarationType = declarationType;
 		this.vmtIndex = -1;
 		this.returnTypeIdentifier = returnTypeIdentifier;
 		this.abstractMethod = isAbstract;
 	}
 
-	public ProcedureDeclaration(Position position, Identifier identifier, Block body,
-	        List<VariableDeclaration> parameter, ResolvableIdentifier returnTypeIdentifier) {
-		this(position, identifier, body, parameter, DeclarationType.UNBOUND, returnTypeIdentifier);
+	public FunctionDeclaration(Position position, Identifier identifier, Block body,
+	        List<VariableDeclaration> parameters) {
+		this(position, identifier, body, parameters, DeclarationType.UNBOUND, (ResolvableIdentifier) null);
+		returnTypeMustBeInferred = true;
+	}
+
+	public FunctionDeclaration(Position position, Identifier identifier, Block body,
+	        List<VariableDeclaration> parameters, ResolvableIdentifier returnTypeIdentifier) {
+		this(position, identifier, body, parameters, DeclarationType.UNBOUND, returnTypeIdentifier);
 	}
 
 	/** Constructor
@@ -115,21 +133,22 @@ public class ProcedureDeclaration extends TypeDeclaration {
 	 *            the identifier
 	 * @param body
 	 *            the body of this function
-	 * @param parameter
-	 *            the parameter of this function
+	 * @param parameters
+	 *            the parameters of this function
 	 * @param returnType
 	 *            the return returnType */
-	public ProcedureDeclaration(Position position, Identifier identifier, Block body,
-	        List<VariableDeclaration> parameter, ClassDeclaration returnType) {
-		this(position, identifier, body, parameter,
+	public FunctionDeclaration(Position position, Identifier identifier, Block body,
+	        List<VariableDeclaration> parameters, ClassDeclaration returnType) {
+		this(position, identifier, body, parameters,
 		        returnType != null ? ResolvableIdentifier.convert(returnType.getIdentifier()) : null);
 		this.returnType = returnType;
 	}
 
-	public ProcedureDeclaration(Position position, Identifier identifier, Block body,
-	        List<VariableDeclaration> parameter, DeclarationType declarationType, TypeDeclaration returnType) {
-		this(position, identifier, body, parameter, declarationType,
-		        returnType != null ? ResolvableIdentifier.convert(returnType.getIdentifier()) : null);
+	public FunctionDeclaration(Position position, Identifier identifier, Block body,
+	        List<VariableDeclaration> parameters, DeclarationType declarationType, TypeDeclaration returnType,
+	        boolean isAbstract) {
+		this(position, identifier, body, parameters, declarationType,
+		        returnType != null ? ResolvableIdentifier.convert(returnType.getIdentifier()) : null, isAbstract);
 		this.returnType = returnType;
 	}
 
@@ -158,6 +177,10 @@ public class ProcedureDeclaration extends TypeDeclaration {
 		this.returnType = returnType;
 	}
 
+	protected void setReturnTypeIdentifier(ResolvableIdentifier identifier) {
+		this.returnTypeIdentifier = identifier;
+	}
+
 	/** Get the body block.
 	 *
 	 * @return the body */
@@ -165,11 +188,11 @@ public class ProcedureDeclaration extends TypeDeclaration {
 		return body;
 	}
 
-	/** Get the list of parameter.
+	/** Get the list of parameters.
 	 *
 	 * @return the paramter */
-	public List<VariableDeclaration> getParameter() {
-		return parameter;
+	public List<VariableDeclaration> getParameters() {
+		return parameters;
 	}
 
 	/** set the declaration type */
@@ -232,7 +255,7 @@ public class ProcedureDeclaration extends TypeDeclaration {
 	/** {@inheritDoc} */
 	@Override
 	public void visitChildren(BaseVisitor visitor) {
-		for (VariableDeclaration variableDeclaration : parameter) {
+		for (VariableDeclaration variableDeclaration : parameters) {
 			visitor.visitDoubleDispatched(variableDeclaration);
 		}
 		visitor.visitDoubleDispatched(body);
@@ -259,19 +282,19 @@ public class ProcedureDeclaration extends TypeDeclaration {
 		if (!super.matchesType(other)) {
 			return false;
 		}
-		if (!(other instanceof ProcedureDeclaration)) {
+		if (!(other instanceof FunctionDeclaration)) {
 			return false;
 		}
-		List<VariableDeclaration> otherParameter = ((ProcedureDeclaration) other).getParameter();
-		if (parameter.size() != otherParameter.size()) {
+		List<VariableDeclaration> otherParameter = ((FunctionDeclaration) other).getParameters();
+		if (parameters.size() != otherParameter.size()) {
 			return false;
 		}
-		for (int i = 0; i < parameter.size(); i++) {
-			if (!parameter.get(i).getType().matchesType(otherParameter.get(i).getType())) {
+		for (int i = 0; i < parameters.size(); i++) {
+			if (!parameters.get(i).getType().matchesType(otherParameter.get(i).getType())) {
 				return false;
 			}
 		}
-		ProcedureDeclaration proc = ((ProcedureDeclaration) other);
+		FunctionDeclaration proc = ((FunctionDeclaration) other);
 
 		return !((proc.getReturnType() != null) && (proc.getReturnType() != CoreClasses.voidType()))
 		        || returnType.matchesType(proc.getReturnType());
@@ -279,5 +302,95 @@ public class ProcedureDeclaration extends TypeDeclaration {
 
 	public boolean isAbstract() {
 		return abstractMethod;
+	}
+
+	public ClassDeclaration getWrapperClass() {
+		return wrapperClass;
+	}
+
+	public void setWrapperClass(ClassDeclaration wrapperClass) {
+		this.wrapperClass = wrapperClass;
+	}
+
+	public VariableDeclaration getWrapperFunctionObjectDeclaration() {
+		return wrapperFunctionObjectDeclaration;
+	}
+
+	public void setWrapperFunctionObjectDeclaration(VariableDeclaration wrapperFunctionObjectDeclaration) {
+		this.wrapperFunctionObjectDeclaration = wrapperFunctionObjectDeclaration;
+	}
+
+	public Assignment getWrapperFunctionAssignment() {
+		return wrapperFunctionAssignment;
+	}
+
+	public void setWrapperFunctionAssignment(Assignment wrapperFunctionAssignment) {
+		this.wrapperFunctionAssignment = wrapperFunctionAssignment;
+	}
+
+	public boolean isReturnTypeToBeInferred() {
+		return returnTypeMustBeInferred;
+	}
+
+	public void setInferredReturnType(TypeDeclaration type) {
+		returnType = type;
+		returnTypeIdentifier = ResolvableIdentifier.convert(type.getIdentifier());
+
+		ResolvableIdentifier retIdent = returnTypeIdentifier;
+		FunctionDeclaration applyMethod = wrapperClass.getMethods().get(0);
+
+		if (CoreClasses.voidType().equals(type)) {
+			returnTypeIdentifier = null;
+			retIdent = new ResolvableIdentifier("Tuple0");
+			applyMethod.setReturnTypeIdentifier(retIdent);
+			applyMethod.setReturnType(getScope().resolveType(retIdent));
+
+			splitReturnStatement(false);
+			applyMethod.splitReturnStatement(true);
+
+		} else {
+			applyMethod.setReturnTypeIdentifier(returnTypeIdentifier);
+			applyMethod.setReturnType(type);
+		}
+
+		// exchange the return type of the wrapper class
+		ResolvableIdentifier genericWrapper = wrapperClass.getSuperClassIdentifiers().get(0);
+		genericWrapper.getGenericTypes().remove(1);
+		genericWrapper.getGenericTypes().add(retIdent);
+	}
+
+	protected void splitReturnStatement(boolean tupleInsteadOfVoid) {
+		ReturnStatement oldRet = (ReturnStatement) getBody().getStatements().get(getBody().getStatements().size() - 1);
+
+		// create a new return statement
+		ReturnStatement newRet;
+		if (tupleInsteadOfVoid) {
+			FunctionCall emptyTuple =
+			        new FunctionCall(oldRet.getPosition(), new ResolvableIdentifier("Tuple0"),
+			                new ArrayList<Expression>());
+			newRet = new ReturnStatement(oldRet.getPosition(), emptyTuple);
+			newRet.setScope(oldRet.getScope());
+			newRet.setParentNode(oldRet.getParentNode());
+			emptyTuple.setScope(newRet.getScope());
+			emptyTuple.setParentNode(newRet.getParentNode());
+		} else {
+			newRet = new ReturnStatement(oldRet.getPosition(), null);
+			newRet.setScope(oldRet.getScope());
+			newRet.setParentNode(oldRet.getParentNode());
+		}
+
+		// remove the old one
+		getBody().getStatements().remove(getBody().getStatements().size() - 1);
+		// add the new ones
+		Expression oldCall = oldRet.getParameter();
+		oldCall.setParentNode(getBody());
+		if (oldCall instanceof FunctionCall) {
+			getBody().addStatement((FunctionCall) oldCall);
+		} else if (oldCall instanceof WrappedFunctionCall) {
+			getBody().addStatement((WrappedFunctionCall) oldCall);
+		} else {
+			throw new RuntimeException("invalid AST!");
+		}
+		getBody().addStatement(newRet);
 	}
 }

@@ -1,0 +1,67 @@
+// Testing: Higher-order functions (functions that take functions as arguments)
+//
+// In this case an Int list is defined and a map function, which takes a list and a function
+//
+// Expected Output: [1 [2 [3 []]]]
+//                  [2 [4 [6 []]]]
+//                  [1 [4 [9 []]]]
+
+// define a recursive list of integer values
+abstract class IntList:
+    abstract Bool isEmpty()
+
+class EmptyIntList inherits IntList:
+    Bool isEmpty():
+        return true
+
+class IntListElement inherits IntList:
+    Int head
+    IntList tail
+
+    initializer(Int head, IntList tail):
+        self.head := head
+        self.tail := tail
+
+    Bool isEmpty():
+        return false
+
+// a procedure which prints the lists
+printList(IntList list):
+    if list.isEmpty():
+        print("[]")
+    else:
+        IntListElement element := list as IntListElement
+        print("[")
+        print(element.head)
+        print(" ")
+        printList(element.tail)
+        print("]")
+
+// a higher-order-function
+IntList map(IntList list, (Int -> Int) fn):
+    if list.isEmpty():
+        return list
+
+    IntListElement element := list as IntListElement
+    return IntListElement(fn(element.head), map(element.tail, fn))
+
+
+// -----------------------------------------------------------------------------
+// -- test the whole damn crap                                                --
+// -----------------------------------------------------------------------------
+IntList myList := IntListElement(1, 
+                            IntListElement(2, 
+                            IntListElement(3, EmptyIntList() ) ))
+
+Int timesTwo(Int x):
+    return x*2
+
+Int square(Int x):
+    return x*x
+
+printList(myList)
+print("\n")
+printList(map(myList, timesTwo))
+print("\n")
+printList(map(myList, square))
+print("\n")

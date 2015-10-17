@@ -62,7 +62,7 @@ public class ClassDeclaration extends TypeDeclaration {
 	private final List<TypeDeclaration> superClassDeclarations = new ArrayList<>();
 
 	/** The generated default initializer to be called from every user defined initializer. */
-	private ProcedureDeclaration defaultInitializer;
+	private FunctionDeclaration defaultInitializer;
 
 	/** Block with assignments **/
 	private Block block;
@@ -70,7 +70,10 @@ public class ClassDeclaration extends TypeDeclaration {
 	private final List<ClassDeclarationVariation> variations;
 
 	/** The virtal method table for this class */
-	private List<ProcedureDeclaration> virtualMethodTable = new ArrayList<>();
+	private List<FunctionDeclaration> virtualMethodTable = new ArrayList<>();
+
+	/** this attribute is set if the class is a function wrapper */
+	private FunctionDeclaration wrappedFunction = null;
 
 	/** The last index for the attributes of this class. This counter starts at `1` as index 0 is reserved for a pointer
 	 * to the vmt. */
@@ -163,14 +166,14 @@ public class ClassDeclaration extends TypeDeclaration {
 	/** Get the VMT.
 	 *
 	 * @return the VMT */
-	public List<ProcedureDeclaration> getVirtualMethodTable() {
+	public List<FunctionDeclaration> getVirtualMethodTable() {
 		return virtualMethodTable;
 	}
 
 	/** Get the default initializer.
 	 *
 	 * @return the default initializer */
-	public ProcedureDeclaration getDefaultInitializer() {
+	public FunctionDeclaration getDefaultInitializer() {
 		return this.defaultInitializer;
 	}
 
@@ -178,7 +181,7 @@ public class ClassDeclaration extends TypeDeclaration {
 	 *
 	 * @param defaultInitializer
 	 *            the new default initializer */
-	public void setDefaultInitializer(ProcedureDeclaration defaultInitializer) {
+	public void setDefaultInitializer(FunctionDeclaration defaultInitializer) {
 		this.defaultInitializer = defaultInitializer;
 	}
 
@@ -238,13 +241,25 @@ public class ClassDeclaration extends TypeDeclaration {
 		return new ClassDeclarationVariation(this, genericIdentifier, concreteGenerics);
 	}
 
-	public List<ProcedureDeclaration> getMethods() {
-		ArrayList<ProcedureDeclaration> methods = new ArrayList<>();
+	public List<FunctionDeclaration> getMethods() {
+		ArrayList<FunctionDeclaration> methods = new ArrayList<>();
 		for (Declaration decl : getBlock().getDeclarations()) {
-			if (decl instanceof ProcedureDeclaration) {
-				methods.add((ProcedureDeclaration) decl);
+			if (decl instanceof FunctionDeclaration) {
+				methods.add((FunctionDeclaration) decl);
 			}
 		}
 		return methods;
+	}
+
+	public FunctionDeclaration getWrappedFunction() {
+		return wrappedFunction;
+	}
+
+	public boolean isFunctionWrapper() {
+		return wrappedFunction != null;
+	}
+
+	public void setWrappedFunction(FunctionDeclaration functionWrapper) {
+		this.wrappedFunction = functionWrapper;
 	}
 }

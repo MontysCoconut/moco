@@ -91,9 +91,6 @@ public class DeclarationVisitor extends BaseVisitor {
 	/** {@inheritDoc} */
 	@Override
 	public void visit(ClassDeclaration node) {
-		if (!(node.getParentNode().getParentNode() instanceof ModuleDeclaration)) {
-			throw new InvalidPlaceToDeclareException(node, "A class may only be declared in a module.");
-		}
 		Block classBlock = node.getBlock();
 
 		currentScope.define(node);
@@ -108,7 +105,7 @@ public class DeclarationVisitor extends BaseVisitor {
 				node.getSuperClassIdentifiers().add(new ResolvableIdentifier("Object"));
 			}
 
-			ProcedureDeclaration defaultInitializer = buildDefaultInitializer(node);
+			FunctionDeclaration defaultInitializer = buildDefaultInitializer(node);
 			node.setDefaultInitializer(defaultInitializer);
 			classBlock.addDeclaration(defaultInitializer);
 			// The default initializer contains these statements so they should no longer be inside the class-block.
@@ -123,7 +120,7 @@ public class DeclarationVisitor extends BaseVisitor {
 
 	/** {@inheritDoc} */
 	@Override
-	public void visit(ProcedureDeclaration node) {
+	public void visit(FunctionDeclaration node) {
 		currentScope.define(node);
 		currentScope = new Scope(currentScope);
 		super.visit(node);
@@ -169,12 +166,12 @@ public class DeclarationVisitor extends BaseVisitor {
 		node.setScope(currentScope);
 	}
 
-	private ProcedureDeclaration buildDefaultInitializer(ClassDeclaration node) {
+	private FunctionDeclaration buildDefaultInitializer(ClassDeclaration node) {
 
-		ProcedureDeclaration initializer =
-		        new ProcedureDeclaration(node.getPosition(), new Identifier(node.getIdentifier().getSymbol()
+		FunctionDeclaration initializer =
+		        new FunctionDeclaration(node.getPosition(), new Identifier(node.getIdentifier().getSymbol()
 		                + "_definit"), new Block(node.getPosition()), new ArrayList<VariableDeclaration>(),
-		                ProcedureDeclaration.DeclarationType.DEFAULT_INITIALIZER, (TypeDeclaration) null);
+		                FunctionDeclaration.DeclarationType.DEFAULT_INITIALIZER, (TypeDeclaration) null, false);
 		initializer.setParentNode(node.getBlock());
 		Block initializerBlock = initializer.getBody();
 		initializerBlock.setParentNode(initializer);

@@ -44,21 +44,21 @@ import de.uni.bremen.monty.moco.antlr.MontyParser;
 import de.uni.bremen.monty.moco.ast.declaration.*;
 import de.uni.bremen.monty.moco.ast.expression.FunctionCall;
 import de.uni.bremen.monty.moco.ast.expression.VariableAccess;
+import de.uni.bremen.monty.moco.ast.expression.WrappedFunctionCall;
 import de.uni.bremen.monty.moco.ast.expression.literal.IntegerLiteral;
 import de.uni.bremen.monty.moco.ast.expression.literal.StringLiteral;
 import de.uni.bremen.monty.moco.ast.statement.Assignment;
 import de.uni.bremen.monty.moco.ast.statement.ConditionalStatement;
+import de.uni.bremen.monty.moco.util.TupleDeclarationFactory;
 import org.antlr.v4.runtime.ANTLRInputStream;
 import org.antlr.v4.runtime.CommonTokenStream;
 import org.apache.commons.io.FileUtils;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import java.io.File;
 import java.io.IOException;
 import java.net.URISyntaxException;
 
-import static de.uni.bremen.monty.moco.ast.declaration.VariableDeclaration.DeclarationType;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertTrue;
@@ -88,36 +88,40 @@ public class ASTBuilderTest {
 		ClassDeclaration classDecl = (ClassDeclaration) ast.getBlock().getDeclarations().get(0);
 		VariableDeclaration memberDecl = (VariableDeclaration) classDecl.getBlock().getDeclarations().get(0);
 		VariableDeclaration memberInit = (VariableDeclaration) classDecl.getBlock().getDeclarations().get(1);
-		ProcedureDeclaration memberProc = (ProcedureDeclaration) classDecl.getBlock().getDeclarations().get(2);
-		ProcedureDeclaration memberFun = (ProcedureDeclaration) classDecl.getBlock().getDeclarations().get(3);
+		FunctionDeclaration memberProc = (FunctionDeclaration) classDecl.getBlock().getDeclarations().get(2);
+		FunctionDeclaration memberFun = (FunctionDeclaration) classDecl.getBlock().getDeclarations().get(3);
 
 		VariableDeclaration varDecl = (VariableDeclaration) ast.getBlock().getDeclarations().get(1);
 		VariableDeclaration varInit = (VariableDeclaration) ast.getBlock().getDeclarations().get(2);
-		ProcedureDeclaration funDecl = (ProcedureDeclaration) ast.getBlock().getDeclarations().get(3);
-		ProcedureDeclaration procDecl = (ProcedureDeclaration) ast.getBlock().getDeclarations().get(4);
+		// 3 is the wrapper class
+		// 4 is the wrapper instance
+		FunctionDeclaration funDecl = (FunctionDeclaration) ast.getBlock().getDeclarations().get(5);
+		// 6 is the wrapper class
+		// 7 is the wrapper instance
+		FunctionDeclaration procDecl = (FunctionDeclaration) ast.getBlock().getDeclarations().get(8);
 
 		assertThat(varDecl.getDeclarationType(), is(VariableDeclaration.DeclarationType.VARIABLE));
 		assertThat(varInit.getDeclarationType(), is(VariableDeclaration.DeclarationType.VARIABLE));
 		assertThat(
-		        funDecl.getParameter().get(0).getDeclarationType(),
+		        funDecl.getParameters().get(0).getDeclarationType(),
 		        is(VariableDeclaration.DeclarationType.PARAMETER));
 		assertThat(
-		        procDecl.getParameter().get(0).getDeclarationType(),
+		        procDecl.getParameters().get(0).getDeclarationType(),
 		        is(VariableDeclaration.DeclarationType.PARAMETER));
 
 		assertThat(memberDecl.getDeclarationType(), is(VariableDeclaration.DeclarationType.ATTRIBUTE));
 		assertThat(memberInit.getDeclarationType(), is(VariableDeclaration.DeclarationType.ATTRIBUTE));
 		assertThat(
-		        memberProc.getParameter().get(0).getDeclarationType(),
+		        memberProc.getParameters().get(0).getDeclarationType(),
 		        is(VariableDeclaration.DeclarationType.PARAMETER));
 		assertThat(
-		        memberFun.getParameter().get(0).getDeclarationType(),
+		        memberFun.getParameters().get(0).getDeclarationType(),
 		        is(VariableDeclaration.DeclarationType.PARAMETER));
 
-		assertThat(memberProc.getDeclarationType(), is(ProcedureDeclaration.DeclarationType.METHOD));
-		assertThat(memberFun.getDeclarationType(), is(ProcedureDeclaration.DeclarationType.METHOD));
-		assertThat(funDecl.getDeclarationType(), is(ProcedureDeclaration.DeclarationType.UNBOUND));
-		assertThat(procDecl.getDeclarationType(), is(ProcedureDeclaration.DeclarationType.UNBOUND));
+		assertThat(memberProc.getDeclarationType(), is(FunctionDeclaration.DeclarationType.METHOD));
+		assertThat(memberFun.getDeclarationType(), is(FunctionDeclaration.DeclarationType.METHOD));
+		assertThat(funDecl.getDeclarationType(), is(FunctionDeclaration.DeclarationType.UNBOUND));
+		assertThat(procDecl.getDeclarationType(), is(FunctionDeclaration.DeclarationType.UNBOUND));
 
 	}
 
@@ -128,7 +132,8 @@ public class ASTBuilderTest {
 		ConditionalStatement condStmt = (ConditionalStatement) ast.getBlock().getStatements().get(0);
 
 		VariableAccess condition = (VariableAccess) condStmt.getCondition();
-		FunctionCall thenBlock = (FunctionCall) condStmt.getThenBlock().getStatements().get(0);
+		FunctionCall thenBlock =
+		        (FunctionCall) ((WrappedFunctionCall) condStmt.getThenBlock().getStatements().get(0)).getFunctionCall();
 		Block elseBlock = condStmt.getElseBlock();
 
 		assertThat(condition.getIdentifier().getSymbol(), is("a"));
@@ -144,8 +149,10 @@ public class ASTBuilderTest {
 		ConditionalStatement condStmt = (ConditionalStatement) ast.getBlock().getStatements().get(1);
 
 		VariableAccess condition = (VariableAccess) condStmt.getCondition();
-		FunctionCall thenBlock = (FunctionCall) condStmt.getThenBlock().getStatements().get(0);
-		FunctionCall elseBlock = (FunctionCall) condStmt.getElseBlock().getStatements().get(0);
+		FunctionCall thenBlock =
+		        ((WrappedFunctionCall) condStmt.getThenBlock().getStatements().get(0)).getFunctionCall();
+		FunctionCall elseBlock =
+		        ((WrappedFunctionCall) condStmt.getElseBlock().getStatements().get(0)).getFunctionCall();
 
 		assertThat(condition.getIdentifier().getSymbol(), is("a"));
 
@@ -160,12 +167,15 @@ public class ASTBuilderTest {
 		ConditionalStatement condStmt = (ConditionalStatement) ast.getBlock().getStatements().get(2);
 
 		VariableAccess firstCondition = (VariableAccess) condStmt.getCondition();
-		FunctionCall firstThenBlock = (FunctionCall) condStmt.getThenBlock().getStatements().get(0);
+		FunctionCall firstThenBlock =
+		        ((WrappedFunctionCall) condStmt.getThenBlock().getStatements().get(0)).getFunctionCall();
 		ConditionalStatement firstElseBlock = (ConditionalStatement) condStmt.getElseBlock().getStatements().get(0);
 
 		VariableAccess secondCondition = (VariableAccess) firstElseBlock.getCondition();
-		FunctionCall secondThenBlock = (FunctionCall) firstElseBlock.getThenBlock().getStatements().get(0);
-		FunctionCall secondElseBlock = (FunctionCall) firstElseBlock.getElseBlock().getStatements().get(0);
+		FunctionCall secondThenBlock =
+		        ((WrappedFunctionCall) firstElseBlock.getThenBlock().getStatements().get(0)).getFunctionCall();
+		FunctionCall secondElseBlock =
+		        ((WrappedFunctionCall) firstElseBlock.getElseBlock().getStatements().get(0)).getFunctionCall();
 
 		assertThat(firstCondition.getIdentifier().getSymbol(), is("a"));
 		assertThat(secondCondition.getIdentifier().getSymbol(), is("b"));
@@ -183,17 +193,21 @@ public class ASTBuilderTest {
 		ConditionalStatement condStmt = (ConditionalStatement) ast.getBlock().getStatements().get(3);
 
 		VariableAccess firstCondition = (VariableAccess) condStmt.getCondition();
-		FunctionCall firstThenBlock = (FunctionCall) condStmt.getThenBlock().getStatements().get(0);
+		FunctionCall firstThenBlock =
+		        ((WrappedFunctionCall) condStmt.getThenBlock().getStatements().get(0)).getFunctionCall();
 		ConditionalStatement firstElseBlock = (ConditionalStatement) condStmt.getElseBlock().getStatements().get(0);
 
 		VariableAccess secondCondition = (VariableAccess) firstElseBlock.getCondition();
-		FunctionCall secondThenBlock = (FunctionCall) firstElseBlock.getThenBlock().getStatements().get(0);
+		FunctionCall secondThenBlock =
+		        ((WrappedFunctionCall) firstElseBlock.getThenBlock().getStatements().get(0)).getFunctionCall();
 		ConditionalStatement secondElseBlock =
 		        (ConditionalStatement) firstElseBlock.getElseBlock().getStatements().get(0);
 
 		VariableAccess thirdCondition = (VariableAccess) secondElseBlock.getCondition();
-		FunctionCall thirdThenBlock = (FunctionCall) secondElseBlock.getThenBlock().getStatements().get(0);
-		FunctionCall thirdElseBlock = (FunctionCall) secondElseBlock.getElseBlock().getStatements().get(0);
+		FunctionCall thirdThenBlock =
+		        ((WrappedFunctionCall) secondElseBlock.getThenBlock().getStatements().get(0)).getFunctionCall();
+		FunctionCall thirdElseBlock =
+		        ((WrappedFunctionCall) secondElseBlock.getElseBlock().getStatements().get(0)).getFunctionCall();
 
 		assertThat(firstCondition.getIdentifier().getSymbol(), is("a"));
 		assertThat(secondCondition.getIdentifier().getSymbol(), is("b"));
@@ -213,16 +227,19 @@ public class ASTBuilderTest {
 		ConditionalStatement condStmt = (ConditionalStatement) ast.getBlock().getStatements().get(4);
 
 		VariableAccess firstCondition = (VariableAccess) condStmt.getCondition();
-		FunctionCall firstThenBlock = (FunctionCall) condStmt.getThenBlock().getStatements().get(0);
+		FunctionCall firstThenBlock =
+		        ((WrappedFunctionCall) condStmt.getThenBlock().getStatements().get(0)).getFunctionCall();
 		ConditionalStatement firstElseBlock = (ConditionalStatement) condStmt.getElseBlock().getStatements().get(0);
 
 		VariableAccess secondCondition = (VariableAccess) firstElseBlock.getCondition();
-		FunctionCall secondThenBlock = (FunctionCall) firstElseBlock.getThenBlock().getStatements().get(0);
+		FunctionCall secondThenBlock =
+		        ((WrappedFunctionCall) firstElseBlock.getThenBlock().getStatements().get(0)).getFunctionCall();
 		ConditionalStatement secondElseBlock =
 		        (ConditionalStatement) firstElseBlock.getElseBlock().getStatements().get(0);
 
 		VariableAccess thirdCondition = (VariableAccess) secondElseBlock.getCondition();
-		FunctionCall thirdThenBlock = (FunctionCall) secondElseBlock.getThenBlock().getStatements().get(0);
+		FunctionCall thirdThenBlock =
+		        ((WrappedFunctionCall) secondElseBlock.getThenBlock().getStatements().get(0)).getFunctionCall();
 
 		assertThat(firstCondition.getIdentifier().getSymbol(), is("a"));
 		assertThat(secondCondition.getIdentifier().getSymbol(), is("b"));
@@ -249,7 +266,7 @@ public class ASTBuilderTest {
 	}
 
 	private ModuleDeclaration buildAST(String fileName, MontyParser parser) {
-		ASTBuilder astBuilder = new ASTBuilder(fileName);
+		ASTBuilder astBuilder = new ASTBuilder(fileName, new TupleDeclarationFactory());
 		ASTNode rootNode = astBuilder.visitModuleDeclaration(parser.moduleDeclaration());
 		return (ModuleDeclaration) rootNode;
 	}

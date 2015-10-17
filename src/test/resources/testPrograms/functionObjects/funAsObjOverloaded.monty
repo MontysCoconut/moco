@@ -1,0 +1,34 @@
+// Testing: Function objects generated from overloaded functions
+//
+// A cast can be used in order to clarify which overloaded version is required
+//
+// Expected Output: Computer says: Hello
+//                  Computer says: Hello
+//                  Computer says: Hello
+//                  Computer says: World
+//                  Computer says: Hello
+//                  Computer says: Hello
+//                  Computer says: Hello
+//                  Computer says: World
+
+saySomething(String message, Int repeat):
+    Int counter := 0
+    while counter < repeat:
+        print("Computer says: ")
+        println(message)
+        counter += 1
+
+saySomething(String message):
+    print("Computer says: ")
+    println(message)
+
+
+(String, Int) -> () printer1 := saySomething as (String, Int) -> ()
+String -> () printer2 := saySomething as String -> ()
+
+
+saySomething("Hello", 3)
+saySomething("World")
+
+printer1("Hello", 3)
+printer2("World")

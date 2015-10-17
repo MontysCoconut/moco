@@ -36,49 +36,72 @@
  * You should have received a copy of the GNU General Public
  * License along with this library.
  */
+package de.uni.bremen.monty.moco.ast.expression;
 
-package de.uni.bremen.monty.moco.ast;
+import de.uni.bremen.monty.moco.ast.Position;
+import de.uni.bremen.monty.moco.ast.Scope;
+import de.uni.bremen.monty.moco.ast.declaration.TypeDeclaration;
+import de.uni.bremen.monty.moco.ast.statement.Statement;
+import de.uni.bremen.monty.moco.visitor.BaseVisitor;
 
-import de.uni.bremen.monty.moco.antlr.MontyLexer;
-import de.uni.bremen.monty.moco.antlr.MontyParser;
-import de.uni.bremen.monty.moco.ast.declaration.ModuleDeclaration;
-import de.uni.bremen.monty.moco.util.TupleDeclarationFactory;
-import org.antlr.v4.runtime.ANTLRInputStream;
-import org.antlr.v4.runtime.CommonTokenStream;
+public class WrappedFunctionCall extends Expression implements Statement {
+	private FunctionCall functionCall;
+	private MemberAccess memberAccess;
 
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.SequenceInputStream;
-
-public class AntlrAdapter {
-	private TupleDeclarationFactory tupleDeclarationFactory = new TupleDeclarationFactory();
-
-	public MontyParser createParser(final InputStream file) throws IOException {
-
-		InputStream in = createInputStream(file);
-
-		// the additional line-break is needed because of our indentation rule
-		// and the fact that a statement should be terminated by a line break
-		ANTLRInputStream input = new ANTLRInputStream(in);
-		MontyLexer lexer = new MontyLexer(input);
-		CommonTokenStream tokens = new CommonTokenStream(lexer);
-		return new MontyParser(tokens);
+	public WrappedFunctionCall(Position position, FunctionCall functionCall) {
+		super(position);
+		this.functionCall = functionCall;
+		this.memberAccess = null;
 	}
 
-	private InputStream createInputStream(InputStream file) {
-		return new SequenceInputStream(file, new ByteArrayInputStream("\n".getBytes()));
+	/** {@inheritDoc} */
+	@Override
+	public void visit(BaseVisitor visitor) {
+		visitor.visit(this);
 	}
 
-	public ModuleDeclaration parse(InputStream file, String fileName) throws IOException {
-		MontyParser parser = createParser(file);
-
-		ASTBuilder astBuilder = new ASTBuilder(fileName, tupleDeclarationFactory);
-		ASTNode moduleNode = astBuilder.visit(parser.compilationUnit());
-		return (ModuleDeclaration) moduleNode;
+	/** {@inheritDoc} */
+	@Override
+	public void visitChildren(BaseVisitor visitor) {
+		if (functionCall != null) {
+			visitor.visitDoubleDispatched(functionCall);
+		}
+		if (memberAccess != null) {
+			visitor.visitDoubleDispatched(memberAccess);
+		}
 	}
 
-	public TupleDeclarationFactory getTupleDeclarationFactory() {
-		return tupleDeclarationFactory;
+	public FunctionCall getFunctionCall() {
+		return functionCall;
+	}
+
+	public void setFunctionCall(FunctionCall functionCall) {
+		this.functionCall = functionCall;
+	}
+
+	public MemberAccess getMemberAccess() {
+		return memberAccess;
+	}
+
+	public void setMemberAccess(MemberAccess memberAccess) {
+		this.memberAccess = memberAccess;
+	}
+
+	@Override
+	public TypeDeclaration getType() {
+		if (functionCall != null) {
+			return functionCall.getType();
+		}
+		if (memberAccess != null) {
+			return memberAccess.getType();
+		}
+		return null;
+	}
+
+	@Override
+	public void setScope(Scope scope) {
+		if (functionCall != null) {
+			functionCall.setScope(scope);
+		}
 	}
 }

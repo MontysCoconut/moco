@@ -1,0 +1,16 @@
+// Testing: Functions as objects, storing functions in variables and call them
+//
+// Expected Output: 25\n25\n10\n
+
+Int square(Int x):
+    return x*x
+
+Int timesTwo(Int x):
+    return x*2
+
+(Int -> Int) sq := square
+
+println(square(5))
+println(sq(5))
+sq := timesTwo
+println(sq(5))

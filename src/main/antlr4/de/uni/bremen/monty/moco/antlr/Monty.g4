@@ -14,11 +14,15 @@ importLine
   : 'import' Identifier EndOfLine+
   ;
 
+declaration
+  : independentDeclaration
+  | classDeclaration
+  ;
+
 independentDeclaration
   : variableDeclaration (':=' expression)? EndOfLine
   | constantDeclaration (':=' expression)? EndOfLine
   | functionDeclaration
-  | procedureDeclaration
   ;
 
 classDeclaration
@@ -53,9 +57,15 @@ constantDeclaration
   : type ConstantIdentifier
   ;
 
+arrow
+  : '->'
+  ;
+
 type
   : ClassIdentifier ('<' typeList '>')?
-  | '(' type (',' type)+ ')'
+  | '(' (type (',' type)+)? ')'
+  | type arrow type
+  | '(' type arrow type ')'
   ;
 
 typeList
@@ -63,14 +73,9 @@ typeList
   ;
 
 functionDeclaration
-  : type
+  : (type)?
     Identifier
     Lparenthesis parameterList? Rparenthesis ':' EndOfLine
-    statementBlock
-  ;
-
-procedureDeclaration
-  : Identifier Lparenthesis parameterList? Rparenthesis ':' EndOfLine
     statementBlock
   ;
 
@@ -83,6 +88,10 @@ parameterList
   | variableDeclaration (',' variableDeclaration)*  (',' defaultParameter)*
   ;
 
+parameterListWithoutDefaults
+  : variableDeclaration (',' variableDeclaration)*
+  ;
+
 statementBlock
   : Indent
       (statement+ | 'pass' EndOfLine)
@@ -93,7 +102,7 @@ statement
   : whileStatement                                                  #whileStm
   | ifStatement                                                     #ifStm
   | tryStatement                                                    #tryStm
-  | independentDeclaration                                          #independentDeclStm
+  | declaration                                                     #declStm
   | unpackAssignment                                                #unpackAssignStm
   | assignment                                                      #assignStm
   | compoundAssignment                                              #compoundAssign
@@ -161,6 +170,7 @@ expressionList
 expression
   : functionCall
   | primary
+  | functionExpression
   | ifExprThen=expression 'if' ifExpCondition=expression 'else' ifExprElse=expression
   | left=expression accessOperator right=expression
   | <assoc=right> (plusMinusOperator | notOperator) singleExpression=expression
@@ -172,9 +182,13 @@ expression
   | left=expression inOperator right=expression
   | left=expression andOperator right=expression
   | left=expression orOperator right=expression
-  | expr=expression asOperator ClassIdentifier
+  | expr=expression asOperator type
   | expr=expression isOperator ClassIdentifier
   ;
+
+functionExpression
+ : Lparenthesis parameterListWithoutDefaults? Rparenthesis arrow expression
+ ;
 
 primary
   : Lparenthesis singleExpression=expression Rparenthesis
@@ -226,7 +240,7 @@ notOperator
   ;
 
 accessOperator
-  : operator=('.' | '->')
+  : operator='.'
   ;
 
 dotOperator

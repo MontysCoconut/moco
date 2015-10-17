@@ -42,7 +42,7 @@ import de.uni.bremen.monty.moco.ast.ASTNode;
 import de.uni.bremen.monty.moco.ast.Block;
 import de.uni.bremen.monty.moco.ast.Package;
 import de.uni.bremen.monty.moco.ast.declaration.Declaration;
-import de.uni.bremen.monty.moco.ast.declaration.ProcedureDeclaration;
+import de.uni.bremen.monty.moco.ast.declaration.FunctionDeclaration;
 import de.uni.bremen.monty.moco.ast.statement.BreakStatement;
 import de.uni.bremen.monty.moco.ast.statement.ConditionalStatement;
 import de.uni.bremen.monty.moco.ast.statement.ContinueStatement;
@@ -67,7 +67,7 @@ public class ControlFlowVisitor extends BaseVisitor {
 
 	/** {@inheritDoc} */
 	@Override
-	public void visit(ProcedureDeclaration node) {
+	public void visit(FunctionDeclaration node) {
 		needsReturnStatement = false;
 		if (node.isFunction() && !node.isAbstract()) {
 			needsReturnStatement = true;
@@ -162,11 +162,11 @@ public class ControlFlowVisitor extends BaseVisitor {
 		super.visit(node);
 		needsReturnStatement = false;
 		for (ASTNode currentNode = node; currentNode != null; currentNode = currentNode.getParentNode()) {
-			if (currentNode instanceof ProcedureDeclaration) {
+			if (currentNode instanceof FunctionDeclaration) {
 				return;
 			}
 		}
 
-		throw new InvalidControlFlowException(node, "Unable to find enclosing Function-/ProcedureDeclaration.");
+		throw new InvalidControlFlowException(node, "Unable to find enclosing function declaration.");
 	}
 }

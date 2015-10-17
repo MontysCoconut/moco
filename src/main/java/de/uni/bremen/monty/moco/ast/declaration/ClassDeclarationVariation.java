@@ -3,7 +3,6 @@ package de.uni.bremen.monty.moco.ast.declaration;
 import de.uni.bremen.monty.moco.ast.Block;
 import de.uni.bremen.monty.moco.ast.ClassScope;
 import de.uni.bremen.monty.moco.ast.ResolvableIdentifier;
-import de.uni.bremen.monty.moco.ast.Scope;
 import de.uni.bremen.monty.moco.ast.statement.Statement;
 
 import java.util.ArrayList;
@@ -27,16 +26,16 @@ public class ClassDeclarationVariation extends ClassDeclaration {
 		classScope.addParentClassScope((ClassScope) classDecl.getScope());
 		setScope(classScope);
 		classDecl.addVariation(this);
-		Collection<ProcedureDeclaration> procedureDeclarations = mapFunctions(classDecl.getVirtualMethodTable());
-		getVirtualMethodTable().addAll(procedureDeclarations);
+		Collection<FunctionDeclaration> functionDeclarations = mapFunctions(classDecl.getVirtualMethodTable());
+		getVirtualMethodTable().addAll(functionDeclarations);
 		mapBlock(classDecl.getBlock());
 		getBlock().setParentNode(this);
-		ProcedureDeclaration defaultInitializer = mapFunction(classDecl.getDefaultInitializer());
+		FunctionDeclaration defaultInitializer = mapFunction(classDecl.getDefaultInitializer());
 		setDefaultInitializer(defaultInitializer);
-		for (Declaration procedureDeclaration : getBlock().getDeclarations()) {
-			if (!(procedureDeclaration instanceof ProcedureDeclaration)
-			        || !((ProcedureDeclaration) procedureDeclaration).isDefaultInitializer()) {
-				classScope.define(procedureDeclaration);
+		for (Declaration functionDeclaration : getBlock().getDeclarations()) {
+			if (!(functionDeclaration instanceof FunctionDeclaration)
+			        || !((FunctionDeclaration) functionDeclaration).isDefaultInitializer()) {
+				classScope.define(functionDeclaration);
 			}
 		}
 		classScope.define(defaultInitializer);
@@ -48,8 +47,8 @@ public class ClassDeclarationVariation extends ClassDeclaration {
 		}
 		for (Declaration declaration : block.getDeclarations()) {
 
-			if (declaration instanceof ProcedureDeclaration) {
-				declaration = mapFunction((ProcedureDeclaration) declaration);
+			if (declaration instanceof FunctionDeclaration) {
+				declaration = mapFunction((FunctionDeclaration) declaration);
 			} else if (declaration instanceof VariableDeclaration) {
 				declaration = mapDeclaration((VariableDeclaration) declaration);
 			}
@@ -57,25 +56,25 @@ public class ClassDeclarationVariation extends ClassDeclaration {
 		}
 	}
 
-	private Collection<ProcedureDeclaration> mapFunctions(List<ProcedureDeclaration> originalVirtualMethods) {
-		ArrayList<ProcedureDeclaration> procedureDeclarations = new ArrayList<>();
-		for (ProcedureDeclaration procedureDeclaration : originalVirtualMethods) {
-			procedureDeclarations.add(mapFunction(procedureDeclaration));
+	private Collection<FunctionDeclaration> mapFunctions(List<FunctionDeclaration> originalVirtualMethods) {
+		ArrayList<FunctionDeclaration> functionDeclarations = new ArrayList<>();
+		for (FunctionDeclaration functionDeclaration : originalVirtualMethods) {
+			functionDeclarations.add(mapFunction(functionDeclaration));
 		}
-		return procedureDeclarations;
+		return functionDeclarations;
 	}
 
-	private ProcedureDeclaration mapFunction(ProcedureDeclaration procedureDeclaration) {
-		ProcedureDeclaration funDecl;
-		if (procedureDeclaration.isFunction()) {
-			TypeDeclaration returnType = mapGenericType((procedureDeclaration).getReturnType());
-			funDecl = new ConcreteProcDecl(this, procedureDeclaration, returnType);
+	private FunctionDeclaration mapFunction(FunctionDeclaration functionDeclaration) {
+		FunctionDeclaration funDecl;
+		if (functionDeclaration.isFunction()) {
+			TypeDeclaration returnType = mapGenericType((functionDeclaration).getReturnType());
+			funDecl = new ConcreteProcDecl(this, functionDeclaration, returnType);
 		} else {
-			funDecl = new ConcreteProcDecl(this, procedureDeclaration);
+			funDecl = new ConcreteProcDecl(this, functionDeclaration);
 		}
-		funDecl.getParameter().addAll(mapParameter(procedureDeclaration.getParameter(), funDecl));
+		funDecl.getParameters().addAll(mapParameter(functionDeclaration.getParameters(), funDecl));
 		funDecl.setParentNode(this);
-		funDecl.setScope(procedureDeclaration.getScope());
+		funDecl.setScope(functionDeclaration.getScope());
 		return funDecl;
 	}
 
@@ -100,7 +99,7 @@ public class ClassDeclarationVariation extends ClassDeclaration {
 		return concreteGenericTypes;
 	}
 
-	private List<VariableDeclaration> mapParameter(List<VariableDeclaration> parameter, ProcedureDeclaration decl) {
+	private List<VariableDeclaration> mapParameter(List<VariableDeclaration> parameter, FunctionDeclaration decl) {
 		ArrayList<VariableDeclaration> params = new ArrayList<>();
 		for (VariableDeclaration variableDeclaration : parameter) {
 			VariableDeclaration var;
@@ -144,5 +143,48 @@ public class ClassDeclarationVariation extends ClassDeclaration {
 	@Override
 	public void addVariation(ClassDeclarationVariation variation) {
 		baseClass.addVariation(variation);
+	}
+
+	/** this method checks whether the type parameters match exactly
+	 *
+	 * @param other
+	 * @return true if all params have the same type */
+	protected boolean doTypeParamsMatch(TypeDeclaration other) {
+		if (other instanceof ClassDeclarationVariation) {
+			List<ClassDeclaration> otherGenerics = ((ClassDeclarationVariation) other).getConcreteGenericTypes();
+			List<ClassDeclaration> ownGenerics = getConcreteGenericTypes();
+			if (otherGenerics.size() == ownGenerics.size()) {
+				for (int i = 0; i < ownGenerics.size(); i++) {
+					// invariant behavior for generic classes
+					if (!ownGenerics.get(i).matchesTypeExactly(otherGenerics.get(i))) {
+						return false;
+					}
+				}
+				return true;
+			}
+		}
+		return false;
+	}
+
+	@Override
+	public int getTypeDist(TypeDeclaration other, int dist) {
+		if (doTypeParamsMatch(other)) { // currently we only support invariance
+			return super.getTypeDist(other, dist);
+		} else { // but if the other one does not have any type parameters, super types of it could do so...
+			if (other instanceof ClassDeclaration) {
+				List<TypeDeclaration> superTypes = ((ClassDeclaration) other).getSuperClassDeclarations();
+				int minScore = Integer.MAX_VALUE;
+				for (TypeDeclaration superType : superTypes) {
+					int score = getTypeDist(superType);
+					if (score < minScore) {
+						minScore = score;
+					}
+				}
+				if ((dist < Integer.MAX_VALUE) && (minScore < Integer.MAX_VALUE)) {
+					return dist + minScore;
+				}
+			}
+		}
+		return Integer.MAX_VALUE;
 	}
 }

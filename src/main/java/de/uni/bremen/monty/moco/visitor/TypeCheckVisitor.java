@@ -39,6 +39,7 @@
 package de.uni.bremen.monty.moco.visitor;
 
 import de.uni.bremen.monty.moco.ast.ASTNode;
+import de.uni.bremen.monty.moco.ast.Block;
 import de.uni.bremen.monty.moco.ast.CoreClasses;
 import de.uni.bremen.monty.moco.ast.declaration.*;
 import de.uni.bremen.monty.moco.ast.expression.*;
@@ -70,7 +71,7 @@ public class TypeCheckVisitor extends BaseVisitor {
 		if (!node.isAbstract()) {
 			// go through all methods and ensure that there remains no abstract one
 			// (i.e. all abstract ones are overridden)
-			for (ProcedureDeclaration procDecl : node.getVirtualMethodTable()) {
+			for (FunctionDeclaration procDecl : node.getVirtualMethodTable()) {
 				if (procDecl.isAbstract()) {
 					ASTNode parent = procDecl;
 					while (!(parent instanceof ClassDeclaration)) {
@@ -162,7 +163,7 @@ public class TypeCheckVisitor extends BaseVisitor {
 				        node.getLeft().getClass().getSimpleName()));
 			}
 		} else if (!(node.getRight() instanceof FunctionCall) && !(node.getRight() instanceof VariableAccess)
-		        && !(node.getRight() instanceof MemberAccess)) {
+		        && !(node.getRight() instanceof WrappedFunctionCall) && !(node.getRight() instanceof MemberAccess)) {
 			throw new TypeMismatchException(node, String.format(
 			        "Invalid right part %s on member access.",
 			        node.getLeft().getClass().getSimpleName()));
@@ -230,7 +231,7 @@ public class TypeCheckVisitor extends BaseVisitor {
 
 	/** {@inheritDoc} */
 	@Override
-	public void visit(ProcedureDeclaration node) {
+	public void visit(FunctionDeclaration node) {
 		super.visit(node);
 		if (node.isFunction()) {
 			if (!(node.getReturnType() instanceof ClassDeclaration || node.getReturnType() instanceof AbstractGenericType)) {
@@ -253,33 +254,33 @@ public class TypeCheckVisitor extends BaseVisitor {
 	@Override
 	public void visit(FunctionCall node) {
 		super.visit(node);
-		ProcedureDeclaration procedure = node.getDeclaration();
+		FunctionDeclaration function = node.getDeclaration();
 
-		if (procedure.isFunction()) {
-			if (procedure.isInitializer()) {
-				throw new TypeMismatchException(node, "Contructor has to be a procedure.");
+		if (function.isFunction()) {
+			if (function.isInitializer()) {
+				throw new TypeMismatchException(node, "Initializer may not have a return type.");
 			}
-			if (!node.getType().matchesType(procedure.getReturnType())) {
+			if (!node.getType().matchesType(function.getReturnType())) {
 				throw new TypeMismatchException(node, "Returntype of function call does not match declaration.");
 			}
 		} else {
-			if (!procedure.isInitializer() && node.getType() != CoreClasses.voidType()) {
-				throw new TypeMismatchException(node, "Function call of procedure must not return anything.");
+			if (!function.isInitializer() && node.getType() != CoreClasses.voidType()) {
+				throw new TypeMismatchException(node, "Procedures must not return anything.");
 			}
 		}
 
-		boolean callMatchesDeclaration = callMatchesDeclaration(node, procedure);
+		boolean callMatchesDeclaration = callMatchesDeclaration(node, function);
 
 		if (!callMatchesDeclaration) {
 			throw new TypeMismatchException(node, "Arguments of function call do not match declaration.");
 		}
 	}
 
-	private boolean callMatchesDeclaration(FunctionCall node, ProcedureDeclaration procedure) {
+	private boolean callMatchesDeclaration(FunctionCall node, FunctionDeclaration function) {
 		boolean callMatchesDeclaration = true;
 
 		List<Expression> callParams = node.getArguments();
-		List<VariableDeclaration> declParams = procedure.getParameter();
+		List<VariableDeclaration> declParams = function.getParameters();
 		if (callParams.size() == declParams.size()) {
 			for (int i = 0; i < callParams.size(); i++) {
 				Expression callParam = callParams.get(i);
@@ -303,11 +304,7 @@ public class TypeCheckVisitor extends BaseVisitor {
 	@Override
 	public void visit(ReturnStatement node) {
 		super.visit(node);
-		ASTNode parent = node;
-		while (!(parent instanceof ProcedureDeclaration)) {
-			parent = parent.getParentNode();
-		}
-		ProcedureDeclaration proc = ((ProcedureDeclaration) parent);
+		FunctionDeclaration proc = ((FunctionDeclaration) node.getParentNodeByType(FunctionDeclaration.class));
 		if (proc.isFunction()) {
 			if (!(node.getParameter().getType().matchesType(proc.getReturnType()))) {
 				throw new TypeMismatchException(node, String.format(

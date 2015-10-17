@@ -149,11 +149,11 @@ public class BaseVisitor {
 		onExitChildrenEachNode(node);
 	}
 
-	/** Visitor method to visit a ProcedureDeclaration.
+	/** Visitor method to visit a FunctionDeclaration.
 	 *
 	 * @param node
 	 *            the node to visit */
-	public void visit(ProcedureDeclaration node) {
+	public void visit(FunctionDeclaration node) {
 		onEnterChildrenEachNode(node);
 		node.visitChildren(this);
 		onExitChildrenEachNode(node);
@@ -226,6 +226,16 @@ public class BaseVisitor {
 	 * @param node
 	 *            the node to visit */
 	public void visit(FunctionCall node) {
+		onEnterChildrenEachNode(node);
+		node.visitChildren(this);
+		onExitChildrenEachNode(node);
+	}
+
+	/** Visitor method to visit a WrappedFunctionCall.
+	 *
+	 * @param node
+	 *            the node to visit */
+	public void visit(WrappedFunctionCall node) {
 		onEnterChildrenEachNode(node);
 		node.visitChildren(this);
 		onExitChildrenEachNode(node);

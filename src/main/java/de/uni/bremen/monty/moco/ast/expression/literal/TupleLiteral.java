@@ -44,34 +44,26 @@ import de.uni.bremen.monty.moco.ast.declaration.*;
 import de.uni.bremen.monty.moco.ast.expression.*;
 
 import java.util.ArrayList;
+import java.util.List;
 
 public class TupleLiteral extends FunctionCall {
-
-	private final ClassDeclaration genericTupleClass;
-
 	/** Constructor.
 	 *
 	 * @param position
 	 *            Position of this node
 	 * @param entries */
-	public TupleLiteral(Position position, ClassDeclaration genericTupleClass, ArrayList<Expression> entries) {
-		super(position, new ResolvableIdentifier("Tuple" + entries.size(), new ArrayList<ResolvableIdentifier>()),
-		        entries);
-		this.genericTupleClass = genericTupleClass;
+	public TupleLiteral(Position position, List<Expression> entries) {
+		super(position, new ResolvableIdentifier("Tuple" + entries.size(), new ArrayList<ResolvableIdentifier>(
+		        entries.size())), entries);
 	}
 
 	public void setConcreteTupleType() {
-		ArrayList<ClassDeclaration> concreteTypes = new ArrayList<>(arguments.size());
 		for (Expression entry : arguments) {
 			if (entry.getType() instanceof ClassDeclaration) {
-				concreteTypes.add((ClassDeclaration) entry.getType());
 				getIdentifier().getGenericTypes().add(ResolvableIdentifier.convert(entry.getType().getIdentifier()));
 			} else {
 				throw new RuntimeException("TYPE:: " + entry.getType());
 			}
 		}
-		setType(genericTupleClass.getVariation(
-		        ResolvableIdentifier.convert(genericTupleClass.getIdentifier()),
-		        concreteTypes));
 	}
 }

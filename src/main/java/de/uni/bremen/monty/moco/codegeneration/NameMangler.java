@@ -45,8 +45,6 @@ import de.uni.bremen.monty.moco.ast.declaration.*;
 import de.uni.bremen.monty.moco.ast.statement.ConditionalStatement;
 import de.uni.bremen.monty.moco.ast.statement.WhileLoop;
 
-import java.util.EnumMap;
-
 enum Mangled {
 	MODULE("M."), CLASS(".C."), FUNC(".F."), PROC(".P."), BLOCK(".B."), VAR(".V."), TYPE("$"), IF("IF."), ELSE("ELSE."), WHILE(
 	        "WHILE.");
@@ -86,9 +84,9 @@ enum Mangled {
  * mangled : packet_module(_class)?((_block|_proc|_func)*(_proc|_func|_var))?; * */
 public class NameMangler {
 
-	private String mangleProcedureDeclaration(ProcedureDeclaration node, String midTerm) {
+	private String mangleFunctionDeclaration(FunctionDeclaration node, String midTerm) {
 		String parameter = "";
-		for (final VariableDeclaration variableDeclaration : node.getParameter()) {
+		for (final VariableDeclaration variableDeclaration : node.getParameters()) {
 			if (escapeForLLVM(variableDeclaration.getIdentifier()).equals("self")) {
 			} else {
 				TypeDeclaration type = variableDeclaration.getType();
@@ -116,17 +114,17 @@ public class NameMangler {
 		return (ClassDeclaration) type;
 	}
 
-	public String mangleProcedure(ProcedureDeclaration node) {
+	public String mangleFunction(FunctionDeclaration node) {
 		if (node.isFunction()) {
 			String funcName = Mangled.FUNC + escapeForLLVM(node.getIdentifier());
 			funcName += Mangled.TYPE + mangleClass(getConcreteClass(node, node.getReturnType()));
 
-			return mangleProcedureDeclaration(node, funcName);
+			return mangleFunctionDeclaration(node, funcName);
 
 		} else {
-			final String procName = Mangled.PROC + escapeForLLVM(node.getIdentifier());
+			final String funName = Mangled.PROC + escapeForLLVM(node.getIdentifier());
 
-			return mangleProcedureDeclaration(node, procName);
+			return mangleFunctionDeclaration(node, funName);
 		}
 	}
 
@@ -146,8 +144,8 @@ public class NameMangler {
 			return mangleModule((ModuleDeclaration) parent);
 		} else if (parent instanceof ClassDeclaration) {
 			return mangleClass((ClassDeclaration) parent);
-		} else if (parent instanceof ProcedureDeclaration) {
-			return mangleProcedure((ProcedureDeclaration) parent);
+		} else if (parent instanceof FunctionDeclaration) {
+			return mangleFunction((FunctionDeclaration) parent);
 		} else if (parent instanceof ConditionalStatement || parent instanceof WhileLoop) {
 			return Mangled.BLOCK + Integer.toHexString(System.identityHashCode(parent)) + mangleBlock(parent);
 		} else {
@@ -156,11 +154,7 @@ public class NameMangler {
 	}
 
 	public String mangleClass(ClassDeclaration node) {
-		ASTNode n = node;
-		while (!(n instanceof ModuleDeclaration)) {
-			n = n.getParentNode();
-		}
-		ModuleDeclaration module = (ModuleDeclaration) n;
+		ModuleDeclaration module = (ModuleDeclaration) node.getParentNodeByType(ModuleDeclaration.class);
 		String base = mangleModule(module);
 
 		String className = Mangled.CLASS + escapeForLLVM(node.getIdentifier());

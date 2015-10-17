@@ -42,11 +42,12 @@ import de.uni.bremen.monty.moco.ast.*;
 import de.uni.bremen.monty.moco.ast.declaration.*;
 import de.uni.bremen.monty.moco.ast.expression.*;
 import de.uni.bremen.monty.moco.ast.expression.literal.*;
+import de.uni.bremen.monty.moco.ast.statement.ReturnStatement;
+import de.uni.bremen.monty.moco.ast.statement.Statement;
 import de.uni.bremen.monty.moco.ast.statement.UnpackAssignment;
-import de.uni.bremen.monty.moco.exception.InvalidExpressionException;
-import de.uni.bremen.monty.moco.exception.TypeMismatchException;
-import de.uni.bremen.monty.moco.exception.UnknownIdentifierException;
-import de.uni.bremen.monty.moco.exception.UnknownTypeException;
+import de.uni.bremen.monty.moco.exception.*;
+import de.uni.bremen.monty.moco.util.OverloadCandidate;
+import de.uni.bremen.monty.moco.util.TupleDeclarationFactory;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -83,7 +84,7 @@ public class ResolveVisitor extends VisitOnceVisitor {
 
 	private void setVMT(ClassDeclaration node, List<TypeDeclaration> superClasses) {
 		int attributeIndex = 1;
-		List<ProcedureDeclaration> virtualMethodTable = node.getVirtualMethodTable();
+		List<FunctionDeclaration> virtualMethodTable = node.getVirtualMethodTable();
 		// This can only deal with single inheritance!
 		if (!superClasses.isEmpty()) {
 			TypeDeclaration type = superClasses.get(0);
@@ -101,12 +102,12 @@ public class ResolveVisitor extends VisitOnceVisitor {
 			if (decl instanceof VariableDeclaration) {
 				VariableDeclaration varDecl = (VariableDeclaration) decl;
 				varDecl.setAttributeIndex(attributeIndex++);
-			} else if (decl instanceof ProcedureDeclaration) {
-				ProcedureDeclaration procDecl = (ProcedureDeclaration) decl;
+			} else if (decl instanceof FunctionDeclaration) {
+				FunctionDeclaration procDecl = (FunctionDeclaration) decl;
 				if (!procDecl.isInitializer()) {
 					boolean foundEntry = false;
 					for (int i = 0; !foundEntry && i < virtualMethodTable.size(); i++) {
-						ProcedureDeclaration vmtEntry = virtualMethodTable.get(i);
+						FunctionDeclaration vmtEntry = virtualMethodTable.get(i);
 						if (procDecl.matchesType(vmtEntry)) {
 							virtualMethodTable.set(i, procDecl);
 							procDecl.setVMTIndex(vmtEntry.getVMTIndex());
@@ -143,9 +144,16 @@ public class ResolveVisitor extends VisitOnceVisitor {
 	@Override
 	public void visit(VariableAccess node) {
 		super.visit(node);
+		Declaration declaration = null;
 
 		Scope scope = node.getScope();
-		Declaration declaration = scope.resolve(node.getIdentifier());
+		// if the variable access is casted into something else, right away...
+		if (node.getParentNode() instanceof CastExpression) {
+			declaration = overloadResolutionForVariableAccess(node);
+		}
+		if (declaration == null) {
+			declaration = scope.resolve(node.getIdentifier());
+		}
 
 		if (declaration instanceof VariableDeclaration) {
 			VariableDeclaration variable = (VariableDeclaration) declaration;
@@ -159,6 +167,36 @@ public class ResolveVisitor extends VisitOnceVisitor {
 				}
 			}
 		}
+	}
+
+	/** If a variable access is casted into a function, we can do overload resolution just like for function calls e.g.
+	 * "Int -> Int myFunction := square as (Int -> Int)" will look for the implementation of square with the correct
+	 * signature.
+	 *
+	 * @param node
+	 * @return */
+	protected Declaration overloadResolutionForVariableAccess(VariableAccess node) {
+		CastExpression cast = (CastExpression) node.getParentNode();
+		TypeDeclaration castedTo = cast.getScope().resolveType(cast.getCastIdentifier());
+		Declaration declaration = null;
+		if (castedTo.matchesType(CoreClasses.functionType())) {
+
+			ClassDeclaration paramType = ((ClassDeclarationVariation) castedTo).getConcreteGenericTypes().get(0);
+			List<TypeDeclaration> params = new ArrayList<>();
+			if (TupleDeclarationFactory.isTuple(paramType)) {
+				params.addAll(((ClassDeclarationVariation) paramType).getConcreteGenericTypes());
+			} else {
+				params.add(paramType);
+			}
+			declaration = overloadResolution(params, node.getScope().resolveFunction(node.getIdentifier()));
+			if (declaration instanceof FunctionDeclaration) {
+				declaration = ((FunctionDeclaration) declaration).getWrapperFunctionObjectDeclaration();
+			}
+			if (declaration == null) {
+				throw new UnknownIdentifierException(node, ResolvableIdentifier.convert(node.getIdentifier()));
+			}
+		}
+		return declaration;
 	}
 
 	/** {@inheritDoc} */
@@ -282,17 +320,27 @@ public class ResolveVisitor extends VisitOnceVisitor {
 
 	/** {@inheritDoc} */
 	@Override
-	public void visit(ProcedureDeclaration node) {
-		if (node.isFunction()) {
-			Scope scope = node.getScope();
-			TypeDeclaration returnType = scope.resolveType(node.getReturnTypeIdentifier());
-			node.setReturnType(returnType);
-		} else {
-			if (node.isMethod() && node.getIdentifier().getSymbol().equals("initializer")) {
-				node.setDeclarationType(ProcedureDeclaration.DeclarationType.INITIALIZER);
+	public void visit(FunctionDeclaration node) {
+		if (node.isReturnTypeToBeInferred()) {
+			super.visit(node);
+			Statement returnStatement = node.getBody().getStatements().get(node.getBody().getStatements().size() - 1);
+			if (returnStatement instanceof ReturnStatement) {
+				node.setInferredReturnType(((ReturnStatement) returnStatement).getParameter().getType());
+			} else {
+				throw new MontyBaseException(node, "can not infer return type!");
 			}
+		} else {
+			if (node.isFunction()) {
+				Scope scope = node.getScope();
+				TypeDeclaration returnType = scope.resolveType(node.getReturnTypeIdentifier());
+				node.setReturnType(returnType);
+			} else {
+				if (node.isMethod() && node.getIdentifier().getSymbol().equals("initializer")) {
+					node.setDeclarationType(FunctionDeclaration.DeclarationType.INITIALIZER);
+				}
+			}
+			super.visit(node);
 		}
-		super.visit(node);
 	}
 
 	/** {@inheritDoc} */
@@ -309,28 +357,78 @@ public class ResolveVisitor extends VisitOnceVisitor {
 
 		declaration = scope.tryToResolveType(node.getIdentifier());
 
+		// constructor call
 		if (declaration instanceof ClassDeclaration) {
 			ClassDeclaration classDecl = (ClassDeclaration) declaration;
 			ResolvableIdentifier identifier = node.getIdentifier();
 			if (classDecl.isAbstract()) {
 				throw new InvalidExpressionException(node, "The abstract class '" + identifier.toString()
-				        + "' may not be instantiated");
+				        + "' must not be instantiated");
 			}
 			node.setType(classDecl);
-			ProcedureDeclaration initializer = findMatchingInitializer(node, classDecl);
+			FunctionDeclaration initializer = (FunctionDeclaration) findMatchingInitializer(node, classDecl);
 			initializer = (initializer != null) ? initializer : classDecl.getDefaultInitializer();
 			node.setDeclaration(initializer);
 		} else {
-			ProcedureDeclaration procedure = findMatchingProcedure(node, scope.resolveProcedure(node.getIdentifier()));
-			node.setDeclaration(procedure);
-			if (procedure.isFunction()) {
-				visitDoubleDispatched(procedure);
+			List<TypeDeclaration> argTypes = new ArrayList<>(node.getArguments().size());
+			for (Expression exp : node.getArguments()) {
+				argTypes.add(exp.getType());
+			}
+			Declaration callableDeclaration = overloadResolution(argTypes, scope.resolveFunction(node.getIdentifier()));
 
-				node.setType(procedure.getReturnType());
+			if (callableDeclaration instanceof FunctionDeclaration) {
+				FunctionDeclaration function = (FunctionDeclaration) callableDeclaration;
+				node.setDeclaration(function);
+				if (function.isFunction()) {
+					visitDoubleDispatched(function);
+
+					node.setType(function.getReturnType());
+				} else {
+					node.setType(CoreClasses.voidType());
+				}
+			} else if (callableDeclaration instanceof VariableDeclaration) {
+				callVariable(node, callableDeclaration);
 			} else {
-				node.setType(CoreClasses.voidType());
+				throw new TypeMismatchException(node, "Arguments of function call do not match declaration.");
 			}
 		}
+	}
+
+	/** this method does the wrapping logic for function objects
+	 *
+	 * @param node
+	 * @param callableDeclaration */
+	protected void callVariable(FunctionCall node, Declaration callableDeclaration) {
+		VariableAccess varAccess =
+		        new VariableAccess(node.getPosition(),
+		                ResolvableIdentifier.convert(callableDeclaration.getIdentifier()));
+
+		TupleLiteral tuple = null;
+		// if there are more than one arguments, we have to pack them into a tuple...
+		List<Expression> arguments = node.getArguments();
+		if (arguments.size() != 1) {
+			arguments = new ArrayList<>(1);
+			tuple = new TupleLiteral(node.getPosition(), node.getArguments());
+			arguments.add(tuple);
+		}
+		FunctionCall functionCall =
+		        new FunctionCall(node.getPosition(), new ResolvableIdentifier("_apply_"), arguments);
+		MemberAccess memberAccess = new MemberAccess(node.getPosition(), varAccess, functionCall);
+		memberAccess.setScope(node.getScope());
+		functionCall.setParentNode(memberAccess);
+		varAccess.setParentNode(memberAccess);
+		functionCall.setScope(node.getScope());
+		varAccess.setScope(node.getScope());
+		if (tuple != null) {
+			tuple.setParentNode(functionCall);
+			tuple.setScope(functionCall.getScope());
+		}
+
+		WrappedFunctionCall wrapper = (WrappedFunctionCall) node.getParentNode();
+		wrapper.setMemberAccess(memberAccess);
+		memberAccess.setParentNode(wrapper);
+		wrapper.setFunctionCall(null);
+		visit(wrapper);
 	}
 
 	/** Find an enclosing class of this node.
@@ -355,60 +453,160 @@ public class ResolveVisitor extends VisitOnceVisitor {
 	 * @param classDeclaration
 	 *            the class declaration searched for a matching initializer.
 	 * @return the matching initializer if one is found for the given function call or null otherwise */
-	private ProcedureDeclaration findMatchingInitializer(FunctionCall node, ClassDeclaration classDeclaration) {
+	private Declaration findMatchingInitializer(FunctionCall node, ClassDeclaration classDeclaration) {
 
-		List<ProcedureDeclaration> procedures = new ArrayList<>();
+		List<Declaration> functions = new ArrayList<>();
 
 		// iterate through the declarations of the given class
 		for (Declaration declaration : classDeclaration.getBlock().getDeclarations()) {
 			// find a matching declaration
 			if ("initializer".equals(declaration.getIdentifier().getSymbol())) {
-				// and verify that it is a procedure...
-				if (declaration instanceof ProcedureDeclaration) {
-					// and not a function
-					if (!(((ProcedureDeclaration) declaration).isFunction())) {
-						procedures.add((ProcedureDeclaration) declaration);
+				// and verify that it is a function...
+				if (declaration instanceof FunctionDeclaration) {
+					// without any return type
+					if (!(((FunctionDeclaration) declaration).isFunction())) {
+						functions.add(declaration);
 					}
 				}
 			}
 		}
 
-		if (procedures.isEmpty()) {
+		if (functions.isEmpty()) {
 			return null;
 		} else {
-			return findMatchingProcedure(node, procedures);
+			List<TypeDeclaration> argTypes = new ArrayList<>(node.getArguments().size());
+			for (Expression exp : node.getArguments()) {
+				argTypes.add(exp.getType());
+			}
+			return overloadResolution(argTypes, functions);
 		}
 	}
 
-	/** Searches the given list of procedures in order to find one that matches the signature of the given function call.
+	/** this one performs the best-fit algorithm, described in the language specification
 	 *
-	 * @param node
-	 *            a function call node representing the function call
-	 * @param procedures
-	 *            the possible procedure declarations for this call
-	 * @return the matching declaration if one is found for the given function call or the first in the list otherwise */
-	private ProcedureDeclaration findMatchingProcedure(FunctionCall node, List<ProcedureDeclaration> procedures) {
+	 * @param arguments
+	 * @param functions
+	 * @return */
+	public Declaration overloadResolution(List<TypeDeclaration> arguments, List<Declaration> functions) {
+		List<OverloadCandidate> candidates = new ArrayList<>();
+		for (Declaration declaration : functions) {
+			if (declaration instanceof FunctionDeclaration) {
+				handleOverloadedFunction(arguments, declaration, candidates);
+			} else if (declaration instanceof VariableDeclaration) {
+				handleOverloadedVariable(arguments, declaration, candidates);
+			} else {
+				throw new RuntimeException("Invalid declaration type for overload resolution: '"
+				        + declaration.getIdentifier() + "'!");
+			}
+		}
+		Declaration result = null;
+		// find out the minimum type distance
+		int minScore = Integer.MAX_VALUE;
+		for (OverloadCandidate candidate : candidates) {
+			if (candidate.getScore() < minScore) {
+				minScore = candidate.getScore();
+				result = candidate.getDeclaration();
+			}
+		}
+		return result;
+	}
 
-		List<Expression> callParams = node.getArguments();
-		for (ProcedureDeclaration procedure : procedures) {
-			List<VariableDeclaration> procParams = procedure.getParameter();
-
-			if (callParams.size() == procParams.size()) {
-				boolean allParamsMatch = true;
-				for (int i = 0; i < callParams.size(); i++) {
-					Expression callParam = callParams.get(i);
-					VariableDeclaration procParam = procParams.get(i);
-					visitDoubleDispatched(procParam);
-					if (!callParam.getType().matchesType(procParam.getType())) {
-						allParamsMatch = false;
-						break;
-					}
-				}
-				if (allParamsMatch) {
-					return procedure;
+	/** this is a helper method which finds out whether a typeDeclaration is a classdeclarationvariation or a subtype of
+	 * some. This is needed since function types are subtypes of Function<Param, Return>, but not
+	 * ClassDeclarationVariations themself.
+	 *
+	 * @param type
+	 * @return */
+	protected ClassDeclarationVariation getClassDeclarationVariationFromTypeDecl(TypeDeclaration type) {
+		if (type instanceof ClassDeclarationVariation) {
+			return (ClassDeclarationVariation) type;
+		} else if (type instanceof ClassDeclaration) {
+			List<TypeDeclaration> superClasses = ((ClassDeclaration) type).getSuperClassDeclarations();
+			for (TypeDeclaration decl : superClasses) {
+				ClassDeclarationVariation result = getClassDeclarationVariationFromTypeDecl(decl);
+				if (result != null) {
+					return result;
 				}
 			}
 		}
-		return procedures.get(0);
+		return null;
+	}
+
+	/** adds 'declaration' to 'candidates' if the signature of it matches 'arguments'
+	 *
+	 * @param arguments
+	 * @param declaration
+	 * @param candidates */
+	protected void handleOverloadedFunction(List<TypeDeclaration> arguments, Declaration declaration,
+	        List<OverloadCandidate> candidates) {
+		FunctionDeclaration funDecl = (FunctionDeclaration) declaration;
+		if (funDecl.getParameters().size() == arguments.size()) {
+			int score = 0;
+			int argIndex = 0;
+			for (VariableDeclaration param : funDecl.getParameters()) {
+				visitDoubleDispatched(param);
+				int typeDist = param.getType().getTypeDist(arguments.get(argIndex));
+				if ((typeDist < Integer.MAX_VALUE) && (score < Integer.MAX_VALUE)) {
+					score += typeDist;
+					argIndex++;
+				} else {
+					score = Integer.MAX_VALUE;
+					break;
+				}
+			}
+			if (score != Integer.MAX_VALUE) {
+				candidates.add(new OverloadCandidate(declaration, score));
+			}
+			// special case for functions without parameters
+		} else if ((arguments.size() == 0) && (funDecl.getParameters().size() == 1)
+		        && (funDecl.getParameters().get(0).getType() != null)
+		        && (funDecl.getParameters().get(0).getType().getIdentifier().getSymbol().equals("Tuple0"))) {
+			candidates.add(new OverloadCandidate(declaration, 0));
+		}
+	}
+
+	/** does the same as handleOverloadedFunction, but for function objects stored in variables
+	 *
+	 * @param arguments
+	 * @param declaration
+	 * @param candidates */
+	protected void handleOverloadedVariable(List<TypeDeclaration> arguments, Declaration declaration,
+	        List<OverloadCandidate> candidates) {
+		ClassDeclarationVariation typedecl =
+		        getClassDeclarationVariationFromTypeDecl(((VariableDeclaration) declaration).getType());
+		if (typedecl != null) {
+			if (typedecl.getConcreteGenericTypes().size() == 2) {
+				ClassDeclaration concreteParamType = typedecl.getConcreteGenericTypes().get(0);
+				List<ClassDeclaration> paramTypes;
+				if (TupleDeclarationFactory.isTuple(concreteParamType)) {
+					paramTypes = ((ClassDeclarationVariation) concreteParamType).getConcreteGenericTypes();
+				} else {
+					paramTypes = new ArrayList<>(1);
+					paramTypes.add(concreteParamType);
+				}
+				if (paramTypes.size() == arguments.size()) {
+					int score = 0;
+					int argIndex = 0;
+					for (ClassDeclaration genericType : paramTypes) {
+						int typeDist = genericType.getTypeDist(arguments.get(argIndex));
+						if ((typeDist < Integer.MAX_VALUE) && (score < Integer.MAX_VALUE)) {
+							score += typeDist;
+							argIndex++;
+						} else {
+							score = Integer.MAX_VALUE;
+							break;
+						}
+					}
+					if (score != Integer.MAX_VALUE) {
+						candidates.add(new OverloadCandidate(declaration, score));
+					}
+				}
+				// special case for functions without parameters
+				else if ((arguments.size() == 0) && (paramTypes.size() == 1)
+				        && (paramTypes.get(0).getIdentifier().getSymbol().equals("Tuple0"))) {
+					candidates.add(new OverloadCandidate(declaration, 0));
+				}
+			}
+		}
 	}
 }

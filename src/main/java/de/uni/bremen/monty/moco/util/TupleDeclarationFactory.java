@@ -53,19 +53,10 @@ import java.util.*;
 
 /** This class bundles utilities for the automatic generation of types at compile-time */
 public class TupleDeclarationFactory {
-	private Map<Integer, ClassDeclaration> tupleTypes = new HashMap<>();
+	private Set<Integer> tupleTypes = new HashSet<>();
 
-	/** Introduces a new type TupleN if it was not already created. Returns the tuple type.
-	 *
-	 * @param n */
-	public ClassDeclaration getTupleType(int n) {
-		// lookup a TupleN, if it was not found, generate the class
-		ClassDeclaration tupleType = tupleTypes.get(n);
-		if (tupleType == null) {
-			tupleType = createTupleType(n);
-			tupleTypes.put(n, tupleType);
-		}
-		return tupleType;
+	public void checkTupleType(int n) {
+		tupleTypes.add(n);
 	}
 
 	/** This method checks whether the given Identifier is a tuple type. If yes, a new tuple type is introduced, given
@@ -73,15 +64,23 @@ public class TupleDeclarationFactory {
 	 *
 	 * @param type */
 	public void checkTupleType(ResolvableIdentifier type) {
+		if (type == null) {
+			return;
+		}
 		String str = type.toString();
 		if (str.startsWith("Tuple")) {
 			String number = str.substring(5);
 			try {
-				getTupleType(Integer.parseInt(number));
+				checkTupleType(Integer.parseInt(number));
 			} catch (Exception e) {
 				// if the rest is not a number, we don't need to create a tuple type
 			}
 		}
+	}
+
+	public ResolvableIdentifier getTupleIdentifier(List<ResolvableIdentifier> types) {
+		checkTupleType(types.size());
+		return new ResolvableIdentifier("Tuple" + types.size(), types);
 	}
 
 	/** This method generates a new TupleType
@@ -97,10 +96,10 @@ public class TupleDeclarationFactory {
 		                new ArrayList<AbstractGenericType>());
 
 		// generate the initializer
-		ProcedureDeclaration initializer =
-		        new ProcedureDeclaration(new Position(), new Identifier("initializer"), new Block(new Position()),
-		                new ArrayList<VariableDeclaration>(), ProcedureDeclaration.DeclarationType.INITIALIZER,
-		                (TypeDeclaration) null);
+		FunctionDeclaration initializer =
+		        new FunctionDeclaration(new Position(), new Identifier("initializer"), new Block(new Position()),
+		                new ArrayList<VariableDeclaration>(), FunctionDeclaration.DeclarationType.INITIALIZER,
+		                (TypeDeclaration) null, false);
 
 		// process the generic type parameters
 		for (int i = 0; i < n; i++) {
@@ -129,12 +128,12 @@ public class TupleDeclarationFactory {
 		tupleType.getBlock().addDeclaration(attr);
 	}
 
-	protected void addTupleInitializerParameter(ProcedureDeclaration initializer, int i, AbstractGenericType t) {
+	protected void addTupleInitializerParameter(FunctionDeclaration initializer, int i, AbstractGenericType t) {
 		// add a parameter with that type to the initializer parameter list
 		VariableDeclaration param =
 		        new VariableDeclaration(new Position(), new Identifier("p" + (i + 1)), t,
 		                VariableDeclaration.DeclarationType.PARAMETER);
-		initializer.getParameter().add(param);
+		initializer.getParameters().add(param);
 
 		// add an assignment to the initializer body: "self._1 := p1"
 		initializer.getBody().addStatement(
@@ -144,7 +143,29 @@ public class TupleDeclarationFactory {
 		                new VariableAccess(new Position(), ResolvableIdentifier.convert(param.getIdentifier()))));
 	}
 
-	public Collection<ClassDeclaration> getTupleTypes() {
-		return tupleTypes.values();
+	public Collection<ClassDeclaration> generateNecessaryTupleTypes() {
+		Collection<ClassDeclaration> tupleClasses = new ArrayList<>(tupleTypes.size());
+		for (int n : tupleTypes) {
+			tupleClasses.add(createTupleType(n));
+		}
+		return tupleClasses;
+	}
+
+	public static boolean isTuple(ClassDeclaration type) {
+		String strIdent = type.getIdentifier().getSymbol();
+		if (strIdent.startsWith("Tuple")) {
+			int n;
+			try {
+				n = Integer.parseInt(strIdent.substring(5));
+			} catch (Exception e) {
+				return false;
+			}
+			if (type instanceof ClassDeclarationVariation) {
+				if (((ClassDeclarationVariation) type).getConcreteGenericTypes().size() == n) {
+					return true;
+				}
+			}
+		}
+		return false;
 	}
 }
