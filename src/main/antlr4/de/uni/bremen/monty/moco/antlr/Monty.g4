@@ -321,11 +321,15 @@ caseBlock
     Dedent
   ;
 
+patternGuard
+  : 'if' expression
+  ;
+
 pattern
-  : typedPattern
+  : (typedPattern
   | '_'
   | compoundPattern
-  | expression
+  | expression) patternGuard?
   ;
 
 typedPattern

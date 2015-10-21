@@ -1,0 +1,51 @@
+// Testing: guarded patterns for both, simple and compound patterns
+//
+// Expected output:
+// ------------------
+// yes1
+// yes2
+// yes3
+// no1
+// no2
+// yes
+// no
+// no
+// no
+
+
+matchSimple(Int x, Int y):
+    case x of:
+        Int a if a > y:
+            println("yes1")
+        Int a if y > 8:
+            println("yes2")
+        y if y%2 = 0:
+            println("yes3")
+        _ if x < 0:
+            println("no1")
+        _:
+            println("no2")
+
+matchSimple(2,1)   // yes1
+matchSimple(10,11) // yes2
+matchSimple(6,6)   // yes3
+matchSimple(-2,5)  // no1
+matchSimple(1,5)   // no2
+
+
+// -----------------------------------------------------------------------------
+// -----------------------------------------------------------------------------
+
+case class Foo(Int x, Int y)
+
+matchCompound(Int x, Int y, Int s, Int t):
+    case Foo(x, y) of:
+        Foo(Int a if a = s, Int b) if b = t:
+            println("yes")
+        _:
+            println("no")
+
+matchCompound(5,10,5,10) // yes
+matchCompound(6,10,5,10) // no
+matchCompound(5,11,5,10) // no
+matchCompound(6,11,5,10) // no

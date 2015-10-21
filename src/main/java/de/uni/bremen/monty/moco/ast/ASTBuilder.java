@@ -1128,21 +1128,34 @@ public class ASTBuilder extends MontyBaseVisitor<ASTNode> {
 	}
 
 	public ConditionalStatement handlePattern(PatternContext ctx, Expression subject, Block patternBlock) {
+		Expression guardExpression = null;
+		if (ctx.patternGuard() != null) {
+			guardExpression = (Expression) visit(ctx.patternGuard().expression());
+		}
 		if (ctx.compoundPattern() != null) {
-			return handleCompoundPattern(ctx.compoundPattern(), subject, patternBlock);
+			return handleCompoundPattern(ctx.compoundPattern(), subject, patternBlock, guardExpression);
 		} else if (ctx.expression() != null) {
-			return handleExpressionPattern(ctx, subject, patternBlock);
+			return handleExpressionPattern(ctx, subject, patternBlock, guardExpression);
 		} else if (ctx.typedPattern() != null) {
-			return handleTypedPattern(ctx, subject, patternBlock);
+			return handleTypedPattern(ctx, subject, patternBlock, guardExpression);
 		} else {
-			return handleWildcardPattern(ctx, subject, patternBlock);
+			return handleWildcardPattern(ctx, subject, patternBlock, guardExpression);
 		}
 	}
 
 	protected ConditionalStatement handleCompoundPattern(CompoundPatternContext ctx, Expression subject,
-	        Block patternBlock) {
+	        Block patternBlock, Expression guardExpression) {
 		Position pos = position(ctx.getStart());
 		int patternCount = ctx.patternList() != null ? ctx.patternList().pattern().size() : 0;
+
+		if (guardExpression != null) {
+			ConditionalStatement guardStm =
+			        new ConditionalStatement(guardExpression.getPosition(), guardExpression, patternBlock, new Block(
+			                guardExpression.getPosition()));
+			patternBlock = new Block(pos);
+			patternBlock.addStatement(guardStm);
+		}
+
 		// if there was no type specified, the pattern matches tuples, thus we assume that the value is already
 		// a tuple and there is no need for type checks or type casts. Further, tuples don't have to be decomposed.
 		if (ctx.type() != null) {
@@ -1200,19 +1213,31 @@ public class ASTBuilder extends MontyBaseVisitor<ASTNode> {
 		return handlePattern(pattern, subjectPart, thenBlock);
 	}
 
-	protected ConditionalStatement handleWildcardPattern(PatternContext ctx, Expression subject, Block patternBlock) {
+	protected ConditionalStatement handleWildcardPattern(PatternContext ctx, Expression subject, Block patternBlock,
+	        Expression guardExpression) {
 		// _ matches everything, but binds nothing
 		Position pos = position(ctx.getStart());
-		return new ConditionalStatement(pos, new BooleanLiteral(pos, true), patternBlock, new Block(pos));
+		Expression condition = guardExpression != null ? guardExpression : new BooleanLiteral(pos, true);
+		return new ConditionalStatement(pos, condition, patternBlock, new Block(pos));
 	}
 
-	protected ConditionalStatement handleTypedPattern(PatternContext ctx, Expression subject, Block patternBlock) {
+	protected ConditionalStatement handleTypedPattern(PatternContext ctx, Expression subject, Block patternBlock,
+	        Expression guardExpression) {
 		Position pos = position(ctx.getStart());
 		Expression condition;
 		// a typed pattern matches everything that is an instance of "type"
 		ResolvableIdentifier type = convertResolvableIdentifier(ctx.typedPattern().type());
 		tupleDeclarationFactory.checkTupleType(type);
 		condition = new IsExpression(position(ctx.getStart()), subject, type);
+
+		if (guardExpression != null) {
+			ConditionalStatement guardStm =
+			        new ConditionalStatement(guardExpression.getPosition(), guardExpression, patternBlock, new Block(
+			                guardExpression.getPosition()));
+			patternBlock = new Block(pos);
+			patternBlock.addStatement(guardStm);
+		}
+
 		// if the identifier is not the wildcard '_', the value is bound to that identifier
 		if (ctx.typedPattern().Identifier() != null) {
 			ResolvableIdentifier localDecl = new ResolvableIdentifier(getText(ctx.typedPattern().Identifier()));
@@ -1226,15 +1251,20 @@ public class ASTBuilder extends MontyBaseVisitor<ASTNode> {
 		return new ConditionalStatement(pos, condition, patternBlock, new Block(pos));
 	}
 
-	protected ConditionalStatement handleExpressionPattern(PatternContext ctx, Expression subject, Block patternBlock) {
+	protected ConditionalStatement handleExpressionPattern(PatternContext ctx, Expression subject, Block patternBlock,
+	        Expression guardExpression) {
 		Position pos = position(ctx.getStart());
 		// if the pattern is an expression, we simply check the subject and the pattern expression for equality
 		Expression expression = (Expression) visitExpression(ctx.expression());
-		return new ConditionalStatement(pos, createAndExpression(
-		        pos,
-		        new IsExpression(pos, subject, expression),
-		        new MemberAccess(pos, new CastExpression(pos, subject, expression, true), new FunctionCall(pos,
-		                new ResolvableIdentifier("_eq_"), Arrays.asList(expression)))), patternBlock, new Block(pos));
+		Expression condition =
+		        createAndExpression(pos, new IsExpression(pos, subject, expression), new MemberAccess(pos,
+		                new CastExpression(pos, subject, expression, true), new FunctionCall(pos,
+		                        new ResolvableIdentifier("_eq_"), Arrays.asList(expression))));
+
+		if (guardExpression != null) {
+			condition = createAndExpression(pos, condition, guardExpression);
+		}
+		return new ConditionalStatement(pos, condition, patternBlock, new Block(pos));
 	}
 
 	protected Statement setAlreadyMatched(Position pos, ResolvableIdentifier alreadyMatchedIdent, boolean value) {
