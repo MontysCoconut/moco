@@ -36,96 +36,30 @@
  * You should have received a copy of the GNU General Public
  * License along with this library.
  */
-package de.uni.bremen.monty.moco.ast;
+package de.uni.bremen.monty.moco.ast.statement;
 
-import java.util.BitSet;
+import de.uni.bremen.monty.moco.ast.Position;
+import de.uni.bremen.monty.moco.ast.declaration.GeneratorFunctionDeclaration;
+import de.uni.bremen.monty.moco.ast.expression.Expression;
 
-/** Baseclass for every node in the AST. */
-public abstract class BasicASTNode implements ASTNode {
+import java.util.List;
 
-	public static final int NUMBER_OF_VISITORS = 6;
-
-	/** Sourcecode position of this node. */
-	private final Position position;
-
-	/** Parent node. */
-	private ASTNode parentNode;
-
-	/** Associated scope. */
-	private Scope scope;
-
-	private BitSet visitedFlags = new BitSet(NUMBER_OF_VISITORS);
+public class YieldStatement extends ReturnStatement {
 
 	/** Constructor.
 	 *
 	 * @param position
-	 *            Position of this node */
-	public BasicASTNode(Position position) {
-		this.position = position;
+	 *            Position of this node
+	 * @param parameter
+	 *            the expression to return */
+	public YieldStatement(Position position, Expression parameter) {
+		super(position, parameter);
 	}
 
-	/** {@inheritDoc} */
-	@Override
-	public String toString() {
-		return getClass().getSimpleName();
-	}
-
-	/** Get parent node.
-	 *
-	 * @return the parent node */
-	@Override
-	public ASTNode getParentNode() {
-		return parentNode;
-	}
-
-	/** Get parent node.
-	 *
-	 * @return the parent node */
-	public ASTNode getParentNodeByType(Class type) {
-		ASTNode n = this;
-		while ((!type.isInstance(n)) && (n != null)) {
-			n = n.getParentNode();
-		}
-		return n;
-	}
-
-	/** Set parent node.
-	 *
-	 * @param parentNode
-	 *            the parent node */
-	@Override
-	public void setParentNode(ASTNode parentNode) {
-		this.parentNode = parentNode;
-	}
-
-	/** Get the sourcecode position.
-	 *
-	 * @return the position */
-	@Override
-	public Position getPosition() {
-		return position;
-	}
-
-	/** Set the associated scope.
-	 *
-	 * @param scope
-	 *            the associated scope */
-	@Override
-	public void setScope(Scope scope) {
-
-		this.scope = scope;
-	}
-
-	/** Get the accociated scope.
-	 *
-	 * @return the scope */
-	@Override
-	public Scope getScope() {
-		return scope;
-	}
-
-	@Override
-	public BitSet getVisitedFlags() {
-		return visitedFlags;
+	public int getYieldStatementIndex() {
+		GeneratorFunctionDeclaration fun =
+		        (GeneratorFunctionDeclaration) getParentNodeByType(GeneratorFunctionDeclaration.class);
+		List<YieldStatement> yields = fun.getYieldStatements();
+		return yields.indexOf(this);
 	}
 }

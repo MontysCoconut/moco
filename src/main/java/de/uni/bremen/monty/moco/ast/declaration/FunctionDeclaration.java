@@ -225,13 +225,7 @@ public class FunctionDeclaration extends TypeDeclaration {
 
 	public ClassDeclaration getDefiningClass() {
 		if (isMethod() || isInitializer()) {
-			ASTNode parentNode = getParentNode().getParentNode();
-
-			if (parentNode.getParentNode() instanceof ClassDeclarationVariation) {
-				parentNode = parentNode.getParentNode();
-			}
-
-			return (ClassDeclaration) parentNode;
+			return (ClassDeclaration) getParentNodeByType(ClassDeclaration.class);
 		}
 		return null;
 	}
@@ -392,5 +386,14 @@ public class FunctionDeclaration extends TypeDeclaration {
 			throw new RuntimeException("invalid AST!");
 		}
 		getBody().addStatement(newRet);
+	}
+
+	public String toString() {
+		String params = "";
+		for (VariableDeclaration param : parameters) {
+			params += param.getTypeIdentifier().toString();
+			params += " " + param.getIdentifier().toString() + ", ";
+		}
+		return String.format("%s(%s)", getIdentifier().toString(), params);
 	}
 }

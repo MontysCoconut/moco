@@ -1,0 +1,35 @@
+for i in Range(0,4):
+    print(i)
+    print(" ")
+print("\n")
+
+for i in Range(13,26):
+    print(i)
+    print(" ")
+print("\n")
+
+
+class Week inherits Iterator<String>:
+    - Int dayNo := 0
+
+    + Maybe<String> getNext():
+        self.dayNo += 1
+        if self.dayNo = 1:
+            return Just<String>("Monday")
+        elif self.dayNo = 2:
+            return Just<String>("Tuesday")
+        elif self.dayNo = 3:
+            return Just<String>("Wednesday")
+        elif self.dayNo = 4:
+            return Just<String>("Thursday")
+        elif self.dayNo = 5:
+            return Just<String>("Friday")
+        elif self.dayNo = 6:
+            return Just<String>("Saturday")
+        elif self.dayNo = 7:
+            return Just<String>("Sunday")
+        return Nothing<String>()
+
+for day in Week():
+    print("Today is ")
+    println(day)

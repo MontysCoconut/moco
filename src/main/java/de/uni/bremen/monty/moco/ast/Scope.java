@@ -38,10 +38,7 @@
  */
 package de.uni.bremen.monty.moco.ast;
 
-import de.uni.bremen.monty.moco.ast.declaration.ClassDeclaration;
-import de.uni.bremen.monty.moco.ast.declaration.Declaration;
-import de.uni.bremen.monty.moco.ast.declaration.FunctionDeclaration;
-import de.uni.bremen.monty.moco.ast.declaration.TypeDeclaration;
+import de.uni.bremen.monty.moco.ast.declaration.*;
 import de.uni.bremen.monty.moco.exception.InvalidExpressionException;
 import de.uni.bremen.monty.moco.exception.RedeclarationException;
 import de.uni.bremen.monty.moco.exception.UnknownIdentifierException;
@@ -246,6 +243,10 @@ public class Scope {
 			for (ResolvableIdentifier genericType : genericTypes) {
 				TypeDeclaration decl = resolveType(genericType);
 				decl = resolveGenericClass(decl, genericType);
+
+				if (decl instanceof AbstractGenericType) {
+					return originalType;
+				}
 				concreteGenerics.add((ClassDeclaration) decl);
 			}
 			return originalClass.getVariation(genericIdentifier, concreteGenerics);

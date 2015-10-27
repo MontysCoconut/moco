@@ -17,6 +17,7 @@ importLine
 declaration
   : independentDeclaration
   | classDeclaration
+  | generatorDeclaration
   ;
 
 independentDeclaration
@@ -79,6 +80,13 @@ functionDeclaration
     statementBlock
   ;
 
+generatorDeclaration
+    : 'generator' type
+      ClassIdentifier
+      Lparenthesis parameterList? Rparenthesis ':' EndOfLine
+      statementBlock
+    ;
+
 defaultParameter
   : variableDeclaration ':=' expression
   ;
@@ -100,6 +108,7 @@ statementBlock
 
 statement
   : whileStatement                                                  #whileStm
+  | forStatement                                                    #forStm
   | ifStatement                                                     #ifStm
   | tryStatement                                                    #tryStm
   | declaration                                                     #declStm
@@ -107,6 +116,7 @@ statement
   | assignment                                                      #assignStm
   | compoundAssignment                                              #compoundAssign
   | command='return' expression? EndOfLine                          #returnStm
+  | command='yield' expression? EndOfLine                           #yieldStm
   | command='raise' expression? EndOfLine                           #raiseStm
   | command='skip' EndOfLine                                        #skipStm
   | command='break' EndOfLine                                       #breakStm
@@ -117,6 +127,11 @@ statement
 /* while loop: The expression must be a condition (i.e. Boolean expression). */
 whileStatement
   : 'while' expression ':' EndOfLine statementBlock
+  ;
+
+/* for loop: The expression must be of type Iterable<T>. */
+forStatement
+  : 'for' Identifier 'in' expression ':' EndOfLine statementBlock
   ;
 
 ifStatement
@@ -184,6 +199,7 @@ expression
   | left=expression orOperator right=expression
   | expr=expression asOperator type
   | expr=expression isOperator ClassIdentifier
+  | listComprehension
   ;
 
 functionExpression
@@ -254,7 +270,12 @@ literal
   | StringLiteral
   | BooleanLiteral
   | arrayLiteral
+  | rangeLiteral
   | tupleLiteral
+  ;
+
+rangeLiteral
+  : Lbracket expression '..' expression Rbracket
   ;
 
 arrayLiteral
@@ -263,4 +284,16 @@ arrayLiteral
 
 tupleLiteral
   : Lparenthesis (expression (',' expression)+)? Rparenthesis
+  ;
+
+listComprehension
+  : Lbracket type expression '|' listGenerator ( ',' listGenerator)? Rbracket
+  ;
+
+listGenerator
+  : Identifier 'in' expression listFilter?
+  ;
+
+listFilter
+  : 'if' expression
   ;

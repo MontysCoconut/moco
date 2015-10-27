@@ -39,18 +39,27 @@
 package de.uni.bremen.monty.moco.ast.expression;
 
 import de.uni.bremen.monty.moco.ast.*;
-import de.uni.bremen.monty.moco.ast.declaration.*;
 import de.uni.bremen.monty.moco.visitor.BaseVisitor;
 
 public class CastExpression extends Expression {
 
 	private Expression expression;
 	private ResolvableIdentifier castIdentifier;
+	private Expression inferTypeParameterFrom;
 
 	public CastExpression(Position position, Expression expression, ResolvableIdentifier castIdentifier) {
 		super(position);
 		this.expression = expression;
 		this.castIdentifier = castIdentifier;
+		this.inferTypeParameterFrom = null;
+	}
+
+	public CastExpression(Position position, Expression expression, ResolvableIdentifier castIdentifier,
+	        Expression inferTypeParameterFrom) {
+		super(position);
+		this.expression = expression;
+		this.castIdentifier = castIdentifier;
+		this.inferTypeParameterFrom = inferTypeParameterFrom;
 	}
 
 	public ResolvableIdentifier getCastIdentifier() {
@@ -59,6 +68,20 @@ public class CastExpression extends Expression {
 
 	public Expression getExpression() {
 		return expression;
+	}
+
+	public boolean typeParameterMustBeInferred() {
+		return inferTypeParameterFrom != null;
+	}
+
+	public void inferTypeParameter() {
+		if (inferTypeParameterFrom.getType().getIdentifier() instanceof ResolvableIdentifier) {
+			ResolvableIdentifier otherIdent = (ResolvableIdentifier) inferTypeParameterFrom.getType().getIdentifier();
+			int max = Math.min(otherIdent.getGenericTypes().size(), castIdentifier.getGenericTypes().size());
+			for (int i = 0; i < max; i++) {
+				castIdentifier.getGenericTypes().set(i, otherIdent.getGenericTypes().get(i));
+			}
+		}
 	}
 
 	@Override

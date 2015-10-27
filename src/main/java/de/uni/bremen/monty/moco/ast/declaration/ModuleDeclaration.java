@@ -98,4 +98,8 @@ public class ModuleDeclaration extends TypeDeclaration {
 		}
 		visitor.visitDoubleDispatched(block);
 	}
+
+	public boolean isNative() {
+		return !getIdentifier().getSymbol().startsWith("_");
+	}
 }

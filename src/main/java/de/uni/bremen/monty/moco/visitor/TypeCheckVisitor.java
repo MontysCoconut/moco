@@ -308,8 +308,9 @@ public class TypeCheckVisitor extends BaseVisitor {
 		if (proc.isFunction()) {
 			if (!(node.getParameter().getType().matchesType(proc.getReturnType()))) {
 				throw new TypeMismatchException(node, String.format(
-				        "Expected to return %s:",
-				        proc.getReturnType().getIdentifier()));
+				        "Expected to return %s, but was %s",
+				        proc.getReturnType().getIdentifier(),
+				        node.getParameter().getType().getIdentifier()));
 			}
 		} else if (node.getParameter() != null) {
 			throw new TypeMismatchException(node, "Expected to return void.");

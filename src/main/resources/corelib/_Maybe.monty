@@ -1,0 +1,19 @@
+abstract class Maybe<Type>:
+    abstract Bool hasValue()
+
+class Just<Type> inherits Maybe<Type>:
+    Type value
+
+    initializer(Type value):
+        self.value := value
+
+    Type getValue():
+        return self.value
+
+    Bool hasValue():
+        return true
+
+
+class Nothing<Type> inherits Maybe<Type>:
+    Bool hasValue():
+        return false 

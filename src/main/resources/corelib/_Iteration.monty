@@ -1,0 +1,8 @@
+abstract class Iterator<Type> inherits Iterable<Type>:
+    + abstract Maybe<Type> getNext()
+    + Iterator<Type> getIterator():
+        return self
+
+
+abstract class Iterable<Type>:
+    + abstract Iterator<Type> getIterator()

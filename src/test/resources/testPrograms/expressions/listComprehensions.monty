@@ -1,0 +1,64 @@
+// testing three list comprehensions and the equivalent generators
+// -----------------------------------------------------------------------------
+// -----------------------------------------------------------------------------
+
+for j in [ Int x*x | x in [1..5]]:
+     println(j)
+
+println("---------")
+
+generator Int Tmp1():
+    for x in [1..5]:
+        yield x*x
+for i in Tmp1():
+    println(i)    
+
+println("---------")
+println("---------")
+
+// -----------------------------------------------------------------------------
+// -----------------------------------------------------------------------------
+
+for j in [ (Int, Int) (x,y) | x in [1..5], y in [0..2]]:
+    print(j._1)
+    print(", ")
+    println(j._2)
+
+println("---------")
+
+generator (Int,Int) Tmp2():
+    for x in [1..5]:
+        for y in [0..2]:
+            yield (x,y)
+for i in Tmp2():
+    print(i._1)
+    print(", ")
+    println(i._2)
+
+println("---------")
+println("---------")
+
+// -----------------------------------------------------------------------------
+// -----------------------------------------------------------------------------
+
+for j in [ (Int, Int) (x,y) | x in [1..5] if x % 2 = 0, y in [0..2] if y > 0]:
+    print(j._1)
+    print(", ")
+    println(j._2)
+
+println("---------")
+
+generator (Int,Int) Tmp3():
+    for x in [1..5]:
+        if x % 2 = 0:
+            for y in [0..2]:
+                if y > 0:
+                    yield (x,y)
+for i in Tmp3():
+    print(i._1)
+    print(", ")
+    println(i._2)
+
+println("---------")
+println("---------")
+ 

@@ -1,0 +1,38 @@
+// Testing: Generic types that contain other generic types
+//
+// The interesting thing here is that in line 23 the type parameter of Wrapper
+// is not replaced by a concrete type, but by a generic one
+//
+// Expected output:
+// ---------------------
+// one
+// two
+// ---------------------
+// 
+
+class Wrapper<Par>:
+    Par value
+    initializer(Par p):
+        self.value := p
+
+    Par getValue():
+        return self.value
+
+
+class WrapperWrapper<Par>:
+    Wrapper<Par> value
+    initializer(Par p):
+        self.value := Wrapper<Par>(p)
+
+    Par getValue():
+        return self.value.getValue()
+
+
+Wrapper<String> one := Wrapper<String>("one")
+WrapperWrapper<String> two := WrapperWrapper<String>("two")
+
+
+println("---------------------")
+println(one.getValue())
+println(two.getValue())
+println("---------------------")

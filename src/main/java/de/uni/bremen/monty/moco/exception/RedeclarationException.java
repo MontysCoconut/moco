@@ -42,6 +42,6 @@ import de.uni.bremen.monty.moco.ast.ASTNode;
 
 public class RedeclarationException extends MontyBaseException {
 	public RedeclarationException(ASTNode node, String message) {
-		super(node, message);
+		super(node, "Redeclaration of '" + message + "'");
 	}
 }

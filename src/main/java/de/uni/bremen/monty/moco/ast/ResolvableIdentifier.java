@@ -63,6 +63,9 @@ public class ResolvableIdentifier extends Identifier {
 	}
 
 	public static ResolvableIdentifier convert(Identifier identifier) {
+		if (identifier instanceof ResolvableIdentifier) {
+			return (ResolvableIdentifier) identifier;
+		}
 		return new ResolvableIdentifier(identifier.getSymbol());
 	}
 
@@ -86,5 +89,18 @@ public class ResolvableIdentifier extends Identifier {
 
 	public List<ResolvableIdentifier> getGenericTypes() {
 		return genericTypes;
+	}
+
+	@Override
+	public String toString() {
+		String generics = "";
+		if (getGenericTypes().size() > 0) {
+			generics = "<";
+			for (ResolvableIdentifier generic : getGenericTypes()) {
+				generics += generic != null ? generic.toString() + ", " : "?, ";
+			}
+			generics += ">";
+		}
+		return getSymbol() + generics;
 	}
 }

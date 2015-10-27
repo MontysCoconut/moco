@@ -40,10 +40,9 @@ package de.uni.bremen.monty.moco.codegeneration;
 
 import de.uni.bremen.monty.moco.ast.ASTNode;
 import de.uni.bremen.monty.moco.ast.CoreClasses;
+import de.uni.bremen.monty.moco.ast.declaration.*;
+import de.uni.bremen.monty.moco.ast.expression.VariableAccess;
 import de.uni.bremen.monty.moco.ast.expression.literal.StringLiteral;
-import de.uni.bremen.monty.moco.ast.declaration.ClassDeclaration;
-import de.uni.bremen.monty.moco.ast.declaration.FunctionDeclaration;
-import de.uni.bremen.monty.moco.ast.declaration.TypeDeclaration;
 import de.uni.bremen.monty.moco.codegeneration.context.CodeContext;
 import de.uni.bremen.monty.moco.codegeneration.context.CodeContext.LLVMFunctionAttribute;
 import de.uni.bremen.monty.moco.codegeneration.context.CodeContext.Linkage;
@@ -54,6 +53,7 @@ import de.uni.bremen.monty.moco.codegeneration.identifier.LLVMIdentifierFactory;
 import de.uni.bremen.monty.moco.codegeneration.types.*;
 import de.uni.bremen.monty.moco.codegeneration.voodoo.BlackMagic;
 
+import java.lang.reflect.Type;
 import java.util.*;
 
 import static de.uni.bremen.monty.moco.codegeneration.types.LLVMTypeFactory.*;
@@ -188,7 +188,10 @@ public class CodeGenerator {
 	private LLVMIdentifier<LLVMPointer<LLVMFunctionType>> getFunctionPointer(CodeContext c,
 	        LLVMIdentifier<LLVMPointer<LLVMType>> selfReference, FunctionDeclaration declaration) {
 		LLVMIdentifier<LLVMPointer<LLVMType>> vmtPointer =
-		        getVMTPointer(c, selfReference, declaration.getDefiningClass());
+		        getVMTPointer(
+		                c,
+		                selfReference,
+		                (ClassDeclaration) mapAbstractGenericToConcreteIfApplicable(declaration.getDefiningClass()));
 
 		LLVMPointer<LLVMFunctionType> functionType = mapToLLVMType(declaration);
 		LLVMIdentifier<LLVMPointer<LLVMFunctionType>> functionPointer = llvmIdentifierFactory.newLocal(functionType);
@@ -372,6 +375,18 @@ public class CodeGenerator {
 	}
 
 	public LLVMIdentifier<LLVMType> accessMember(CodeContext c, LLVMIdentifier<LLVMPointer<LLVMType>> pointer,
+	        int attributeOffset, LLVMType type, boolean load) {
+
+		LLVMIdentifier<LLVMType> result = llvmIdentifierFactory.newLocal(type, load);
+		c.getelementptr(
+		        result,
+		        resolveIfNeeded(c, pointer),
+		        llvmIdentifierFactory.constant(int32(), 0),
+		        llvmIdentifierFactory.constant(int32(), attributeOffset));
+		return result;
+	}
+
+	public LLVMIdentifier<LLVMType> accessMember(CodeContext c, LLVMIdentifier<LLVMPointer<LLVMType>> pointer,
 	        int attributeOffset, TypeDeclaration type, boolean load) {
 
 		LLVMIdentifier<LLVMType> result = llvmIdentifierFactory.newLocal(mapToLLVMType(type), load);
@@ -381,6 +396,48 @@ public class CodeGenerator {
 		        llvmIdentifierFactory.constant(int32(), 0),
 		        llvmIdentifierFactory.constant(int32(), attributeOffset));
 		return result;
+	}
+
+	public LLVMIdentifier<LLVMType> accessContextMember(CodeContext c, ClassDeclaration generatorClass,
+	        VariableDeclaration varDecl, VariableAccess varAccess, TypeDeclaration variableType) {
+
+		LLVMType contextType = LLVMTypeFactory.struct(nameMangler.mangleClass(generatorClass) + "_context");
+
+		LLVMIdentifier<?> self = resolveLocalVarName("self", generatorClass, false);
+		LLVMIdentifier<LLVMType> contextLlvmIdentifier =
+		        accessMember(
+		                c,
+		                (LLVMIdentifier<LLVMPointer<LLVMType>>) self,
+		                generatorClass.getLastAttributeIndex(),
+		                contextType,
+		                false); // TODO: richtig?
+		LLVMIdentifier<LLVMType> result =
+		        accessMember(
+		                c,
+		                llvmIdentifierFactory.pointerTo(contextLlvmIdentifier),
+		                varDecl.getAttributeIndex(),
+		                variableType,
+		                !varAccess.getLValue());
+		return result;
+	}
+
+	public LLVMIdentifier<LLVMType> accessGeneratorJumpPointer(CodeContext c,
+	        LLVMIdentifier<LLVMPointer<LLVMType>> pointer, ClassDeclaration generatorClass, int attributeOffset,
+	        boolean load) {
+
+		LLVMType contextType = LLVMTypeFactory.struct(nameMangler.mangleClass(generatorClass) + "_context");
+		LLVMType jumpPrtType = LLVMTypeFactory.pointer(LLVMTypeFactory.int8());
+		LLVMIdentifier<LLVMType> pointervar = llvmIdentifierFactory.newLocal(jumpPrtType, load);
+		LLVMIdentifier<LLVMType> contextLlvmIdentifier =
+		        accessMember(c, pointer, generatorClass.getLastAttributeIndex(), contextType, true);
+
+		// get the attribute address from the generator class
+		c.getelementptr(
+		        pointervar,
+		        llvmIdentifierFactory.pointerTo(contextLlvmIdentifier),
+		        llvmIdentifierFactory.constant(int32(), 0),
+		        llvmIdentifierFactory.constant(int32(), attributeOffset));
+		return pointervar;
 	}
 
 	public <T extends LLVMType> T mapToLLVMType(TypeDeclaration type) {
@@ -575,5 +632,21 @@ public class CodeGenerator {
 
 		c.load(sourcePointer, targetPointer);
 		return targetPointer;
+	}
+
+	public void pushClassDeclarationVariation(ClassDeclarationVariation var) {
+		typeConverter.pushClassDeclarationVariation(var);
+	}
+
+	public ClassDeclarationVariation getCurrentClassDeclarationVariation() {
+		return typeConverter.getCurrentClassDeclarationVariation();
+	}
+
+	public void popClassDeclarationVariation() {
+		typeConverter.popClassDeclarationVariation();
+	}
+
+	public TypeDeclaration mapAbstractGenericToConcreteIfApplicable(ClassDeclaration classDecl) {
+		return typeConverter.mapAbstractGenericToConcreteIfApplicable(classDecl);
 	}
 }

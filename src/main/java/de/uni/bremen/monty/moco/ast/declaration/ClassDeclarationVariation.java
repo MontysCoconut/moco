@@ -3,6 +3,7 @@ package de.uni.bremen.monty.moco.ast.declaration;
 import de.uni.bremen.monty.moco.ast.Block;
 import de.uni.bremen.monty.moco.ast.ClassScope;
 import de.uni.bremen.monty.moco.ast.ResolvableIdentifier;
+import de.uni.bremen.monty.moco.ast.statement.Assignment;
 import de.uni.bremen.monty.moco.ast.statement.Statement;
 
 import java.util.ArrayList;
@@ -23,9 +24,11 @@ public class ClassDeclarationVariation extends ClassDeclaration {
 		this.concreteGenericTypes = concreteGenericTypes;
 		setParentNode(classDecl.getParentNode());
 		ClassScope classScope = new ClassScope(classDecl.getScope().getParentScope());
-		classScope.addParentClassScope((ClassScope) classDecl.getScope());
 		setScope(classScope);
 		classDecl.addVariation(this);
+
+		addSuperClassDeclarations(classDecl);
+
 		Collection<FunctionDeclaration> functionDeclarations = mapFunctions(classDecl.getVirtualMethodTable());
 		getVirtualMethodTable().addAll(functionDeclarations);
 		mapBlock(classDecl.getBlock());
@@ -39,6 +42,57 @@ public class ClassDeclarationVariation extends ClassDeclaration {
 			}
 		}
 		classScope.define(defaultInitializer);
+	}
+
+	/** The parent (super) class declarations should also be referenced in the ClassDeclarationVariation and not only in
+	 * the ClassDeclaration, since they can be used interchangeably
+	 *
+	 * @param classDecl */
+	private void addSuperClassDeclarations(ClassDeclaration classDecl) {
+		List<TypeDeclaration> ownParents = getSuperClassDeclarations();
+		for (TypeDeclaration parent : classDecl.getSuperClassDeclarations()) {
+			// if the parent class is a concrete generic class, we can add it
+			if (parent instanceof ClassDeclarationVariation) {
+				ownParents.add(parent);
+			} else if (parent instanceof ClassDeclaration) {
+				// if the parent class has no unresolved abstract generic types, we can add it as well
+				if (((ClassDeclaration) parent).getAbstractGenericTypes().isEmpty()) {
+					ownParents.add(parent);
+					((ClassScope) getScope()).addParentClassScope((ClassScope) parent.getScope());
+				}
+				// if there are unresolved type parameters, we have to resolve them using our own
+				else {
+					TypeDeclaration newParent = mapAbstractGenericSuperClass((ClassDeclaration) parent);
+					ownParents.add(newParent);
+					((ClassScope) getScope()).addParentClassScope((ClassScope) newParent.getScope());
+				}
+			}
+			// if the parent is neither one of the above, something is terribly going wrong...
+			else {
+				throw new RuntimeException("Was ist hier los?!?");
+			}
+		}
+	}
+
+	/** converts a parent ClassDeclaration with abstractGenericTypes into a ClassDeclarationVariation with
+	 * concreteGenericTypes
+	 *
+	 * @return */
+	private TypeDeclaration mapAbstractGenericSuperClass(ClassDeclaration parent) {
+		List<AbstractGenericType> placeholders = parent.getAbstractGenericTypes();
+		List<AbstractGenericType> ownPlaceholders = baseClass.getAbstractGenericTypes();
+		ArrayList<ClassDeclaration> concreteTypes = new ArrayList<>(placeholders.size());
+		ArrayList<ResolvableIdentifier> concreteIdentifiers = new ArrayList<>(placeholders.size());
+
+		for (AbstractGenericType placeholder : placeholders) {
+			int index = ownPlaceholders.indexOf(placeholder);
+			concreteTypes.add(concreteGenericTypes.get(index));
+			concreteIdentifiers.add(ResolvableIdentifier.convert(concreteGenericTypes.get(index).getIdentifier()));
+		}
+
+		return parent.getVariation(
+		        new ResolvableIdentifier(parent.getIdentifier().getSymbol(), concreteIdentifiers),
+		        concreteTypes);
 	}
 
 	private void mapBlock(Block block) {
@@ -66,11 +120,14 @@ public class ClassDeclarationVariation extends ClassDeclaration {
 
 	private FunctionDeclaration mapFunction(FunctionDeclaration functionDeclaration) {
 		FunctionDeclaration funDecl;
+		// important for generic inheritance
+		ClassDeclarationVariation parent = findCorrectSuperClass(functionDeclaration);
+		parent = parent != null ? parent : this;
 		if (functionDeclaration.isFunction()) {
 			TypeDeclaration returnType = mapGenericType((functionDeclaration).getReturnType());
-			funDecl = new ConcreteProcDecl(this, functionDeclaration, returnType);
+			funDecl = new ConcreteProcDecl(parent, functionDeclaration, returnType);
 		} else {
-			funDecl = new ConcreteProcDecl(this, functionDeclaration);
+			funDecl = new ConcreteProcDecl(parent, functionDeclaration);
 		}
 		funDecl.getParameters().addAll(mapParameter(functionDeclaration.getParameters(), funDecl));
 		funDecl.setParentNode(this);
@@ -78,12 +135,48 @@ public class ClassDeclarationVariation extends ClassDeclaration {
 		return funDecl;
 	}
 
+	/** inherited methods in the VMT should get the correct ClassDeclarationVariation reference. If this does not happen,
+	 * inheritance does not work for ``Gen2<T> ----|> Gen1<T>`` but only for ``NotGen ----|> Gen<Int>``
+	 *
+	 * @param funDecl
+	 * @return */
+	private ClassDeclarationVariation findCorrectSuperClass(FunctionDeclaration funDecl) {
+		ClassDeclaration classDecl = funDecl.getDefiningClass();
+		for (TypeDeclaration parent : getSuperClassDeclarations()) {
+			if (parent instanceof ClassDeclarationVariation) {
+				int index = classDecl.getVariations().indexOf(parent);
+				if (index >= 0) {
+					return classDecl.getVariations().get(index);
+				}
+			}
+		}
+		return null;
+	}
+
 	private TypeDeclaration mapGenericType(TypeDeclaration type) {
 		if (type instanceof AbstractGenericType) {
 			return mapAbstractToConcrete((AbstractGenericType) type);
+		} else if ((type instanceof ClassDeclaration)
+		        && (!((ClassDeclaration) type).getAbstractGenericTypes().isEmpty())) {
+			return mapAbstractGenericToConcrete((ClassDeclaration) type);
 		} else {
 			return type;
 		}
+	}
+
+	public TypeDeclaration mapAbstractGenericToConcrete(ClassDeclaration type) {
+		ArrayList<ClassDeclaration> concreteTypes = new ArrayList<>(type.getAbstractGenericTypes().size());
+		ArrayList<ResolvableIdentifier> concreteIdentifiers = new ArrayList<>(type.getAbstractGenericTypes().size());
+		for (AbstractGenericType abs : type.getAbstractGenericTypes()) {
+			TypeDeclaration con = mapGenericType(abs);
+			concreteTypes.add((ClassDeclaration) con);
+			concreteIdentifiers.add(ResolvableIdentifier.convert(con.getIdentifier()));
+		}
+		TypeDeclaration result =
+		        type.getVariation(
+		                new ResolvableIdentifier(type.getIdentifier().getSymbol(), concreteIdentifiers),
+		                concreteTypes);
+		return result;
 	}
 
 	public ClassDeclaration mapAbstractToConcrete(AbstractGenericType type) {
@@ -187,4 +280,9 @@ public class ClassDeclarationVariation extends ClassDeclaration {
 		}
 		return Integer.MAX_VALUE;
 	}
+
+	public ClassDeclaration getBaseClass() {
+		return baseClass;
+	}
+
 }

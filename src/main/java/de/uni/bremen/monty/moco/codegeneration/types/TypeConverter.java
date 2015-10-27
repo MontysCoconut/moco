@@ -39,7 +39,6 @@
 
 package de.uni.bremen.monty.moco.codegeneration.types;
 
-import de.uni.bremen.monty.moco.ast.ASTNode;
 import de.uni.bremen.monty.moco.ast.CoreClasses;
 import de.uni.bremen.monty.moco.ast.declaration.*;
 import de.uni.bremen.monty.moco.codegeneration.NameMangler;
@@ -57,6 +56,7 @@ public class TypeConverter {
 	private LLVMIdentifierFactory llvmIdentifierFactory;
 	private CodeContext constantContext;
 	private NameMangler nameMangler;
+	private Stack<ClassDeclarationVariation> currentClassDeclVar = new Stack<>();
 
 	public TypeConverter(LLVMIdentifierFactory llvmIdentifierFactory, CodeContext constantContext,
 	        NameMangler nameMangler) {
@@ -73,7 +73,7 @@ public class TypeConverter {
 	private LLVMPointer<LLVMFunctionType> convertType(FunctionDeclaration type) {
 		List<LLVMType> parameter = new ArrayList<>();
 		if (type.getDeclarationType().equals(FunctionDeclaration.DeclarationType.METHOD)) {
-			parameter.add(mapToLLVMType(type.getDefiningClass()));
+			parameter.add(mapToLLVMType(mapAbstractGenericToConcreteIfApplicable(type.getDefiningClass())));
 		}
 		for (VariableDeclaration varDecl : type.getParameters()) {
 			parameter.add(mapToLLVMType(varDecl.getType()));
@@ -159,6 +159,13 @@ public class TypeConverter {
 			}
 		}
 
+		if (classDecl.isGenerator()) {
+			// create the structure
+			LLVMType contextStruct = addGeneratorContext(classDecl, mangledNodeName);
+			// add context struct as the last index to the class declaration
+			llvmClassTypeDeclarations.add(contextStruct);
+		}
+
 		for (FunctionDeclaration function : classDecl.getVirtualMethodTable()) {
 			if (!function.isInitializer()) {
 				LLVMType signature = mapToLLVMType(function);
@@ -182,6 +189,31 @@ public class TypeConverter {
 		        llvmIdentifierFactory.constant(llvmVMTType, llvmVMTDataInitializer));
 	}
 
+	protected LLVMType addGeneratorContext(ClassDeclaration classDecl, String mangledNodeName) {
+		GeneratorFunctionDeclaration inFunction = null;
+		for (FunctionDeclaration fun : classDecl.getMethods()) {
+			if (fun.getIdentifier().getSymbol().equals("getNext")) {
+				inFunction = (GeneratorFunctionDeclaration) fun;
+				break;
+			}
+		}
+
+		// declaration types inside the struct
+		List<LLVMType> llvmStructTypeDeclarations = new ArrayList<>();
+
+		// add state i8 pointer to context structure
+		llvmStructTypeDeclarations.add(LLVMTypeFactory.pointer(LLVMTypeFactory.int8()));
+		// add the variable declarations inside the generator to the struct
+		for (VariableDeclaration decl : inFunction.getVariableDeclarations()) {
+			llvmStructTypeDeclarations.add(mapToLLVMType(decl.getType()));
+		}
+
+		LLVMStructType llvmStructType = struct(mangledNodeName + "_context");
+		constantContext.type(llvmStructType, llvmStructTypeDeclarations);
+
+		return llvmStructType;
+	}
+
 	public LLVMPointer<LLVMStructType> mapToLLVMType(ClassDeclaration type) {
 		return (LLVMPointer<LLVMStructType>) mapToLLVMType((TypeDeclaration) type);
 	}
@@ -192,13 +224,8 @@ public class TypeConverter {
 
 	public <T extends LLVMType> T mapToLLVMType(TypeDeclaration type) {
 		if (type instanceof AbstractGenericType) {
-			ASTNode parent = type.getParentNode();
-			while (!(parent instanceof ClassDeclarationVariation)) {
-				parent = parent.getParentNode();
-			}
-			ClassDeclarationVariation classVariation = (ClassDeclarationVariation) parent;
-			ClassDeclaration concreteType = classVariation.mapAbstractToConcrete((AbstractGenericType) type);
-
+			ClassDeclaration concreteType =
+			        getCurrentClassDeclarationVariation().mapAbstractToConcrete((AbstractGenericType) type);
 			T t = (T) mapToLLVMType(concreteType);
 			return t;
 		}
@@ -210,5 +237,29 @@ public class TypeConverter {
 			addType(type);
 		}
 		return llvmType;
+	}
+
+	public void pushClassDeclarationVariation(ClassDeclarationVariation var) {
+		currentClassDeclVar.push(var);
+	}
+
+	public ClassDeclarationVariation getCurrentClassDeclarationVariation() {
+		if (currentClassDeclVar.isEmpty()) {
+			return null;
+		}
+		return currentClassDeclVar.peek();
+	}
+
+	public void popClassDeclarationVariation() {
+		if (!currentClassDeclVar.isEmpty()) {
+			currentClassDeclVar.pop();
+		}
+	}
+
+	public TypeDeclaration mapAbstractGenericToConcreteIfApplicable(ClassDeclaration type) {
+		if ((type.getAbstractGenericTypes().isEmpty()) || (type instanceof ClassDeclarationVariation)) {
+			return type;
+		}
+		return getCurrentClassDeclarationVariation().mapAbstractGenericToConcrete(type);
 	}
 }

@@ -1,0 +1,11 @@
+generator Int Range(Int start, Int end):
+    Int step := 1
+    if start > end:
+        step := -1
+    while start != end:
+        yield start
+        start += step
+    yield start
+
+Range range(Int x):
+    return Range(0, x-1)

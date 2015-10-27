@@ -414,6 +414,16 @@ public class BaseVisitor {
 		onExitChildrenEachNode(node);
 	}
 
+	/** Visitor method to visit a YieldStatement.
+	 *
+	 * @param node
+	 *            the node to visit */
+	public void visit(YieldStatement node) {
+		onEnterChildrenEachNode(node);
+		node.visitChildren(this);
+		onExitChildrenEachNode(node);
+	}
+
 	/** Visitor method to visit a WhileLoop.
 	 *
 	 * @param node

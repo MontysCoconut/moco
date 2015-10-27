@@ -47,6 +47,7 @@ import de.uni.bremen.monty.moco.ast.expression.*;
 import de.uni.bremen.monty.moco.ast.expression.literal.*;
 import de.uni.bremen.monty.moco.ast.statement.*;
 import de.uni.bremen.monty.moco.util.FunctionWrapperFactory;
+import de.uni.bremen.monty.moco.util.GeneratorClassFactory;
 import de.uni.bremen.monty.moco.util.TmpIdentifierFactory;
 import de.uni.bremen.monty.moco.util.TupleDeclarationFactory;
 import org.antlr.v4.runtime.Token;
@@ -59,6 +60,8 @@ import java.util.*;
 public class ASTBuilder extends MontyBaseVisitor<ASTNode> {
 	private final String fileName;
 	private Stack<Block> currentBlocks;
+	// functions push null, generators push their return type
+	private Stack<ResolvableIdentifier> currentGeneratorReturnType;
 	private VariableDeclaration.DeclarationType currentVariableContext;
 	private FunctionDeclaration.DeclarationType currentFunctionContext;
 	private TupleDeclarationFactory tupleDeclarationFactory;
@@ -94,6 +97,8 @@ public class ASTBuilder extends MontyBaseVisitor<ASTNode> {
 	public ASTBuilder(String fileName, TupleDeclarationFactory tupleDeclarationFactory) {
 		this.fileName = fileName;
 		currentBlocks = new Stack<>();
+		currentGeneratorReturnType = new Stack<>();
+		currentGeneratorReturnType.push(null); // initially, we are not inside a generator
 		this.tupleDeclarationFactory = tupleDeclarationFactory;
 	}
 
@@ -349,6 +354,7 @@ public class ASTBuilder extends MontyBaseVisitor<ASTNode> {
 
 	@Override
 	public ASTNode visitFunctionDeclaration(FunctionDeclarationContext ctx) {
+		currentGeneratorReturnType.push(null);
 		FunctionDeclaration proc =
 		        buildFunctions(
 		                ctx.type() != null,
@@ -364,7 +370,54 @@ public class ASTBuilder extends MontyBaseVisitor<ASTNode> {
 				list.add(new ReturnStatement(new Position(), null));
 			}
 		}
+		currentGeneratorReturnType.pop();
 		return proc;
+	}
+
+	@Override
+	public ASTNode visitGeneratorDeclaration(GeneratorDeclarationContext ctx) {
+		Position pos = position(ctx.getStart());
+		ResolvableIdentifier returnType = convertResolvableIdentifier(ctx.type());
+		ResolvableIdentifier className = new ResolvableIdentifier(getText(ctx.ClassIdentifier()));
+		tupleDeclarationFactory.checkTupleType(returnType);
+		currentGeneratorReturnType.push(returnType);
+
+		List<VariableDeclaration> params = new ArrayList<>();
+		List<VariableDeclaration> defaultParams = new ArrayList<>();
+		List<Expression> defaultValues = new ArrayList<>();
+		parameterListToVarDeclListIncludingDefaults(ctx.parameterList(), params, defaultParams, defaultValues);
+
+		Block funBody = (Block) visit(ctx.statementBlock());
+		currentGeneratorReturnType.pop();
+
+		return createGenerator(pos, className, returnType, params, defaultParams, defaultValues, funBody);
+	}
+
+	private ASTNode createGenerator(Position pos, ResolvableIdentifier className, ResolvableIdentifier returnType,
+	        List<VariableDeclaration> params, List<VariableDeclaration> defaultParams, List<Expression> defaultValues,
+	        Block body) {
+		tupleDeclarationFactory.checkTupleType(returnType);
+		currentGeneratorReturnType.push(returnType);
+
+		List<VariableDeclaration> allParams = new ArrayList<>();
+		allParams.addAll(params);
+		allParams.addAll(defaultParams);
+
+		ClassDeclaration iterator =
+		        GeneratorClassFactory.generateGeneratorIteratorClass(pos, allParams, body, returnType);
+		currentBlocks.peek().addDeclaration(iterator);
+
+		ClassDeclaration generator =
+		        GeneratorClassFactory.generateGeneratorClass(
+		                pos,
+		                className,
+		                ResolvableIdentifier.convert(iterator.getIdentifier()),
+		                params,
+		                defaultParams,
+		                defaultValues,
+		                returnType);
+		currentGeneratorReturnType.pop();
+		return generator;
 	}
 
 	@Override
@@ -476,12 +529,107 @@ public class ASTBuilder extends MontyBaseVisitor<ASTNode> {
 		return parameterList;
 	}
 
+	private void parameterListToVarDeclListIncludingDefaults(ParameterListContext context,
+	        List<VariableDeclaration> params, List<VariableDeclaration> defaultParams, List<Expression> defaultValues) {
+
+		if (context == null) {
+			return;
+		}
+		currentVariableContext = VariableDeclaration.DeclarationType.PARAMETER;
+		if (context.variableDeclaration() != null) {
+			for (VariableDeclarationContext var : context.variableDeclaration()) {
+				params.add((VariableDeclaration) visit(var));
+			}
+		}
+
+		if (context.defaultParameter() != null) {
+			for (DefaultParameterContext var : context.defaultParameter()) {
+				defaultParams.add((VariableDeclaration) visit(var.variableDeclaration()));
+				defaultValues.add((Expression) visit(var.expression()));
+			}
+		}
+
+	}
+
 	private List<DefaultParameterContext> defaultParameterListToVarDeclList(ParameterListContext parameter) {
 		if (parameter == null) {
 			return new ArrayList<>();
 		}
 		currentVariableContext = VariableDeclaration.DeclarationType.PARAMETER;
 		return parameter.defaultParameter();
+	}
+
+	@Override
+	public ASTNode visitForStatement(ForStatementContext ctx) {
+		ResolvableIdentifier ident = new ResolvableIdentifier(getText(ctx.Identifier()));
+		Position pos = position(ctx.getStart());
+		Expression iterableExpression =
+		        new MemberAccess(pos, (Expression) visit(ctx.expression()), new FunctionCall(pos,
+		                new ResolvableIdentifier("getIterator"), new ArrayList<Expression>()));
+		return createForLoop(pos, ident, iterableExpression, (Block) visit(ctx.statementBlock()));
+	}
+
+	private ASTNode createForLoop(Position pos, ResolvableIdentifier indexVar, Expression iterableExpression, Block body) {
+		// Iterator<Int> r := MyRange(10).getIterator()
+		// while true:
+		// ....Maybe<Int> _i := r.getNext()
+		// ....if _i.hasValue():
+		// ........Int i := (_i as Just<Int>).getValue()
+		// ........// body
+		// ....else:
+		// ........break
+
+		// ## MONTY: ## Iterator<Int> r := MyRange(10).getIterator()
+		// get the iterator object
+		ResolvableIdentifier iterableIdentifier = TmpIdentifierFactory.getUniqueIdentifier();
+		VariableDeclaration iterableDeclaration = new VariableDeclaration(pos, iterableIdentifier, iterableExpression);
+		Assignment iterableAssignment =
+		        new Assignment(pos, new VariableAccess(pos, iterableIdentifier), iterableExpression);
+		// add the declaration and the assignment to the current block
+		currentBlocks.peek().addDeclaration(iterableDeclaration);
+		currentBlocks.peek().addStatement(iterableAssignment);
+
+		// ## MONTY: ## while true:
+		Block whileBlock = new Block(pos);
+		WhileLoop loop = new WhileLoop(pos, new BooleanLiteral(pos, true), whileBlock);
+
+		// ## MONTY: ## Maybe<Int> _i := r.getNext()
+		// add the maybe value containing the indexing variable to the loop's body
+		ResolvableIdentifier maybeIdent = TmpIdentifierFactory.getUniqueIdentifier();
+		Expression callGetNext =
+		        new MemberAccess(pos, new VariableAccess(pos, iterableIdentifier), new FunctionCall(pos,
+		                new ResolvableIdentifier("getNext"), new ArrayList<Expression>()));
+		whileBlock.addDeclaration(new VariableDeclaration(pos, maybeIdent, callGetNext));
+		whileBlock.getStatements().add(
+		        0,
+		        new Assignment(pos, new VariableAccess(pos, ResolvableIdentifier.convert(maybeIdent)), callGetNext));
+
+		// ## MONTY: ## if _i.hasValue():
+		// check whether we have a Just<T> or a Nothing<T> here...
+		Block thenBlock = body;
+		Block elseBlock = new Block(pos);
+		Statement ifstm =
+		        new ConditionalStatement(pos, new MemberAccess(pos, new VariableAccess(pos, maybeIdent),
+		                new FunctionCall(pos, new ResolvableIdentifier("hasValue"), new ArrayList<Expression>())),
+		                thenBlock, elseBlock);
+
+		// ## MONTY: ## Int i := (_i as Just<Int>).getValue()
+		ResolvableIdentifier iteratorType =
+		        new ResolvableIdentifier("Just", Arrays.asList((ResolvableIdentifier) null));
+		Expression getValueExpr =
+		        new MemberAccess(pos, new CastExpression(pos, new VariableAccess(pos, maybeIdent), iteratorType,
+		                callGetNext), new FunctionCall(pos, new ResolvableIdentifier("getValue"),
+		                new ArrayList<Expression>()));
+		VariableDeclaration itDecl = new VariableDeclaration(pos, indexVar, getValueExpr);
+		Assignment itAss = new Assignment(pos, new VariableAccess(pos, indexVar), getValueExpr);
+		thenBlock.addDeclaration(itDecl);
+		thenBlock.getStatements().add(0, itAss);
+
+		whileBlock.addStatement(ifstm);
+
+		// ## MONTY: ## else: break
+		elseBlock.addStatement(new BreakStatement(pos));
+		return loop;
 	}
 
 	@Override
@@ -584,13 +732,30 @@ public class ASTBuilder extends MontyBaseVisitor<ASTNode> {
 
 	@Override
 	public ASTNode visitReturnStm(ReturnStmContext ctx) {
-		ASTNode expr = null;
-		if (ctx.expression() != null) {
+		if (currentGeneratorReturnType.peek() != null) {
+			// if we are inside a generator, automatically return "Nothing<>"
+			return new ReturnStatement(position(ctx.getStart()), new FunctionCall(position(ctx.getStop()),
+			        new ResolvableIdentifier("Nothing", Arrays.asList(currentGeneratorReturnType.peek())),
+			        new ArrayList<Expression>()));
+		} else {
+			ASTNode expr = null;
+			if (ctx.expression() != null) {
+				expr = visit(ctx.expression());
+			}
 
-			expr = visit(ctx.expression());
+			return new ReturnStatement(position(ctx.getStart()), (Expression) expr);
 		}
+	}
 
-		return new ReturnStatement(position(ctx.getStart()), (Expression) expr);
+	@Override
+	public ASTNode visitYieldStm(YieldStmContext ctx) {
+		ASTNode expr = visit(ctx.expression());
+		return createYieldStatement(position(ctx.getStart()), (Expression) expr);
+	}
+
+	protected Statement createYieldStatement(Position pos, Expression expr) {
+		return new YieldStatement(pos, new FunctionCall(expr.getPosition(), new ResolvableIdentifier("Just",
+		        Arrays.asList(currentGeneratorReturnType.peek())), Arrays.asList(expr)));
 	}
 
 	@Override
@@ -665,6 +830,8 @@ public class ASTBuilder extends MontyBaseVisitor<ASTNode> {
 			return visitCastExpression(ctx);
 		} else if (ctx.isOperator() != null) {
 			return visitIsExpression(ctx);
+		} else if (ctx.listComprehension() != null) {
+			return visitListComprehension(ctx.listComprehension());
 		}
 		return null;
 	}
@@ -711,6 +878,12 @@ public class ASTBuilder extends MontyBaseVisitor<ASTNode> {
 				elements.add((Expression) visit(eContext));
 			}
 			return new ArrayLiteral(position(ctx.getStart()), elements);
+		} else if (ctx.rangeLiteral() != null) {
+			ArrayList<Expression> parameters = new ArrayList<>();
+			for (ExpressionContext eContext : ctx.rangeLiteral().expression()) {
+				parameters.add((Expression) visit(eContext));
+			}
+			return new FunctionCall(position(ctx.getStart()), new ResolvableIdentifier("Range"), parameters);
 		} else if (ctx.tupleLiteral() != null) {
 			ArrayList<Expression> elements = new ArrayList<>();
 			for (ExpressionContext eContext : ctx.tupleLiteral().expression()) {
@@ -803,5 +976,68 @@ public class ASTBuilder extends MontyBaseVisitor<ASTNode> {
 
 	protected ASTNode aggregateResult(ASTNode aggregate, ASTNode nextResult) {
 		return nextResult == null ? aggregate : nextResult;
+	}
+
+	@Override
+	public ASTNode visitListComprehension(ListComprehensionContext ctx) {
+		Expression target = (Expression) visit(ctx.expression());
+		Position pos = position(ctx.getStart());
+		Stack<ResolvableIdentifier> identifiers = new Stack<>();
+		Stack<Expression> sources = new Stack<>();
+		Stack<Expression> filters = new Stack<>();
+		ResolvableIdentifier type = convertResolvableIdentifier(ctx.type());
+		tupleDeclarationFactory.checkTupleType(type);
+
+		for (ListGeneratorContext genCtx : ctx.listGenerator()) {
+			identifiers.push(new ResolvableIdentifier(getText(genCtx.Identifier())));
+			sources.push((Expression) visit(genCtx.expression()));
+			if (genCtx.listFilter() != null) {
+				filters.push((Expression) visit(genCtx.listFilter().expression()));
+			} else {
+				filters.push(null);
+			}
+		}
+
+		// we start with the innermost block
+		Block currentBlock = new Block(position(ctx.expression().getStart()));
+		currentBlocks.push(currentBlock);
+		currentGeneratorReturnType.push(type);
+		currentBlock.addStatement(createYieldStatement(position(ctx.expression().getStart()), target));
+		currentGeneratorReturnType.pop();
+		for (int i = identifiers.size(); i > 0; i--) {
+			Expression filter = filters.pop();
+			Expression source = sources.pop();
+			source =
+			        new MemberAccess(source.getPosition(), source, new FunctionCall(source.getPosition(),
+			                new ResolvableIdentifier("getIterator"), new ArrayList<Expression>()));
+			ResolvableIdentifier ident = identifiers.pop();
+			if (filter != null) {
+				Position filterPos = filter.getPosition();
+				Statement ifStm = new ConditionalStatement(filterPos, filter, currentBlock, new Block(filterPos));
+				currentBlocks.pop();
+				currentBlock = new Block(filterPos);
+				currentBlocks.push(currentBlock);
+				currentBlock.addStatement(ifStm);
+			}
+			currentBlocks.pop();
+			Block forBlock = new Block(source.getPosition()); // the block containing the for stm
+			currentBlocks.push(forBlock);
+			Statement forStm = (Statement) createForLoop(source.getPosition(), ident, source, currentBlock);
+			currentBlock = forBlock;
+			currentBlock.addStatement(forStm);
+		}
+		currentBlocks.pop();
+		// the current block is now the outermost for loop
+		ClassDeclaration generator =
+		        (ClassDeclaration) createGenerator(pos, TmpIdentifierFactory.getUniqueIdentifier(), type,
+		        // new ResolvableIdentifier("Object"),
+		                new ArrayList<VariableDeclaration>(),
+		                new ArrayList<VariableDeclaration>(),
+		                new ArrayList<Expression>(),
+		                currentBlock);
+		currentBlocks.peek().addDeclaration(generator);
+		// return new instance
+		return new WrappedFunctionCall(pos, new FunctionCall(pos,
+		        ResolvableIdentifier.convert(generator.getIdentifier()), new ArrayList<Expression>()));
 	}
 }

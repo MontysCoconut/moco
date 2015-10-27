@@ -44,6 +44,7 @@ import de.uni.bremen.monty.moco.ast.Identifier;
 import de.uni.bremen.monty.moco.ast.declaration.*;
 import de.uni.bremen.monty.moco.ast.statement.ConditionalStatement;
 import de.uni.bremen.monty.moco.ast.statement.WhileLoop;
+import de.uni.bremen.monty.moco.codegeneration.types.TypeConverter;
 
 enum Mangled {
 	MODULE("M."), CLASS(".C."), FUNC(".F."), PROC(".P."), BLOCK(".B."), VAR(".V."), TYPE("$"), IF("IF."), ELSE("ELSE."), WHILE(
@@ -83,6 +84,7 @@ enum Mangled {
  *
  * mangled : packet_module(_class)?((_block|_proc|_func)*(_proc|_func|_var))?; * */
 public class NameMangler {
+	TypeConverter typeConverter;
 
 	private String mangleFunctionDeclaration(FunctionDeclaration node, String midTerm) {
 		String parameter = "";
@@ -97,7 +99,8 @@ public class NameMangler {
 
 		String base;
 		if (node.getDefiningClass() != null) {
-			base = mangleClass(node.getDefiningClass());
+			base =
+			        mangleClass((ClassDeclaration) typeConverter.mapAbstractGenericToConcreteIfApplicable(node.getDefiningClass()));
 		} else {
 			base = mangleBlock(node);
 		}
@@ -107,8 +110,7 @@ public class NameMangler {
 
 	private ClassDeclaration getConcreteClass(ASTNode node, TypeDeclaration type) {
 		if (type instanceof AbstractGenericType) {
-			ClassDeclarationVariation variation =
-			        (ClassDeclarationVariation) ((AbstractGenericType) type).getDefinedIn().getParentNode();
+			ClassDeclarationVariation variation = typeConverter.getCurrentClassDeclarationVariation();
 			type = variation.mapAbstractToConcrete((AbstractGenericType) type);
 		}
 		return (ClassDeclaration) type;
@@ -191,4 +193,7 @@ public class NameMangler {
 		return string;
 	}
 
+	public void setTypeConverter(TypeConverter converter) {
+		typeConverter = converter;
+	}
 }

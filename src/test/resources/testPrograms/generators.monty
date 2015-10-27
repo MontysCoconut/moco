@@ -1,0 +1,30 @@
+generator Int Values(Int x := 1, Int y := 2, Int z := 3):
+    yield x
+    yield y
+    yield z
+
+for i in Values():
+    println(i)
+println("----------")
+for i in Values(5):
+    println(i)
+println("----------")
+for i in Values(5, 6):
+    println(i)
+println("----------")
+for i in Values(5, 6, 7):
+    println(i)
+println("----------")
+
+
+generator String Week():
+    yield "Monday"
+    yield "Tuesday"
+    yield "Wednesday"
+    yield "Thursday"
+    yield "Friday"
+    yield "Saturday"
+    yield "Sunday"
+
+for day in Week():
+    println(day)

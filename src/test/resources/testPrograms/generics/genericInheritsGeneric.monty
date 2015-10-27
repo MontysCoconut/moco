@@ -1,0 +1,31 @@
+// Testing: Generic types that inherit other generic types
+//
+// The interesting thing here is that Gen2 does inherit from Gen1<T> 
+// where T is not a concrete type, but a type parameter of Gen2
+//
+// Expected output:
+// 5
+// 6
+// 7
+// 
+ 
+class Gen1<Type>:
+    Type val
+    initializer(Type val):
+        self.val := val
+
+    Type getVal():
+        return self.val
+
+class Gen2<Type> inherits Gen1<Type>:
+    initializer(Type val):
+        self.val := val
+        // // FIXME: Parent type is not resolved properly
+        // parent(Gen1<Type>).initializer(val)
+
+Gen1<Int> x:= Gen1<Int>(5) 
+Gen1<Int> y:= Gen2<Int>(6) 
+Gen2<Int> z:= Gen2<Int>(7) 
+println(x.getVal())
+println(y.getVal())
+println(z.getVal())
