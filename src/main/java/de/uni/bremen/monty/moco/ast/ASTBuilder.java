@@ -398,8 +398,14 @@ public class ASTBuilder extends MontyBaseVisitor<ASTNode> {
 		allParams.addAll(params);
 		allParams.addAll(defaultParams);
 
+		List<VariableDeclaration> allParamsCopy = new ArrayList<>(allParams.size());
+		for (VariableDeclaration param : allParams) {
+			allParamsCopy.add(new VariableDeclaration(param.getPosition(), param.getIdentifier(),
+			        param.getTypeIdentifier(), param.getDeclarationType()));
+		}
+
 		ClassDeclaration iterator =
-		        GeneratorClassFactory.generateGeneratorIteratorClass(pos, allParams, body, returnType);
+		        GeneratorClassFactory.generateGeneratorIteratorClass(pos, allParamsCopy, body, returnType);
 		currentBlocks.peek().addDeclaration(iterator);
 
 		ClassDeclaration generator =

@@ -82,7 +82,7 @@ public abstract class BasicASTNode implements ASTNode {
 	 *
 	 * @return the parent node */
 	public ASTNode getParentNodeByType(Class type) {
-		ASTNode n = this;
+		ASTNode n = getParentNode();
 		while ((!type.isInstance(n)) && (n != null)) {
 			n = n.getParentNode();
 		}
