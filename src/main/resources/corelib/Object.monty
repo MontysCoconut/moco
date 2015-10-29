@@ -1,3 +1,3 @@
-class Object:
-    + Bool _eq_(Object other):
+@native class Object:
+    + @native Bool _eq_(Object other):
         pass

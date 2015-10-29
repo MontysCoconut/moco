@@ -1,6 +1,6 @@
-class String:
-    + initializer(String s):
+@native class String:
+    + @native initializer(String s):
         pass
 
-    + Bool _eq_(String other):
+    + @native Bool _eq_(String other):
         pass

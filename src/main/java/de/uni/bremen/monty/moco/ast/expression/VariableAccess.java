@@ -49,6 +49,7 @@ public class VariableAccess extends Expression {
 	/** Identifier of the variable to access. */
 	private final ResolvableIdentifier identifier;
 	private Declaration declaration;
+	private boolean isClosureVar = false;
 
 	/** Is this a L-value? */
 	private boolean lValue = false;
@@ -97,5 +98,13 @@ public class VariableAccess extends Expression {
 	 *            the declaration to set */
 	public void setDeclaration(Declaration declaration) {
 		this.declaration = declaration;
+	}
+
+	public void setClosureVariable(boolean closure) {
+		isClosureVar = closure;
+	}
+
+	public boolean isClosureVariable() {
+		return isClosureVar;
 	}
 }

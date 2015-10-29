@@ -1,36 +1,36 @@
-class Float:
-    + initializer(Float f):
+@native class Float:
+    + @native initializer(Float f):
         pass
 
-    + Float _neg_():
+    + @native Float _neg_():
         pass
 
-    + Float _add_(Float other):
+    + @native Float _add_(Float other):
         pass
 
-    + Float _sub_(Float other):
+    + @native Float _sub_(Float other):
         pass
 
-    + Float _mul_(Float other):
+    + @native Float _mul_(Float other):
         pass
 
-    + Float _div_(Float other):
+    + @native Float _div_(Float other):
         pass
 
-    + Bool _lt_(Float other):
+    + @native Bool _lt_(Float other):
         pass
 
-    + Bool _gt_(Float other):
+    + @native Bool _gt_(Float other):
         pass
 
-    + Bool _leq_(Float other):
+    + @native Bool _leq_(Float other):
         pass
 
-    + Bool _geq_(Float other):
+    + @native Bool _geq_(Float other):
         pass
 
-    + Bool _eq_(Float other):
+    + @native Bool _eq_(Float other):
         pass
 
-    + Bool _neq_(Float other):
+    + @native Bool _neq_(Float other):
         pass

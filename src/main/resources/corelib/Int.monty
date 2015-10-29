@@ -1,39 +1,39 @@
-class Int:
-    + initializer(Int i):
+@native class Int:
+    + @native initializer(Int i):
         pass
 
-    + Int _neg_():
+    + @native Int _neg_():
         pass
 
-    + Int _add_(Int other):
+    + @native Int _add_(Int other):
         pass
 
-    + Int _sub_(Int other):
+    + @native Int _sub_(Int other):
         pass
 
-    + Int _mul_(Int other):
+    + @native Int _mul_(Int other):
         pass
 
-    + Int _div_(Int other):
+    + @native Int _div_(Int other):
         pass
 
-    + Int _mod_(Int other):
+    + @native Int _mod_(Int other):
         pass
 
-    + Bool _lt_(Int other):
+    + @native Bool _lt_(Int other):
         pass
 
-    + Bool _gt_(Int other):
+    + @native Bool _gt_(Int other):
         pass
 
-    + Bool _leq_(Int other):
+    + @native Bool _leq_(Int other):
         pass
 
-    + Bool _geq_(Int other):
+    + @native Bool _geq_(Int other):
         pass
 
-    + Bool _eq_(Int other):
+    + @native Bool _eq_(Int other):
         pass
 
-    + Bool _neq_(Int other):
+    + @native Bool _neq_(Int other):
         pass

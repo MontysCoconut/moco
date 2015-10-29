@@ -196,29 +196,6 @@ public class CodeGenerationVisitor extends BaseVisitor {
 		codeGenerator.addNativeFunction(contextUtils.active(), returnType, llvmParameter, name);
 	}
 
-	private boolean isNative(ASTNode node) {
-		if ((node instanceof FunctionDeclaration) && (((FunctionDeclaration) node).isAbstract())) {
-			return false; // abstract methods are never native
-		}
-		while (node.getParentNode() != null) {
-			node = node.getParentNode();
-			if (node instanceof ModuleDeclaration) {
-				if (!((ModuleDeclaration) node).isNative()) {
-					return false;
-				}
-			}
-			if (node instanceof Package) {
-				if (((Package) node).isNativePackage()) {
-					return true;
-				}
-			} else if ((node instanceof ClassDeclaration) && (((ClassDeclaration) node).isFunctionWrapper())) {
-				return false; // function wrappers are never native,
-				              // because they are always automatically generated monty code
-			}
-		}
-		return false;
-	}
-
 	@Override
 	public void visit(Package node) {
 		if (node.getParentNode() == null) {
@@ -669,7 +646,7 @@ public class CodeGenerationVisitor extends BaseVisitor {
 		} else {
 			if (node.isFunction()) {
 				openNewFunctionScope();
-				if (isNative(node)) {
+				if (node.isNative()) {
 					addNativeFunction(node, returnType);
 				} else {
 					addFunction(node, returnType);
@@ -678,7 +655,7 @@ public class CodeGenerationVisitor extends BaseVisitor {
 				closeFunctionContext();
 			} else {
 				openNewFunctionScope();
-				if (isNative(node) && !node.isInitializer()) {
+				if (node.isNative() && !node.isInitializer()) {
 					addNativeFunction(node, returnType);
 				} else {
 					addFunction(node, returnType);
