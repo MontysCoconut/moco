@@ -180,7 +180,7 @@ public class ResolveVisitor extends VisitOnceVisitor {
 	}
 
 	protected void resolveClosureVariables(VariableAccess access, VariableDeclaration declaration) {
-		// everything that is not an attribute
+		// everything that is not an attribute (since attributes are always defined outside the current scope)
 		if (declaration.getDeclarationType() != VariableDeclaration.DeclarationType.ATTRIBUTE) {
 			Declaration declParent = (Declaration) declaration.getParentNodeByType(Declaration.class);
 			Declaration accessParent = (Declaration) access.getParentNodeByType(Declaration.class);
@@ -188,13 +188,21 @@ public class ResolveVisitor extends VisitOnceVisitor {
 			if (declParent != accessParent) {
 				if (!(declParent instanceof ModuleDeclaration)) {
 					FunctionDeclaration fn = ((FunctionDeclaration) accessParent);
-					// VariableDeclaration attr = fn.registerClosureVariable(declaration);
-					// access.setDeclaration(attr);
 					VariableDeclaration closureVarDecl = fn.addClosureVariable(declaration);
 					access.setClosureVariable(true);
 					access.setDeclaration(closureVarDecl);
 				}
 			}
+		}
+	}
+
+	protected void resolveClosureVariablesForSelf(SelfExpression self) {
+		FunctionDeclaration selfParent = (FunctionDeclaration) self.getParentNodeByType(FunctionDeclaration.class);
+		// self expressions in unbound functions must be closure variables
+		if (selfParent != null && selfParent.isUnbound()) {
+			self.setInClosure();
+			selfParent.addClosureVariable(new VariableDeclaration(self.getPosition(), new Identifier("self"),
+			        self.getType(), VariableDeclaration.DeclarationType.VARIABLE));
 		}
 	}
 
@@ -238,6 +246,7 @@ public class ResolveVisitor extends VisitOnceVisitor {
 	public void visit(SelfExpression node) {
 		super.visit(node);
 		node.setType(findEnclosingClass(node));
+		resolveClosureVariablesForSelf(node);
 	}
 
 	/** {@inheritDoc} */

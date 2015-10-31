@@ -1,0 +1,46 @@
+// Testing: whether 'self' is available inside closures
+//
+// Expected Output: 
+//                  7
+//                  World
+//                  Hello
+//                  Hello
+//                  World
+//                  World
+
+
+class Foo:
+    Int x := 7
+
+    (() -> Int) bar():
+        return () -> self.x
+
+Foo f := Foo()
+(() -> Int) fn := f.bar()
+println(fn())
+
+
+class Container:
+    String message
+
+    initializer(String message):
+        self.message := message
+
+    (() -> String) getMessageGetter():
+        return () -> self.getMessage()
+
+    String getMessage():
+        return self.message
+
+
+Container h := Container("Hello")
+Container w := Container("World")
+
+() -> String fh := h.getMessageGetter()
+() -> String fw := w.getMessageGetter()
+
+println(fw())
+println(fh())
+println(fh())
+println(fw())
+println(fw())

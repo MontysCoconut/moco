@@ -402,6 +402,7 @@ public class FunctionDeclaration extends TypeDeclaration {
 		} else if (oldCall instanceof WrappedFunctionCall) {
 			getBody().addStatement((WrappedFunctionCall) oldCall);
 		} else {
+			System.out.println(oldCall);
 			throw new RuntimeException("invalid AST!");
 		}
 		getBody().addStatement(newRet);
@@ -416,7 +417,19 @@ public class FunctionDeclaration extends TypeDeclaration {
 		return String.format("%s(%s)", getIdentifier().toString(), params);
 	}
 
+	private VariableDeclaration checkSelfVariable(VariableDeclaration var) {
+		if (var.getIdentifier().getSymbol().equals("self")) {
+			for (VariableDeclaration key : closureVars.keySet()) {
+				if (key.getIdentifier().getSymbol().equals("self")) {
+					return key;
+				}
+			}
+		}
+		return var;
+	}
+
 	public VariableDeclaration addClosureVariable(VariableDeclaration var) {
+		var = checkSelfVariable(var);
 		if (!closureVars.containsKey(var)) {
 			VariableDeclaration attr =
 			        new VariableDeclaration(var.getPosition(), var.getIdentifier(), var.getTypeIdentifier(),
@@ -435,6 +448,7 @@ public class FunctionDeclaration extends TypeDeclaration {
 	}
 
 	public VariableDeclaration getClosureVariable(VariableDeclaration var) {
+		var = checkSelfVariable(var);
 		return closureVars.get(var);
 	}
 

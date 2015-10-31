@@ -259,11 +259,19 @@ public class CodeGenerationVisitor extends BaseVisitor {
 				                var.getType(),
 				                (LLVMIdentifier<LLVMPointer<LLVMType>>) source);
 
-				VariableAccess varAccess = new VariableAccess(pos, ResolvableIdentifier.convert(var.getIdentifier()));
-				varAccess.setType(var.getType());
-				varAccess.setDeclaration(var);
-				varAccess.setParentNode(node.getParentNode());
-				visit(varAccess);
+				if (var.getIdentifier().getSymbol().equals("self")) {
+					SelfExpression self = new SelfExpression(pos);
+					self.setType(var.getType());
+					self.setParentNode(node.getParentNode());
+					visit(self);
+				} else {
+					VariableAccess varAccess =
+					        new VariableAccess(pos, ResolvableIdentifier.convert(var.getIdentifier()));
+					varAccess.setType(var.getType());
+					varAccess.setDeclaration(var);
+					varAccess.setParentNode(node.getParentNode());
+					visit(varAccess);
+				}
 				LLVMIdentifier<LLVMType> closureSource = stack.pop();
 				codeGenerator.assign(contextUtils.active(), closureTarget, closureSource);
 			}
@@ -390,7 +398,22 @@ public class CodeGenerationVisitor extends BaseVisitor {
 	@Override
 	public void visit(SelfExpression node) {
 		TypeDeclaration type = useClassVariationIfApplicable(node.getType());
-		stack.push(codeGenerator.resolveLocalVarName("self", type, false));
+		// if 'self' is used inside a closure, we can not use the usual 'self'
+		if (node.isInClosure()) {
+			FunctionDeclaration funDecl = (FunctionDeclaration) node.getParentNodeByType(FunctionDeclaration.class);
+			ClassDeclaration containingClass = funDecl.getWrapperClass();
+			VariableAccess lvalue = new VariableAccess(new Position(), new ResolvableIdentifier("self"));
+
+			stack.push(codeGenerator.accessClosureContextMember(
+			        contextUtils.active(),
+			        containingClass,
+			        funDecl.getClosureVariable(new VariableDeclaration(new Position(), new Identifier("self"), type,
+			                VariableDeclaration.DeclarationType.VARIABLE)),
+			        lvalue,
+			        type));
+		} else {
+			stack.push(codeGenerator.resolveLocalVarName("self", type, false));
+		}
 	}
 
 	@SuppressWarnings("unchecked")
