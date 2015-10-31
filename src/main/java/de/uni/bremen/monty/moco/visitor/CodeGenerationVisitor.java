@@ -304,7 +304,17 @@ public class CodeGenerationVisitor extends BaseVisitor {
 			                varDeclaration,
 			                node,
 			                type);
-
+		} else if (node.isClosureVariable()) {
+			System.err.println(node.getIdentifier() + " is closure var");
+			ClassDeclaration containingClass =
+			        ((FunctionDeclaration) node.getParentNodeByType(FunctionDeclaration.class)).getWrapperClass();
+			llvmIdentifier =
+			        codeGenerator.accessClosureContextMember(
+			                contextUtils.active(),
+			                containingClass,
+			                varDeclaration,
+			                node,
+			                type);
 		} else if (varDeclaration.isAttribute()) {
 			LLVMIdentifier<?> leftIdentifier = stack.pop();
 			llvmIdentifier =

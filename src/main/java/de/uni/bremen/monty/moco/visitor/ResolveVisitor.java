@@ -165,12 +165,37 @@ public class ResolveVisitor extends VisitOnceVisitor {
 		if (declaration instanceof VariableDeclaration) {
 			VariableDeclaration variable = (VariableDeclaration) declaration;
 			node.setDeclaration(variable);
+
+			resolveClosureVariables(node, variable);
+
 			visitDoubleDispatched(variable);
 			node.setType(variable.getType());
 			if (!(scope instanceof ClassScope) && findEnclosingClass(node) == CoreClasses.voidType()) {
 				if (node.getDeclaration() == null
 				        || node.getDeclaration().getPosition().getLineNumber() > node.getPosition().getLineNumber()) {
 					throw new UnknownIdentifierException(node.getIdentifier());
+				}
+			}
+		}
+	}
+
+	protected void resolveClosureVariables(VariableAccess access, VariableDeclaration declaration) {
+		// everything that is not an attribute
+		if (declaration.getDeclarationType() != VariableDeclaration.DeclarationType.ATTRIBUTE) {
+			Declaration declParent = (Declaration) declaration.getParentNodeByType(Declaration.class);
+			Declaration accessParent = (Declaration) access.getParentNodeByType(Declaration.class);
+
+			if (declParent != accessParent) {
+				if (!(declParent instanceof ModuleDeclaration)) {
+					FunctionDeclaration fn = ((FunctionDeclaration) accessParent);
+					// VariableDeclaration attr = fn.registerClosureVariable(declaration);
+					// access.setDeclaration(attr);
+					VariableDeclaration closureVarDecl = fn.addClosureVariable(declaration);
+					access.setClosureVariable(true);
+					access.setDeclaration(closureVarDecl);
+
+					System.err.print("### " + declaration.getIdentifier() + " ");
+					System.err.print(declaration.getDeclarationType() + ":\n");
 				}
 			}
 		}

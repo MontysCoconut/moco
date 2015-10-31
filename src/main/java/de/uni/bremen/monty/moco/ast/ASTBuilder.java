@@ -253,8 +253,12 @@ public class ASTBuilder extends MontyBaseVisitor<ASTNode> {
 				}
 			}
 
-			List<VariableDeclaration> subParams =
-			        allVariableDeclarations.subList(0, params.size() + defaultParameterIdx);
+			List<VariableDeclaration> subParams = new ArrayList<>(params.size() + defaultParameterIdx);
+			for (int i = 0; i < params.size() + defaultParameterIdx; i++) {
+				VariableDeclaration var = allVariableDeclarations.get(i);
+				subParams.add(new VariableDeclaration(var.getPosition(), var.getIdentifier(), var.getTypeIdentifier(),
+				        var.getDeclarationType()));
+			}
 
 			Expression expression =
 			        new FunctionCall(position(token), new ResolvableIdentifier(identifier.getSymbol()), l);

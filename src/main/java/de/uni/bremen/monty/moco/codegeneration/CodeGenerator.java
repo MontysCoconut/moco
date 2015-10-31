@@ -398,6 +398,29 @@ public class CodeGenerator {
 		return result;
 	}
 
+	public LLVMIdentifier<LLVMType> accessClosureContextMember(CodeContext c, ClassDeclaration closureClass,
+	        VariableDeclaration varDecl, VariableAccess varAccess, TypeDeclaration variableType) {
+
+		LLVMType contextType = LLVMTypeFactory.struct(nameMangler.mangleClass(closureClass) + "_closure_context");
+
+		LLVMIdentifier<?> self = resolveLocalVarName("self", closureClass, false);
+		LLVMIdentifier<LLVMType> contextLlvmIdentifier =
+		        accessMember(
+		                c,
+		                (LLVMIdentifier<LLVMPointer<LLVMType>>) self,
+		                closureClass.getLastAttributeIndex(),
+		                contextType,
+		                false);
+		LLVMIdentifier<LLVMType> result =
+		        accessMember(
+		                c,
+		                llvmIdentifierFactory.pointerTo(contextLlvmIdentifier),
+		                varDecl.getAttributeIndex(),
+		                variableType,
+		                !varAccess.getLValue());
+		return result;
+	}
+
 	public LLVMIdentifier<LLVMType> accessContextMember(CodeContext c, ClassDeclaration generatorClass,
 	        VariableDeclaration varDecl, VariableAccess varAccess, TypeDeclaration variableType) {
 
@@ -410,7 +433,7 @@ public class CodeGenerator {
 		                (LLVMIdentifier<LLVMPointer<LLVMType>>) self,
 		                generatorClass.getLastAttributeIndex(),
 		                contextType,
-		                false); // TODO: richtig?
+		                false);
 		LLVMIdentifier<LLVMType> result =
 		        accessMember(
 		                c,
