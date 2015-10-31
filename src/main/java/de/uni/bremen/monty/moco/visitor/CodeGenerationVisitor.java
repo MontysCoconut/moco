@@ -235,6 +235,39 @@ public class CodeGenerationVisitor extends BaseVisitor {
 		LLVMIdentifier<LLVMType> source = stack.pop();
 		LLVMIdentifier<LLVMType> target = stack.pop();
 		codeGenerator.assign(contextUtils.active(), target, source);
+
+		if (node.belongsToFunctionWrapper()) {
+			initializeClosureWrapper(node, source);
+		}
+	}
+
+	protected void initializeClosureWrapper(Assignment node, LLVMIdentifier<?> source) {
+		Position pos = node.getPosition();
+		FunctionDeclaration function = node.getCorrespondingFunctionWrapper();
+		if (function.isClosure()) {
+			ClassDeclaration functionWrapper = function.getWrapperClass();
+			for (VariableDeclaration var : function.getClosureVariableOriginalDeclarations()) {
+				VariableDeclaration localVar = function.getClosureVariable(var);
+				VariableAccess lvalue = new VariableAccess(pos, ResolvableIdentifier.convert(var.getIdentifier()));
+				lvalue.setLValue();
+				LLVMIdentifier<LLVMType> closureTarget =
+				        codeGenerator.accessClosureContextMember(
+				                contextUtils.active(),
+				                functionWrapper,
+				                localVar,
+				                lvalue,
+				                var.getType(),
+				                (LLVMIdentifier<LLVMPointer<LLVMType>>) source);
+
+				VariableAccess varAccess = new VariableAccess(pos, ResolvableIdentifier.convert(var.getIdentifier()));
+				varAccess.setType(var.getType());
+				varAccess.setDeclaration(var);
+				varAccess.setParentNode(node.getParentNode());
+				visit(varAccess);
+				LLVMIdentifier<LLVMType> closureSource = stack.pop();
+				codeGenerator.assign(contextUtils.active(), closureTarget, closureSource);
+			}
+		}
 	}
 
 	@Override
@@ -312,7 +345,6 @@ public class CodeGenerationVisitor extends BaseVisitor {
 			                node,
 			                type);
 		} else if (node.isClosureVariable()) {
-			System.err.println(node.getIdentifier() + " is closure var");
 			ClassDeclaration containingClass =
 			        ((FunctionDeclaration) node.getParentNodeByType(FunctionDeclaration.class)).getWrapperClass();
 			llvmIdentifier =

@@ -434,7 +434,15 @@ public class FunctionDeclaration extends TypeDeclaration {
 		return closureVars.size() > 0;
 	}
 
+	public VariableDeclaration getClosureVariable(VariableDeclaration var) {
+		return closureVars.get(var);
+	}
+
 	public Collection<VariableDeclaration> getClosureVariables() {
 		return closureVars.values();
+	}
+
+	public Collection<VariableDeclaration> getClosureVariableOriginalDeclarations() {
+		return closureVars.keySet();
 	}
 }

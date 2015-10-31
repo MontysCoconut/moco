@@ -39,6 +39,7 @@
 package de.uni.bremen.monty.moco.ast.statement;
 
 import de.uni.bremen.monty.moco.ast.*;
+import de.uni.bremen.monty.moco.ast.declaration.FunctionDeclaration;
 import de.uni.bremen.monty.moco.ast.expression.Expression;
 import de.uni.bremen.monty.moco.visitor.BaseVisitor;
 
@@ -49,6 +50,8 @@ public class Assignment extends BasicASTNode implements Statement {
 
 	/** The right side. */
 	private final Expression right;
+
+	private FunctionDeclaration correspondingFunWrapper = null;
 
 	/** Constructor.
 	 *
@@ -91,4 +94,15 @@ public class Assignment extends BasicASTNode implements Statement {
 		visitor.visitDoubleDispatched(right);
 	}
 
+	public boolean belongsToFunctionWrapper() {
+		return correspondingFunWrapper != null;
+	}
+
+	public void setCorrespondingFunctionWrapper(FunctionDeclaration fun) {
+		correspondingFunWrapper = fun;
+	}
+
+	public FunctionDeclaration getCorrespondingFunctionWrapper() {
+		return correspondingFunWrapper;
+	}
 }

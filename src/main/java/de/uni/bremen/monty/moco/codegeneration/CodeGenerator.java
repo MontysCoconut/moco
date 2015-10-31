@@ -399,18 +399,12 @@ public class CodeGenerator {
 	}
 
 	public LLVMIdentifier<LLVMType> accessClosureContextMember(CodeContext c, ClassDeclaration closureClass,
-	        VariableDeclaration varDecl, VariableAccess varAccess, TypeDeclaration variableType) {
+	        VariableDeclaration varDecl, VariableAccess varAccess, TypeDeclaration variableType,
+	        LLVMIdentifier<LLVMPointer<LLVMType>> context) {
 
 		LLVMType contextType = LLVMTypeFactory.struct(nameMangler.mangleClass(closureClass) + "_closure_context");
-
-		LLVMIdentifier<?> self = resolveLocalVarName("..ctx..", closureClass, false);
 		LLVMIdentifier<LLVMType> contextLlvmIdentifier =
-		        accessMember(
-		                c,
-		                (LLVMIdentifier<LLVMPointer<LLVMType>>) self,
-		                closureClass.getLastAttributeIndex(),
-		                contextType,
-		                false);
+		        accessMember(c, context, closureClass.getLastAttributeIndex(), contextType, false);
 		LLVMIdentifier<LLVMType> result =
 		        accessMember(
 		                c,
@@ -419,6 +413,13 @@ public class CodeGenerator {
 		                variableType,
 		                !varAccess.getLValue());
 		return result;
+	}
+
+	public LLVMIdentifier<LLVMType> accessClosureContextMember(CodeContext c, ClassDeclaration closureClass,
+	        VariableDeclaration varDecl, VariableAccess varAccess, TypeDeclaration variableType) {
+
+		LLVMIdentifier<LLVMPointer<LLVMType>> self = resolveLocalVarName("..ctx..", closureClass, false);
+		return accessClosureContextMember(c, closureClass, varDecl, varAccess, variableType, self);
 	}
 
 	public LLVMIdentifier<LLVMType> accessContextMember(CodeContext c, ClassDeclaration generatorClass,

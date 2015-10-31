@@ -1,0 +1,29 @@
+// Testing: Closures, functions that use variables from enclosing scopes
+//
+// Expected Output: --- 20 25 30 --- 16 20 24 ---
+
+println("-------------------")
+
+// a function that returns a closure
+(Int -> Int) foo(Int x):
+    Int innerfoo(Int y):
+        return x*y
+    return innerfoo
+
+// -------------------------------
+
+// use the closure
+(Int -> Int) bar := foo(5)
+println(bar(4)) // 20
+println(bar(5)) // 25
+println(bar(6)) // 30
+
+println("-------------------")
+
+// use the closure
+(Int -> Int) baz := foo(4)
+println(baz(4)) // 16
+println(baz(5)) // 20
+println(baz(6)) // 24
+
+println("-------------------")

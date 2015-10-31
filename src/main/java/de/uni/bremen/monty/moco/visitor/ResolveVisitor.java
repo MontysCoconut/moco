@@ -193,9 +193,6 @@ public class ResolveVisitor extends VisitOnceVisitor {
 					VariableDeclaration closureVarDecl = fn.addClosureVariable(declaration);
 					access.setClosureVariable(true);
 					access.setDeclaration(closureVarDecl);
-
-					System.err.print("### " + declaration.getIdentifier() + " ");
-					System.err.print(declaration.getDeclarationType() + ":\n");
 				}
 			}
 		}
