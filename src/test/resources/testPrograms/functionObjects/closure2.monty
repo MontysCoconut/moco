@@ -1,0 +1,13 @@
+// Testing: Do closures work with anonymous functions?
+//
+// In this case an Int list is defined and a map function, which takes a list and a function
+//
+// Expected Output: 6 12 18
+
+(Int -> Int) foo(Int x):
+    return (Int y) -> x*y
+
+Int -> Int bar := foo(3)
+println(bar(2))  // 6
+println(bar(4))  // 12
+println(bar(6))  // 18
