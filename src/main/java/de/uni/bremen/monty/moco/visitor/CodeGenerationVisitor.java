@@ -609,9 +609,20 @@ public class CodeGenerationVisitor extends BaseVisitor {
 
 		if (declaration.isClosure()) {
 			// the 'self' of a function wrapper implementation is passed as a context to the actual function
-			TypeDeclaration ctxType =
-			        useClassVariationIfApplicable((ClassDeclaration) node.getParentNodeByType(ClassDeclaration.class));
-			LLVMIdentifier<LLVMPointer<LLVMType>> ctx = codeGenerator.resolveLocalVarName("self", ctxType, false);
+			TypeDeclaration ctxType = useClassVariationIfApplicable(declaration.getWrapperClass());
+
+			LLVMIdentifier<LLVMPointer<LLVMType>> ctx;
+			// if we're inside the wrapper class' _apply_ method, use "self" as the function's context
+			if (declaration.getWrapperClass() == node.getParentNodeByType(ClassDeclaration.class)) {
+				ctx = codeGenerator.resolveLocalVarName("self", ctxType, false);
+			} else {
+				// if not, use the respective wrapper object
+				ctx =
+				        codeGenerator.resolveLocalVarName(
+				                nameMangler.mangleVariable(declaration.getWrapperFunctionObjectDeclaration()),
+				                ctxType,
+				                true);
+			}
 			expectedParameters.add(0, ctxType);
 			arguments.add(0, ctx);
 		}
