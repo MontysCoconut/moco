@@ -124,6 +124,13 @@ public class CodeGenerationVisitor extends BaseVisitor {
 			llvmParameter.add(selfReference);
 		}
 
+		if (node.isClosure()) {
+			ClassDeclaration typeDeclaration = node.getWrapperClass();
+			LLVMType contextType = codeGenerator.mapToLLVMType(typeDeclaration);
+			LLVMIdentifier<LLVMType> ctxReference = llvmIdentifierFactory.newLocal("..ctx..", contextType, false);
+			llvmParameter.add(ctxReference);
+		}
+
 		for (VariableDeclaration param : node.getParameters()) {
 			LLVMType llvmType = codeGenerator.mapToLLVMType(param.getType());
 			llvmType = llvmType instanceof LLVMStructType ? pointer(llvmType) : llvmType;
@@ -598,6 +605,15 @@ public class CodeGenerationVisitor extends BaseVisitor {
 					arguments.add(0, selfReference);
 				}
 			}
+		}
+
+		if (declaration.isClosure()) {
+			// the 'self' of a function wrapper implementation is passed as a context to the actual function
+			TypeDeclaration ctxType =
+			        useClassVariationIfApplicable((ClassDeclaration) node.getParentNodeByType(ClassDeclaration.class));
+			LLVMIdentifier<LLVMPointer<LLVMType>> ctx = codeGenerator.resolveLocalVarName("self", ctxType, false);
+			expectedParameters.add(0, ctxType);
+			arguments.add(0, ctx);
 		}
 
 		if (declaration.isMethod() && !declaration.isInitializer()) {

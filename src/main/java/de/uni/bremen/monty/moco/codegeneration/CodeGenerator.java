@@ -403,7 +403,7 @@ public class CodeGenerator {
 
 		LLVMType contextType = LLVMTypeFactory.struct(nameMangler.mangleClass(closureClass) + "_closure_context");
 
-		LLVMIdentifier<?> self = resolveLocalVarName("self", closureClass, false);
+		LLVMIdentifier<?> self = resolveLocalVarName("..ctx..", closureClass, false);
 		LLVMIdentifier<LLVMType> contextLlvmIdentifier =
 		        accessMember(
 		                c,
