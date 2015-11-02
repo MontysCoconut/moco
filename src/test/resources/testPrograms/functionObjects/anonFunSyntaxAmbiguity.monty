@@ -1,0 +1,13 @@
+// Testing: Anonymous functions syntax ambiguity (see description below...)
+//
+// Expected Output: 5
+
+class Foo:
+    Int x := 5
+
+// the following is meant to be an anonymous function
+() -> Int getFive := () -> Foo().x
+// instead of the instantiation of ( ()-> Foo ) and accessing its x
+// this case will never happen, the grammar should also avoid this
+
+println(getFive())

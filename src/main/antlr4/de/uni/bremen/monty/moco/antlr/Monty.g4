@@ -198,9 +198,9 @@ expressionList
   ;
 
 expression
-  : functionCall
-  | primary
+  : primary
   | functionExpression
+  | functionCall
   | ifExprThen=expression 'if' ifExpCondition=expression 'else' ifExprElse=expression
   | left=expression accessOperator right=expression
   | <assoc=right> (plusMinusOperator | notOperator) singleExpression=expression
