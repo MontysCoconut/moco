@@ -44,6 +44,7 @@ import de.uni.bremen.monty.moco.ast.expression.FunctionCall;
 import de.uni.bremen.monty.moco.ast.expression.WrappedFunctionCall;
 import de.uni.bremen.monty.moco.ast.statement.Assignment;
 import de.uni.bremen.monty.moco.ast.statement.ReturnStatement;
+import de.uni.bremen.monty.moco.ast.statement.Statement;
 import de.uni.bremen.monty.moco.visitor.BaseVisitor;
 
 import java.util.*;
@@ -397,12 +398,10 @@ public class FunctionDeclaration extends TypeDeclaration {
 		// add the new ones
 		Expression oldCall = oldRet.getParameter();
 		oldCall.setParentNode(getBody());
-		if (oldCall instanceof FunctionCall) {
-			getBody().addStatement((FunctionCall) oldCall);
-		} else if (oldCall instanceof WrappedFunctionCall) {
-			getBody().addStatement((WrappedFunctionCall) oldCall);
+
+		if (oldCall instanceof Statement) {
+			getBody().addStatement((Statement) oldCall);
 		} else {
-			System.out.println(oldCall);
 			throw new RuntimeException("invalid AST!");
 		}
 		getBody().addStatement(newRet);

@@ -1,0 +1,51 @@
+// Testing: Anonymous functions in classes, in combination with methods
+//
+// Expected Output:
+        // 'Ok' clicked, performing the next action
+        // 'Cancel' clicked, closing the Dialog
+
+
+
+// ----------------------------------------------------------------------------
+
+class Button:
+    String label
+    String -> () onclick
+
+    initializer(String label, (String -> ()) onclick):
+        self.onclick := onclick
+        self.label := label
+
+    click():
+        self.onclick(self.label)
+
+// ----------------------------------------------------------------------------
+
+class Dialog:
+    Button ok
+    Button cancel
+
+    initializer():
+        // pass
+        String -> () okAction := (String s) -> self.nextAction(s)
+
+        self.ok := Button("Ok", okAction)
+        self.cancel := Button("Cancel", (String s) -> self.closeDialog(s))
+
+    closeDialog(String s):
+        print("'")
+        print(s)
+        print("' clicked, closing the Dialog\n")
+        // return -1
+
+    nextAction(String s):
+        print("'")
+        print(s)
+        print("' clicked, performing the next action\n")
+
+// ----------------------------------------------------------------------------
+
+Dialog dlg := Dialog()
+dlg.ok.click()
+dlg.cancel.click()
+
