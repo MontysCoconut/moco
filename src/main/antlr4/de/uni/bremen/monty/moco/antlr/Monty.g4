@@ -17,6 +17,7 @@ importLine
 declaration
   : independentDeclaration
   | classDeclaration
+  | caseClassDeclaration
   | generatorDeclaration
   ;
 
@@ -32,6 +33,14 @@ classDeclaration
     Indent
         (memberDeclaration+ | 'pass' EndOfLine)
     Dedent
+  ;
+
+caseClassDeclaration
+  : 'case' 'class' type '(' (parameterListWithoutDefaults)? ')' ('inherits' typeList)?
+    (':' EndOfLine
+    Indent
+        (memberDeclaration+ | 'pass' EndOfLine)
+    Dedent)?
   ;
 
 memberDeclaration
@@ -107,11 +116,11 @@ statementBlock
   ;
 
 statement
-  : whileStatement                                                  #whileStm
+  : declaration                                                     #declStm
+  | whileStatement                                                  #whileStm
   | forStatement                                                    #forStm
   | ifStatement                                                     #ifStm
   | tryStatement                                                    #tryStm
-  | declaration                                                     #declStm
   | unpackAssignment                                                #unpackAssignStm
   | assignment                                                      #assignStm
   | compoundAssignment                                              #compoundAssign
@@ -122,6 +131,7 @@ statement
   | command='break' EndOfLine                                       #breakStm
   | functionCall EndOfLine                                          #funcCallStm
   | left=expression operator='.' right=functionCall EndOfLine       #MemberAccessStmt
+  | caseStatement                                                   #caseStm
   ;
 
 /* while loop: The expression must be a condition (i.e. Boolean expression). */
@@ -296,4 +306,41 @@ listGenerator
 
 listFilter
   : 'if' expression
+  ;
+
+
+/* pattern matching */
+
+caseStatement
+  : 'case' expression 'of' ':' EndOfLine caseBlock
+  ;
+
+caseBlock
+  : Indent
+      (pattern ':' EndOfLine statementBlock)+
+    Dedent
+  ;
+
+patternGuard
+  : 'if' expression
+  ;
+
+pattern
+  : (typedPattern
+  | '_'
+  | compoundPattern
+  | expression) patternGuard?
+  ;
+
+typedPattern
+  : type Identifier
+  | type ('_')?
+  ;
+
+compoundPattern
+  : type? '(' patternList? ')'
+  ;
+
+patternList
+  : pattern (',' pattern )*
   ;

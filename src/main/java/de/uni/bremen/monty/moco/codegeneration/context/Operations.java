@@ -167,6 +167,20 @@ public class Operations {
 		        CoreClasses.stringType());
 	}
 
+	@Native("M.Object.C.Object.F._eq_$M.Bool.C.Bool$M.Object.C.Object")
+	public LLVMIdentifier<LLVMBool> objEq(CodeContext c, LLVMIdentifier<LLVMInt> arg1, LLVMIdentifier<LLVMInt> arg2) {
+		return c.icmp(IcmpOperand.eq, arg1, arg2, llvmIdentifierFactory.newLocal(int1(), false));
+	}
+
+	@Native("M.String.C.String.F._eq_$M.Bool.C.Bool$M.String.C.String")
+	public LLVMIdentifier<LLVMBool> strEq(CodeContext c, LLVMIdentifier<LLVMPointer> arg1,
+	        LLVMIdentifier<LLVMPointer> arg2) {
+
+		LLVMIdentifier<LLVMBool> scmp = llvmIdentifierFactory.newGlobal("scmp", int1());
+		LLVMIdentifier<LLVMBool> resultPointer = llvmIdentifierFactory.newLocal(scmp.getType());
+		return c.call((LLVMIdentifier<LLVMType>) (LLVMIdentifier<?>) scmp, resultPointer, arg1, arg2);
+	}
+
 	@Native("M.Int.C.Int.F._add_$M.Int.C.Int$M.Int.C.Int")
 	public LLVMIdentifier<LLVMInt> add(CodeContext c, LLVMIdentifier<LLVMInt> arg1, LLVMIdentifier<LLVMInt> arg2) {
 		return c.binaryOperation("add", arg1, arg2, llvmIdentifierFactory.newLocal(arg1.getType(), false));
@@ -303,21 +317,6 @@ public class Operations {
 	public LLVMIdentifier<LLVMBool> floatSge(CodeContext c, LLVMIdentifier<LLVMDouble> arg1,
 	        LLVMIdentifier<LLVMDouble> arg2) {
 		return c.fcmp(FcmpOperand.oge, arg1, arg2, llvmIdentifierFactory.newLocal(int1(), false));
-	}
-
-	@Native("M.Bool.C.Bool.F._and_$M.Bool.C.Bool$M.Bool.C.Bool")
-	public LLVMIdentifier<LLVMBool> and(CodeContext c, LLVMIdentifier<LLVMBool> arg1, LLVMIdentifier<LLVMBool> arg2) {
-		return c.binaryOperation("and", arg1, arg2, llvmIdentifierFactory.newLocal(arg1.getType(), false));
-	}
-
-	@Native("M.Bool.C.Bool.F._or_$M.Bool.C.Bool$M.Bool.C.Bool")
-	public LLVMIdentifier<LLVMBool> or(CodeContext c, LLVMIdentifier<LLVMBool> arg1, LLVMIdentifier<LLVMBool> arg2) {
-		return c.binaryOperation("or", arg1, arg2, llvmIdentifierFactory.newLocal(arg1.getType(), false));
-	}
-
-	@Native("M.Bool.C.Bool.F._xor_$M.Bool.C.Bool$M.Bool.C.Bool")
-	public LLVMIdentifier<LLVMBool> xor(CodeContext c, LLVMIdentifier<LLVMBool> arg1, LLVMIdentifier<LLVMBool> arg2) {
-		return c.binaryOperation("xor", arg1, arg2, llvmIdentifierFactory.newLocal(arg1.getType(), false));
 	}
 
 	@Native("M.Bool.C.Bool.F._not_$M.Bool.C.Bool")

@@ -1,0 +1,72 @@
+abstract class List:
+    Int getLength():
+        case self of:
+            Cons(Int value, List l):
+                return 1 + l.getLength()
+        return 0
+
+
+class Cons inherits List:
+    Int head
+    List tail
+    + initializer(Int head, List tail):
+        self.head := head
+        self.tail := tail
+
+class Empty inherits List:
+    pass
+
+(Int, List) decompose(Cons l):
+    return (l.head, l.tail)
+
+printList(List l):
+    case l of:
+        Empty _:
+            println("[]")
+        Cons(Int x, Empty _):
+            print("[")
+            print(x)
+            println("]")
+        Cons(Int x, Cons(Int y, Empty _)):
+            print("[")
+            print(x)
+            print(", ")
+            print(y)
+            println("]")
+        Cons(Int x, Cons(Int y, Cons(Int z, Empty _))):
+            print("[")
+            print(x)
+            print(", ")
+            print(y)
+            print(", ")
+            print(z)
+            println("]")
+        Cons(Int x, Cons(Int y, Cons(Int z, _))):
+            print("[")
+            print(x)
+            print(", ")
+            print(y)
+            print(", ")
+            print(z)
+            print(", ...")
+            println("]")
+        _:
+            println("*error*: unknown list format!")
+
+List l0 := Cons(1,Cons(2, Cons(3, Cons(4, Empty()))))
+List l1 := Cons(1,Cons(2, Cons(3, Empty())))
+List l2 := Cons(1,Cons(2, Empty()))
+List l3 := Cons(1, Empty())
+List l4 := Empty()
+
+printList(l0)
+printList(l1)
+printList(l2)
+printList(l3)
+printList(l4)
+
+println(l0.getLength())
+println(l1.getLength())
+println(l2.getLength())
+println(l3.getLength())
+println(l4.getLength())

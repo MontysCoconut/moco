@@ -3,7 +3,6 @@ package de.uni.bremen.monty.moco.ast.declaration;
 import de.uni.bremen.monty.moco.ast.Block;
 import de.uni.bremen.monty.moco.ast.ClassScope;
 import de.uni.bremen.monty.moco.ast.ResolvableIdentifier;
-import de.uni.bremen.monty.moco.ast.statement.Assignment;
 import de.uni.bremen.monty.moco.ast.statement.Statement;
 
 import java.util.ArrayList;
@@ -121,18 +120,22 @@ public class ClassDeclarationVariation extends ClassDeclaration {
 	private FunctionDeclaration mapFunction(FunctionDeclaration functionDeclaration) {
 		FunctionDeclaration funDecl;
 		// important for generic inheritance
-		ClassDeclarationVariation parent = findCorrectSuperClass(functionDeclaration);
-		parent = parent != null ? parent : this;
-		if (functionDeclaration.isFunction()) {
-			TypeDeclaration returnType = mapGenericType((functionDeclaration).getReturnType());
-			funDecl = new ConcreteProcDecl(parent, functionDeclaration, returnType);
-		} else {
-			funDecl = new ConcreteProcDecl(parent, functionDeclaration);
+
+		if (!functionDeclaration.getDefiningClass().getAbstractGenericTypes().isEmpty()) {
+			ClassDeclarationVariation parent = findCorrectSuperClass(functionDeclaration);
+			parent = parent != null ? parent : this;
+			if (functionDeclaration.isFunction()) {
+				TypeDeclaration returnType = mapGenericType((functionDeclaration).getReturnType());
+				funDecl = new ConcreteProcDecl(parent, functionDeclaration, returnType);
+			} else {
+				funDecl = new ConcreteProcDecl(parent, functionDeclaration);
+			}
+			funDecl.getParameters().addAll(mapParameter(functionDeclaration.getParameters(), funDecl));
+			funDecl.setParentNode(this);
+			funDecl.setScope(functionDeclaration.getScope());
+			return funDecl;
 		}
-		funDecl.getParameters().addAll(mapParameter(functionDeclaration.getParameters(), funDecl));
-		funDecl.setParentNode(this);
-		funDecl.setScope(functionDeclaration.getScope());
-		return funDecl;
+		return functionDeclaration;
 	}
 
 	/** inherited methods in the VMT should get the correct ClassDeclarationVariation reference. If this does not happen,

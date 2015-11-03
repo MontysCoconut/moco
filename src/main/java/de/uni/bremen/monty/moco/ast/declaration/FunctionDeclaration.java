@@ -294,6 +294,24 @@ public class FunctionDeclaration extends TypeDeclaration {
 		        || returnType.matchesType(proc.getReturnType());
 	}
 
+	public boolean overridesFunction(FunctionDeclaration other) {
+		if (!other.getIdentifier().getSymbol().equals(getIdentifier().getSymbol())) {
+			return false;
+		}
+		List<VariableDeclaration> otherParameter = other.getParameters();
+		if (parameters.size() != otherParameter.size()) {
+			return false;
+		}
+		for (int i = 0; i < parameters.size(); i++) {
+			if (!parameters.get(i).getType().matchesTypeExactly(otherParameter.get(i).getType())) {
+				return false;
+			}
+		}
+
+		return !((other.getReturnType() != null) && (other.getReturnType() != CoreClasses.voidType()))
+		        || returnType.matchesType(other.getReturnType());
+	}
+
 	public boolean isAbstract() {
 		return abstractMethod;
 	}

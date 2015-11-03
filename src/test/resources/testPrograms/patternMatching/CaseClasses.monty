@@ -1,0 +1,62 @@
+println("--- haskell-style lists ---")
+
+abstract class List:
+    + Int getLength():
+        case self of:
+            Cons(Int value, List l):
+                return 1 + l.getLength()
+        return 0
+    + printList():
+        case self of:
+            Cons(Int value, List l):
+                print("[")
+                print(value)
+                l.printList()
+                print("]")
+            Empty:
+                print("[]")
+
+case class Cons(Int head, List tail) inherits List
+case class Empty() inherits List
+
+Cons l := Cons(1, Cons(2, Cons(3, Empty())))
+print("list head:      ")
+println(l.head)
+print("list structure: ")
+l.printList()
+print("\nlist length:    ")
+println(l.getLength())
+
+
+println("")
+println("--- a case class with just one element ---")
+
+case class Container(String content)
+printContainer(Container c):
+    case c of:
+        Container("hello"):
+            println("Hello, World")
+        Container("bye"):
+            println("Goodbye, World")
+        Container(String s):
+            print("Container: ")
+            println(s)
+
+printContainer(Container("hello"))
+printContainer(Container("bye"))
+printContainer(Container("Monty"))
+
+
+println("")
+println("--- a case class with a body ---")
+
+case class Squarinator(Int value):
+    + Int square():
+        return self.value*self.value
+
+Squarinator s := Squarinator(5)
+case s of:
+    Squarinator(5):
+        println(s.square())
+        
+println("--- terminated ---")

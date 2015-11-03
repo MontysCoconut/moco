@@ -46,10 +46,7 @@ import de.uni.bremen.monty.moco.ast.declaration.FunctionDeclaration.DeclarationT
 import de.uni.bremen.monty.moco.ast.expression.*;
 import de.uni.bremen.monty.moco.ast.expression.literal.*;
 import de.uni.bremen.monty.moco.ast.statement.*;
-import de.uni.bremen.monty.moco.util.FunctionWrapperFactory;
-import de.uni.bremen.monty.moco.util.GeneratorClassFactory;
-import de.uni.bremen.monty.moco.util.TmpIdentifierFactory;
-import de.uni.bremen.monty.moco.util.TupleDeclarationFactory;
+import de.uni.bremen.monty.moco.util.*;
 import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.misc.NotNull;
 import org.antlr.v4.runtime.tree.TerminalNode;
@@ -65,6 +62,7 @@ public class ASTBuilder extends MontyBaseVisitor<ASTNode> {
 	private VariableDeclaration.DeclarationType currentVariableContext;
 	private FunctionDeclaration.DeclarationType currentFunctionContext;
 	private TupleDeclarationFactory tupleDeclarationFactory;
+	private PatternMatchingContext patternMatchingContext = new PatternMatchingContext();
 
 	private static final Map<String, String> binaryOperatorMapping = new HashMap<String, String>() {
 		{
@@ -81,9 +79,6 @@ public class ASTBuilder extends MontyBaseVisitor<ASTNode> {
 			put("<=", "_leq_");
 			put(">=", "_geq_");
 			put("in", "_contains_");
-			put("and", "_and_");
-			put("or", "_or_");
-			put("xor", "_xor_");
 		}
 	};
 
@@ -420,16 +415,22 @@ public class ASTBuilder extends MontyBaseVisitor<ASTNode> {
 		return generator;
 	}
 
-	@Override
-	public ASTNode visitFunctionExpression(FunctionExpressionContext ctx) {
+	protected List<VariableDeclaration> createParameterListWithoutDefaults(ParameterListWithoutDefaultsContext ctx) {
 		ArrayList<VariableDeclaration> parameterList = new ArrayList<>();
-		ParameterListWithoutDefaultsContext plist = ctx.parameterListWithoutDefaults();
+		ParameterListWithoutDefaultsContext plist = ctx;
 		if (plist != null) {
 			currentVariableContext = VariableDeclaration.DeclarationType.PARAMETER;
 			for (VariableDeclarationContext var : plist.variableDeclaration()) {
 				parameterList.add((VariableDeclaration) visit(var));
 			}
 		}
+		return parameterList;
+	}
+
+	@Override
+	public ASTNode visitFunctionExpression(FunctionExpressionContext ctx) {
+		List<VariableDeclaration> parameterList =
+		        createParameterListWithoutDefaults(ctx.parameterListWithoutDefaults());
 
 		Block body = new Block(position(ctx.expression().getStart()));
 		body.addStatement(new ReturnStatement(body.getPosition(), (Expression) visit(ctx.expression())));
@@ -449,9 +450,20 @@ public class ASTBuilder extends MontyBaseVisitor<ASTNode> {
 
 	@Override
 	public ASTNode visitClassDeclaration(ClassDeclarationContext ctx) {
+		// if there is an 'abstract' keyword, the class is abstract
+		return createClass(
+		        position(ctx.getStart()),
+		        ctx.type(),
+		        ctx.typeList(),
+		        ctx.getTokens(MontyParser.AbstractKeyword).size() > 0,
+		        ctx.memberDeclaration());
+	}
+
+	protected ClassDeclaration createClass(Position pos, TypeContext className, TypeListContext inheritsFrom,
+	        boolean isAbstract, List<MemberDeclarationContext> members) {
 		List<ResolvableIdentifier> superClasses = new ArrayList<>();
-		if (ctx.typeList() != null) {
-			for (TypeContext typeContext : ctx.typeList().type()) {
+		if (inheritsFrom != null) {
+			for (TypeContext typeContext : inheritsFrom.type()) {
 				ResolvableIdentifier type = convertResolvableIdentifier(typeContext);
 				superClasses.add(type);
 				tupleDeclarationFactory.checkTupleType(type);
@@ -459,14 +471,11 @@ public class ASTBuilder extends MontyBaseVisitor<ASTNode> {
 		}
 
 		ArrayList<AbstractGenericType> genericTypes = new ArrayList<>();
-		// if there is an 'abstract' keyword, the class is abstract
-		boolean isAbstract = ctx.getTokens(MontyParser.AbstractKeyword).size() > 0;
-
 		ClassDeclaration cl =
-		        new ClassDeclaration(position(ctx.getStart()), convertResolvableIdentifier(ctx.type()), superClasses,
-		                new Block(position(ctx.getStart())), isAbstract, genericTypes);
+		        new ClassDeclaration(pos, convertResolvableIdentifier(className), superClasses, new Block(pos),
+		                isAbstract, genericTypes);
 
-		TypeContext type = ctx.type();
+		TypeContext type = className;
 		if (type.typeList() != null) {
 			for (TypeContext typeContext1 : type.typeList().type()) {
 				genericTypes.add(new AbstractGenericType(cl, position(typeContext1.getStart()),
@@ -474,8 +483,11 @@ public class ASTBuilder extends MontyBaseVisitor<ASTNode> {
 			}
 		}
 
+		if (members == null) {
+			members = new ArrayList<>();
+		}
 		currentBlocks.push(cl.getBlock());
-		for (MemberDeclarationContext member : ctx.memberDeclaration()) {
+		for (MemberDeclarationContext member : members) {
 			currentVariableContext = VariableDeclaration.DeclarationType.ATTRIBUTE;
 			currentFunctionContext = FunctionDeclaration.DeclarationType.METHOD;
 			ASTNode astNode = visit(member);
@@ -822,10 +834,10 @@ public class ASTBuilder extends MontyBaseVisitor<ASTNode> {
 			return binaryExpression(position(ctx.getStart()), ctx.inOperator().getText(), ctx.left, ctx.right);
 		} else if (ctx.andOperator() != null) {
 
-			return binaryExpression(position(ctx.getStart()), ctx.andOperator().getText(), ctx.left, ctx.right);
+			return booleanExpression(position(ctx.getStart()), ctx.andOperator().getText(), ctx.left, ctx.right);
 		} else if (ctx.orOperator() != null) {
 
-			return binaryExpression(position(ctx.getStart()), ctx.orOperator().getText(), ctx.left, ctx.right);
+			return booleanExpression(position(ctx.getStart()), ctx.orOperator().getText(), ctx.left, ctx.right);
 		} else if (ctx.asOperator() != null) {
 			return visitCastExpression(ctx);
 		} else if (ctx.isOperator() != null) {
@@ -962,6 +974,27 @@ public class ASTBuilder extends MontyBaseVisitor<ASTNode> {
 
 	}
 
+	private Expression booleanExpression(Position position, String operator, ExpressionContext left,
+	        ExpressionContext right) {
+		Expression leftExp = (Expression) visit(left);
+		Expression rightExp = (Expression) visit(right);
+		if (operator.equals("and")) {
+			return createAndExpression(position, leftExp, rightExp);
+		} else {
+			return createOrExpression(position, leftExp, rightExp);
+		}
+	}
+
+	private ConditionalExpression createAndExpression(Position position, Expression left, Expression right) {
+		// (x and y) ==> y if x else false
+		return new ConditionalExpression(position, left, right, new BooleanLiteral(position, false));
+	}
+
+	private ConditionalExpression createOrExpression(Position position, Expression left, Expression right) {
+		// (x or y) ==> true if x else y
+		return new ConditionalExpression(position, left, new BooleanLiteral(position, true), right);
+	}
+
 	private CastExpression visitCastExpression(ExpressionContext ctx) {
 		ResolvableIdentifier type = convertResolvableIdentifier(ctx.type());
 		tupleDeclarationFactory.checkTupleType(type);
@@ -1039,5 +1072,315 @@ public class ASTBuilder extends MontyBaseVisitor<ASTNode> {
 		// return new instance
 		return new WrappedFunctionCall(pos, new FunctionCall(pos,
 		        ResolvableIdentifier.convert(generator.getIdentifier()), new ArrayList<Expression>()));
+	}
+
+	/* ---- Pattern matching ---- */
+
+	@Override
+	public ASTNode visitCaseStatement(CaseStatementContext ctx) {
+		Position pos = position(ctx.getStart());
+		// extract the expression and make a new temporary variable for it...
+		Expression subject = (Expression) visit(ctx.expression());
+		ResolvableIdentifier subjectIdent = TmpIdentifierFactory.getUniqueIdentifier();
+		VariableDeclaration subjectVar = new VariableDeclaration(subject.getPosition(), subjectIdent, subject);
+		Assignment subjectAss =
+		        new Assignment(subject.getPosition(), new VariableAccess(subject.getPosition(), subjectIdent), subject);
+		currentBlocks.peek().addDeclaration(subjectVar);
+		currentBlocks.peek().addStatement(subjectAss);
+
+		// add a boolean variable in order to indicate, whether a match was successful (more flexible than nesting else)
+		ResolvableIdentifier alreadyMatchedIdent = TmpIdentifierFactory.getUniqueIdentifier();
+		VariableDeclaration alreadyMatchedDecl =
+		        new VariableDeclaration(pos, alreadyMatchedIdent, new ResolvableIdentifier("Bool"));
+		currentBlocks.peek().addDeclaration(alreadyMatchedDecl);
+		currentBlocks.peek().addStatement(setAlreadyMatched(pos, alreadyMatchedIdent, false));
+
+		// convert the different cases into an if-else-orgy
+		List<PatternContext> patterns = ctx.caseBlock().pattern();
+		List<StatementBlockContext> blocks = ctx.caseBlock().statementBlock();
+		return createPatternIfElifs(patterns, blocks, new VariableAccess(pos, subjectIdent), alreadyMatchedIdent);
+	}
+
+	public Statement createPatternIfElifs(List<PatternContext> patterns, List<StatementBlockContext> blocks,
+	        Expression subject, ResolvableIdentifier alreadyMatchedIdent) {
+		Block outermostBlock = new Block(new Position());
+		Block currentBlock = outermostBlock;
+		int i = 0;
+		for (PatternContext pattern : patterns) {
+			patternMatchingContext.clearBindings();
+			Position patternPos = position(pattern.getStart());
+			Block patternBlock = (Block) visit(blocks.get(i));
+			// at the end of every case block, we have to set the alreadyMatched variable to true
+			patternBlock.addStatement(setAlreadyMatched(patternPos, alreadyMatchedIdent, true));
+
+			currentBlock.addStatement(handlePattern(pattern, subject, patternBlock));
+			Block insteadOfElseBlock = new Block(patternPos);
+			currentBlock.addStatement(ifNotAlreadyMatched(
+			        patternPos,
+			        alreadyMatchedIdent,
+			        insteadOfElseBlock,
+			        new Block(patternPos)));
+			currentBlock = insteadOfElseBlock;
+			i++;
+		}
+		currentBlocks.peek().addStatement(outermostBlock.getStatements().get(0));
+		return outermostBlock.getStatements().get(1);
+	}
+
+	public ConditionalStatement handlePattern(PatternContext ctx, Expression subject, Block patternBlock) {
+		Expression guardExpression = null;
+		if (ctx.patternGuard() != null) {
+			guardExpression = (Expression) visit(ctx.patternGuard().expression());
+		}
+		if (ctx.compoundPattern() != null) {
+			return handleCompoundPattern(ctx.compoundPattern(), subject, patternBlock, guardExpression);
+		} else if (ctx.expression() != null) {
+			return handleExpressionPattern(ctx, subject, patternBlock, guardExpression);
+		} else if (ctx.typedPattern() != null) {
+			return handleTypedPattern(ctx, subject, patternBlock, guardExpression);
+		} else {
+			return handleWildcardPattern(ctx, subject, patternBlock, guardExpression);
+		}
+	}
+
+	protected ConditionalStatement handleCompoundPattern(CompoundPatternContext ctx, Expression subject,
+	        Block patternBlock, Expression guardExpression) {
+		Position pos = position(ctx.getStart());
+		int patternCount = ctx.patternList() != null ? ctx.patternList().pattern().size() : 0;
+
+		if (guardExpression != null) {
+			ConditionalStatement guardStm =
+			        new ConditionalStatement(guardExpression.getPosition(), guardExpression, patternBlock, new Block(
+			                guardExpression.getPosition()));
+			patternBlock = new Block(pos);
+			patternBlock.addStatement(guardStm);
+		}
+
+		// if there was no type specified, the pattern matches tuples, thus we assume that the value is already
+		// a tuple and there is no need for type checks or type casts. Further, tuples don't have to be decomposed.
+		if (ctx.type() != null) {
+
+			ResolvableIdentifier type = convertResolvableIdentifier(ctx.type());
+			tupleDeclarationFactory.checkTupleType(type);
+			Expression castedArg = new CastExpression(pos, subject, type, true);
+			ResolvableIdentifier decomposedIdent = TmpIdentifierFactory.getUniqueIdentifier();
+			Block thenBlock = ctx.patternList() != null ? new Block(pos) : patternBlock;
+
+			ConditionalStatement stm =
+			        new ConditionalStatement(pos, new IsExpression(pos, subject, type), thenBlock, new Block(pos));
+
+			if (ctx.patternList() != null) {
+				Expression decomposeExpr =
+				        new FunctionCall(pos, new ResolvableIdentifier("decompose"), Arrays.asList(castedArg));
+				thenBlock.addDeclaration(new VariableDeclaration(pos, decomposedIdent, decomposeExpr));
+				thenBlock.addStatement(new Assignment(pos, new VariableAccess(pos, decomposedIdent), decomposeExpr));
+				subject = new VariableAccess(pos, decomposedIdent);
+				if (patternCount == 1) {
+					thenBlock.addStatement(handlePattern(ctx.patternList().pattern().get(0), subject, patternBlock));
+				} else {
+					thenBlock.addStatement(processNestedCompoundPattern(
+					        ctx.patternList().pattern(),
+					        subject,
+					        1,
+					        patternBlock));
+				}
+			}
+			return stm;
+		}
+		if (patternCount == 1) {
+			return handlePattern(ctx.patternList().pattern().get(0), subject, patternBlock);
+		}
+		return processNestedCompoundPattern(ctx.patternList().pattern(), subject, 1, patternBlock);
+	}
+
+	protected ConditionalStatement processNestedCompoundPattern(List<PatternContext> patterns, Expression subject,
+	        int i, Block patternBlock) {
+		PatternContext pattern = patterns.get(0);
+		patterns.remove(0);
+		Position subPatternPos = position(pattern.getStart());
+
+		Expression subjectPart =
+		        new MemberAccess(subPatternPos, subject, new VariableAccess(subPatternPos, new ResolvableIdentifier("_"
+		                + i)));
+
+		Block thenBlock;
+		if (patterns.size() > 0) {
+			thenBlock = new Block(subPatternPos);
+			thenBlock.addStatement(processNestedCompoundPattern(patterns, subject, i + 1, patternBlock));
+		} else {
+			thenBlock = patternBlock;
+		}
+		return handlePattern(pattern, subjectPart, thenBlock);
+	}
+
+	protected ConditionalStatement handleWildcardPattern(PatternContext ctx, Expression subject, Block patternBlock,
+	        Expression guardExpression) {
+		// _ matches everything, but binds nothing
+		Position pos = position(ctx.getStart());
+		Expression condition = guardExpression != null ? guardExpression : new BooleanLiteral(pos, true);
+		return new ConditionalStatement(pos, condition, patternBlock, new Block(pos));
+	}
+
+	protected ConditionalStatement handleTypedPattern(PatternContext ctx, Expression subject, Block patternBlock,
+	        Expression guardExpression) {
+		Position pos = position(ctx.getStart());
+		Expression condition;
+		// a typed pattern matches everything that is an instance of "type"
+		ResolvableIdentifier type = convertResolvableIdentifier(ctx.typedPattern().type());
+		tupleDeclarationFactory.checkTupleType(type);
+		condition = new IsExpression(position(ctx.getStart()), subject, type);
+
+		if (guardExpression != null) {
+			ConditionalStatement guardStm =
+			        new ConditionalStatement(guardExpression.getPosition(), guardExpression, patternBlock, new Block(
+			                guardExpression.getPosition()));
+			patternBlock = new Block(pos);
+			patternBlock.addStatement(guardStm);
+		}
+
+		// if the identifier is not the wildcard '_', the value is bound to that identifier
+		if (ctx.typedPattern().Identifier() != null) {
+			ResolvableIdentifier localDecl = new ResolvableIdentifier(getText(ctx.typedPattern().Identifier()));
+			VariableDeclaration localVarDecl = new VariableDeclaration(pos, localDecl, type);
+			patternBlock.addDeclaration(localVarDecl);
+			patternMatchingContext.addBinding(localVarDecl);
+			patternBlock.getStatements().add(
+			        0,
+			        new Assignment(pos, new VariableAccess(pos, localDecl), new CastExpression(pos, subject, type)));
+		}
+		return new ConditionalStatement(pos, condition, patternBlock, new Block(pos));
+	}
+
+	protected ConditionalStatement handleExpressionPattern(PatternContext ctx, Expression subject, Block patternBlock,
+	        Expression guardExpression) {
+		Position pos = position(ctx.getStart());
+		// if the pattern is an expression, we simply check the subject and the pattern expression for equality
+		Expression expression = (Expression) visitExpression(ctx.expression());
+		Expression condition =
+		        createAndExpression(pos, new IsExpression(pos, subject, expression), new MemberAccess(pos,
+		                new CastExpression(pos, subject, expression, true), new FunctionCall(pos,
+		                        new ResolvableIdentifier("_eq_"), Arrays.asList(expression))));
+
+		if (guardExpression != null) {
+			condition = createAndExpression(pos, condition, guardExpression);
+		}
+		return new ConditionalStatement(pos, condition, patternBlock, new Block(pos));
+	}
+
+	protected Statement setAlreadyMatched(Position pos, ResolvableIdentifier alreadyMatchedIdent, boolean value) {
+		return new Assignment(pos, new VariableAccess(pos, alreadyMatchedIdent), new BooleanLiteral(pos, value));
+	}
+
+	protected ConditionalStatement ifNotAlreadyMatched(Position pos, ResolvableIdentifier alreadyMatchedIdent,
+	        Block thenBlock, Block elseBlock) {
+		return new ConditionalStatement(pos, new MemberAccess(pos, new VariableAccess(pos, alreadyMatchedIdent),
+		        new FunctionCall(pos, new ResolvableIdentifier("_not_"), new ArrayList<Expression>())), thenBlock,
+		        elseBlock);
+	}
+
+	/** {@inheritDoc} */
+	@Override
+	public ASTNode visitCaseClassDeclaration(CaseClassDeclarationContext ctx) {
+		Position pos = position(ctx.getStart());
+		ClassDeclaration classDecl = createClass(pos, ctx.type(), ctx.typeList(), false, ctx.memberDeclaration());
+
+		List<VariableDeclaration> parameterList =
+		        createParameterListWithoutDefaults(ctx.parameterListWithoutDefaults());
+		Block classBlock = classDecl.getBlock();
+		Block initBody = new Block(pos);
+
+		for (VariableDeclaration var : parameterList) {
+			Position vp = var.getPosition();
+			ResolvableIdentifier resId = ResolvableIdentifier.convert(var.getIdentifier());
+			VariableDeclaration attr =
+			        new VariableDeclaration(vp, resId, var.getTypeIdentifier(),
+			                VariableDeclaration.DeclarationType.ATTRIBUTE);
+			attr.setAccessModifier(AccessModifier.PACKAGE);
+			classBlock.addDeclaration(attr);
+
+			initBody.addStatement(new Assignment(pos, new MemberAccess(vp, new SelfExpression(vp), new VariableAccess(
+			        vp, resId)), new VariableAccess(vp, resId)));
+		}
+
+		FunctionDeclaration caseInit =
+		        new FunctionDeclaration(pos, new Identifier("initializer"), initBody, parameterList,
+		                DeclarationType.INITIALIZER, null);
+		classDecl.getBlock().addDeclaration(caseInit);
+		classDecl.getBlock().addDeclaration(createCaseEqMethod(pos, parameterList, classDecl));
+		currentBlocks.peek().addDeclaration(classDecl);
+
+		// create the decompose function
+		return createDecomposerFunction(pos, parameterList, classDecl);
+	}
+
+	protected FunctionDeclaration createDecomposerFunction(Position pos, List<VariableDeclaration> parameterList,
+	        ClassDeclaration classDecl) {
+		int n = parameterList.size();
+		Block decomposeBody = new Block(pos);
+
+		ResolvableIdentifier decompReturnType;
+		ResolvableIdentifier decompParam = new ResolvableIdentifier("obj");
+		if (n != 1) {
+			List<ResolvableIdentifier> decomposeTypes = new ArrayList<>(n);
+			List<Expression> decompExp = new ArrayList<>(n);
+
+			for (VariableDeclaration var : parameterList) {
+				ResolvableIdentifier varType = var.getTypeIdentifier();
+				tupleDeclarationFactory.checkTupleType(varType);
+				decomposeTypes.add(varType);
+				decompExp.add(new MemberAccess(pos, new VariableAccess(pos, decompParam), new VariableAccess(pos,
+				        ResolvableIdentifier.convert(var.getIdentifier()))));
+			}
+			decompReturnType = new ResolvableIdentifier("Tuple" + n, decomposeTypes);
+			tupleDeclarationFactory.checkTupleType(decompReturnType);
+			decomposeBody.addStatement(new ReturnStatement(pos, new FunctionCall(pos, decompReturnType, decompExp)));
+		} else {
+			VariableDeclaration value = parameterList.get(0);
+			decompReturnType = value.getTypeIdentifier();
+			decomposeBody.addStatement(new ReturnStatement(pos, new MemberAccess(pos, new VariableAccess(pos,
+			        decompParam), new VariableAccess(pos, ResolvableIdentifier.convert(value.getIdentifier())))));
+		}
+
+		return new FunctionDeclaration(pos, new Identifier("decompose"), decomposeBody,
+		        Arrays.asList(new VariableDeclaration(pos, decompParam,
+		                ResolvableIdentifier.convert(classDecl.getIdentifier()),
+		                VariableDeclaration.DeclarationType.PARAMETER)), DeclarationType.UNBOUND, decompReturnType);
+	}
+
+	protected FunctionDeclaration createCaseEqMethod(Position pos, List<VariableDeclaration> attributes,
+	        ClassDeclaration classDecl) {
+		Block body = new Block(pos);
+		ResolvableIdentifier paramIdent = new ResolvableIdentifier("other");
+		ResolvableIdentifier classIdentifier = ResolvableIdentifier.convert(classDecl.getIdentifier());
+
+		Expression returnExpression;
+
+		if (attributes.size() > 0) {
+			List<Expression> returnExpressions = new ArrayList<>(attributes.size());
+
+			for (VariableDeclaration attr : attributes) {
+				ResolvableIdentifier attrId = ResolvableIdentifier.convert(attr.getIdentifier());
+				Expression selfAttr = new MemberAccess(pos, new SelfExpression(pos), new VariableAccess(pos, attrId));
+				Expression otherAttr =
+				        new MemberAccess(pos, new VariableAccess(pos, paramIdent), new VariableAccess(pos, attrId));
+				returnExpressions.add(new MemberAccess(pos, selfAttr, new FunctionCall(pos, new ResolvableIdentifier(
+				        "_eq_"), Arrays.asList(otherAttr))));
+			}
+			returnExpression = returnExpressions.get(0);
+			returnExpressions.remove(0);
+			while (returnExpressions.size() > 0) {
+				returnExpression = createAndExpression(pos, returnExpression, returnExpressions.get(0));
+				returnExpressions.remove(0);
+			}
+		} else {
+			returnExpression = new BooleanLiteral(pos, true);
+		}
+
+		body.addStatement(new ReturnStatement(pos, returnExpression));
+
+		return new FunctionDeclaration(pos, new ResolvableIdentifier("_eq_"), body,
+		        Arrays.asList(new VariableDeclaration(pos, paramIdent, classIdentifier,
+		                VariableDeclaration.DeclarationType.PARAMETER)), DeclarationType.METHOD,
+		        ResolvableIdentifier.convert(CoreClasses.boolType().getIdentifier()));
 	}
 }

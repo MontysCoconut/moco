@@ -243,10 +243,6 @@ public class Main {
 		IOUtils.copy(Main.class.getResourceAsStream("/std_llvm_include.ll"), writer);
 
 		Package ast = buildPackage(inputFileName);
-		if (printAST) {
-			(new PrintVisitor()).visitDoubleDispatched(ast);
-			return;
-		}
 
 		if (!visitVisitors(ast, stopOnFirstError, writer.getBuffer())) {
 			return;

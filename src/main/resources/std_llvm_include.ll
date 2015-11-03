@@ -167,5 +167,62 @@ define void @array_bounds_check({ i64, [0 x i8*] }* %array, i64 %index) {
     bounds.success:
         ret void
 }
+
+; Compare two strings for equality
+; Function Attrs: nounwind uwtable
+define zeroext i1 @scmp(i8* %a, i8* %b) #0 {
+  %1 = alloca i1, align 1
+  %2 = alloca i8*, align 8
+  %3 = alloca i8*, align 8
+  store i8* %a, i8** %2, align 8
+  store i8* %b, i8** %3, align 8
+  br label %4
+
+; <label>:4                                       ; preds = %18, %0
+  %5 = load i8** %2, align 8
+  %6 = load i8* %5, align 1
+  %7 = sext i8 %6 to i32
+  %8 = icmp ne i32 %7, 0
+  br i1 %8, label %9, label %23
+
+; <label>:9                                       ; preds = %4
+  %10 = load i8** %2, align 8
+  %11 = load i8* %10, align 1
+  %12 = sext i8 %11 to i32
+  %13 = load i8** %3, align 8
+  %14 = load i8* %13, align 1
+  %15 = sext i8 %14 to i32
+  %16 = icmp ne i32 %12, %15
+  br i1 %16, label %17, label %18
+
+; <label>:17                                      ; preds = %9
+  store i1 false, i1* %1
+  br label %31
+
+; <label>:18                                      ; preds = %9
+  %19 = load i8** %2, align 8
+  %20 = getelementptr inbounds i8* %19, i32 1
+  store i8* %20, i8** %2, align 8
+  %21 = load i8** %3, align 8
+  %22 = getelementptr inbounds i8* %21, i32 1
+  store i8* %22, i8** %3, align 8
+  br label %4
+
+; <label>:23                                      ; preds = %4
+  %24 = load i8** %2, align 8
+  %25 = load i8* %24, align 1
+  %26 = sext i8 %25 to i32
+  %27 = load i8** %3, align 8
+  %28 = load i8* %27, align 1
+  %29 = sext i8 %28 to i32
+  %30 = icmp eq i32 %26, %29
+  store i1 %30, i1* %1
+  br label %31
+
+; <label>:31                                      ; preds = %23, %17
+  %32 = load i1* %1
+  ret i1 %32
+}
+
 ; End of the standard declarations and definitions every Monty program needs.
 

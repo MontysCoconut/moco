@@ -36,67 +36,26 @@
  * You should have received a copy of the GNU General Public
  * License along with this library.
  */
-package de.uni.bremen.monty.moco.ast.expression;
+package de.uni.bremen.monty.moco.util;
 
-import de.uni.bremen.monty.moco.ast.*;
-import de.uni.bremen.monty.moco.ast.declaration.*;
-import de.uni.bremen.monty.moco.visitor.BaseVisitor;
+import de.uni.bremen.monty.moco.ast.declaration.VariableDeclaration;
+import de.uni.bremen.monty.moco.exception.RedeclarationException;
 
-public class IsExpression extends Expression {
+import java.util.HashMap;
+import java.util.Map;
 
-	private Expression expression;
-	private ResolvableIdentifier isIdentifier;
-	private TypeDeclaration toType;
-	private Expression inferTypeFrom;
+public class PatternMatchingContext {
+	protected Map<String, VariableDeclaration> declarations = new HashMap<>();
 
-	public IsExpression(Position position, Expression expression, ResolvableIdentifier isIdentifier) {
-		super(position);
-		this.expression = expression;
-		this.isIdentifier = isIdentifier;
+	public void addBinding(VariableDeclaration decl) {
+		String name = decl.getIdentifier().getSymbol();
+		if (declarations.containsKey(name)) {
+			throw new RedeclarationException(decl, "The name '" + name + "' is bound more than once in a pattern!");
+		}
+		this.declarations.put(name, decl);
 	}
 
-	public IsExpression(Position position, Expression expression, Expression inferTypeFrom) {
-		super(position);
-		this.expression = expression;
-		this.inferTypeFrom = inferTypeFrom;
-	}
-
-	public ResolvableIdentifier getIsIdentifier() {
-		return isIdentifier;
-	}
-
-	public Expression getExpression() {
-		return expression;
-	}
-
-	public void setToType(TypeDeclaration toType) {
-		this.toType = toType;
-	}
-
-	public TypeDeclaration getToType() {
-		return toType;
-	}
-
-	public boolean typeMustBeInferred() {
-		return inferTypeFrom != null;
-	}
-
-	public Expression getExpressionToInferFrom() {
-		return inferTypeFrom;
-	}
-
-	public void inferType() {
-		toType = inferTypeFrom.getType();
-		isIdentifier = ResolvableIdentifier.convert(toType.getIdentifier());
-	}
-
-	@Override
-	public void visit(BaseVisitor visitor) {
-		visitor.visit(this);
-	}
-
-	@Override
-	public void visitChildren(BaseVisitor visitor) {
-		visitor.visitDoubleDispatched(expression);
+	public void clearBindings() {
+		declarations.clear();
 	}
 }

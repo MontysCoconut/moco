@@ -1,0 +1,35 @@
+abstract class List:
+    + Bool _eq_(List other):
+        case self of:
+            Cons(_,_):
+                case other of:
+                    Cons(_,_):
+                        return (self as Cons) = (other as Cons)
+                return false
+        return true
+
+    + Int getLength():
+        case self of:
+            Cons(_, List l):
+                return 1 + l.getLength()
+        return 0
+
+case class Cons(Int head, List tail) inherits List
+case class Empty() inherits List
+
+List l0 := Cons(1,Cons(2, Cons(3, Cons(4, Empty()))))
+List l1 := Cons(1,Cons(2, Cons(3, Cons(4, Empty()))))
+List l2 := Cons(1,Cons(2, Cons(3, Cons(5, Empty()))))
+List l3 := Cons(1,Cons(2, Cons(3, Empty())))
+
+print(l0 = l0)
+print(l0 = l1)
+print(l0 = l2)
+print(l0 = l3)
+print(l1 = l1)
+print(l1 = l2)
+print(l1 = l3)
+print(l2 = l2)
+print(l2 = l3)
+print(l3 = l3)
+println("")

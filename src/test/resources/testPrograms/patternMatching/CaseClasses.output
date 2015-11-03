@@ -1,0 +1,13 @@
+--- haskell-style lists ---
+list head:      1
+list structure: [1[2[3[]]]]
+list length:    3
+
+--- a case class with just one element ---
+Hello, World
+Goodbye, World
+Container: Monty
+
+--- a case class with a body ---
+25
+--- terminated ---

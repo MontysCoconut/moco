@@ -40,6 +40,7 @@ package de.uni.bremen.monty.moco.visitor;
 
 import de.uni.bremen.monty.moco.ast.ASTNode;
 import de.uni.bremen.monty.moco.ast.declaration.VariableDeclaration;
+import de.uni.bremen.monty.moco.ast.expression.FunctionCall;
 import de.uni.bremen.monty.moco.ast.expression.VariableAccess;
 import de.uni.bremen.monty.moco.ast.expression.literal.BooleanLiteral;
 import de.uni.bremen.monty.moco.ast.expression.literal.FloatLiteral;
@@ -67,6 +68,17 @@ public class PrintVisitor extends BaseVisitor {
 	public void visit(VariableDeclaration node) {
 		printIndent("Symbol: " + node.getIdentifier());
 		printIndent("TypeSymbol: " + node.getTypeIdentifier());
+	}
+
+	/** {@inheritDoc} */
+	@Override
+	public void visit(FunctionCall node) {
+		printIndent("Symbol: " + node.getIdentifier());
+		String parameters = "";
+		for (VariableDeclaration parameter : node.getDeclaration().getParameters()) {
+			parameters += parameter.getTypeIdentifier() + " " + parameter.getIdentifier() + ", ";
+		}
+		printIndent("Parameters: (" + parameters + ")");
 	}
 
 	/** {@inheritDoc} */

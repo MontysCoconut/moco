@@ -4,7 +4,7 @@
 //
 // Expected output: operator_unary-operator+operator-operator*operator/
 //                  operator%operator<operator>operator<=operator>=operator=
-//                  operator!=operator_notoperator_xoroperator_andoperator_or
+//                  operator!=operator_not
 
 class SomeClass:
     + SomeClass _neg_():
@@ -59,14 +59,6 @@ class SomeClass:
         println("_not_")
         return self
 
-    + SomeClass _and_(SomeClass other):
-        println("_and_")
-        return self
-
-    + SomeClass _or_(SomeClass other):
-        println("_or_")
-        return self
-
 SomeClass foo := SomeClass()
 SomeClass bar := SomeClass()
 SomeClass result := SomeClass()
@@ -84,5 +76,3 @@ result := foo >= bar
 result := foo = bar
 result := foo != bar
 result := not bar
-result := foo and bar
-result := foo or bar

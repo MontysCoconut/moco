@@ -1,0 +1,56 @@
+// Testing: Whether the shortcut-evaluation strategy of boolean expressions works
+//
+// Expected output:
+
+Bool getTrue():
+    println("true")
+    return true
+
+Bool getFalse():
+    println("false")
+    return false
+
+// ----------------------
+// ----------------------
+
+if getFalse() and getFalse():
+    println("-not-ok-")
+
+println("--------")
+
+if getFalse() and getTrue():
+    println("-not-ok-")
+
+println("--------")
+
+if getTrue() and getFalse():
+    println("-not-ok-")
+
+println("--------")
+
+if getTrue() and getTrue():
+    println("-ok-")
+
+println("========")
+
+// ----------------------
+
+if getFalse() or getFalse():
+    println("-not-ok-")
+
+println("--------")
+
+if getFalse() or getTrue():
+    println("-ok-")
+
+println("--------")
+
+if getTrue() or getFalse():
+    println("-ok-")
+
+println("--------")
+
+if getTrue() or getTrue():
+    println("-ok-")
+
+println("========")

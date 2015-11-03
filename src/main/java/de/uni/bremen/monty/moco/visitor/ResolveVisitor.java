@@ -109,7 +109,7 @@ public class ResolveVisitor extends VisitOnceVisitor {
 					boolean foundEntry = false;
 					for (int i = 0; !foundEntry && i < virtualMethodTable.size(); i++) {
 						FunctionDeclaration vmtEntry = virtualMethodTable.get(i);
-						if (procDecl.matchesType(vmtEntry)) {
+						if (procDecl.overridesFunction(vmtEntry)) {
 							virtualMethodTable.set(i, procDecl);
 							procDecl.setVMTIndex(vmtEntry.getVMTIndex());
 							foundEntry = true;
@@ -184,6 +184,11 @@ public class ResolveVisitor extends VisitOnceVisitor {
 	 * @return */
 	protected Declaration overloadResolutionForVariableAccess(VariableAccess node) {
 		CastExpression cast = (CastExpression) node.getParentNode();
+		// if the cast type is inferred, we can not resolve this one
+		if (cast.getCastIdentifier() == null) {
+			return null;
+		}
+
 		TypeDeclaration castedTo = cast.getScope().resolveType(cast.getCastIdentifier());
 		Declaration declaration = null;
 		if (castedTo.matchesType(CoreClasses.functionType())) {
@@ -227,6 +232,10 @@ public class ResolveVisitor extends VisitOnceVisitor {
 		if (node.typeParameterMustBeInferred()) {
 			node.inferTypeParameter();
 		}
+		if (node.typeMustBeInferred()) {
+			visitDoubleDispatched(node.getExpressionToInferFrom());
+			node.inferType();
+		}
 		super.visit(node);
 		node.setType(node.getScope().resolveType(node.getCastIdentifier()));
 	}
@@ -235,7 +244,12 @@ public class ResolveVisitor extends VisitOnceVisitor {
 	@Override
 	public void visit(IsExpression node) {
 		super.visit(node);
-		node.setToType(node.getScope().resolveType(node.getIsIdentifier()));
+		if (node.typeMustBeInferred()) {
+			visitDoubleDispatched(node.getExpressionToInferFrom());
+			node.inferType();
+		} else {
+			node.setToType(node.getScope().resolveType(node.getIsIdentifier()));
+		}
 		node.setType(CoreClasses.boolType());
 	}
 

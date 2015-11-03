@@ -1,2 +1,3 @@
 class Object:
-    pass
+    + Bool _eq_(Object other):
+        pass

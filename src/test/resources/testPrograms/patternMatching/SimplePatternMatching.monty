@@ -1,0 +1,48 @@
+// Testing: simple pattern matching (without compound patterns)
+//
+// The first matching pattern should be chosen
+//
+// Expected output:
+// ------------------
+// other
+// ------------------
+// Hello World!
+// ------------------
+// String: Hello World!
+// ------------------
+// It's a five!
+// ------------------
+// Integer: 7
+// ------------------
+// other
+// ------------------
+
+printSomething(Object obj):
+    case obj of:
+        5:
+            println("It's a five!")
+        Int x:
+            print("Integer: ")
+            println(x)
+        "Hello":
+            println("Hello World!")
+        String s:
+            print("String: ")
+            println(s)
+        _:
+            println("other")
+
+
+println("------------------")
+printSomething(5.5)
+println("------------------")
+printSomething("Hello")
+println("------------------")
+printSomething("Hello World!")
+println("------------------")
+printSomething(5)
+println("------------------")
+printSomething(7)
+println("------------------")
+printSomething(false)
+println("------------------")

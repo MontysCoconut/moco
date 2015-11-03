@@ -148,7 +148,7 @@ ClassIdentifier
 
 Identifier
   : '_'* LowercaseLetter (LowercaseLetter | UppercaseLetter | Digit | '_')*
-  | '_'+ (LowercaseLetter | UppercaseLetter | Digit | '_')*
+  | '_'+ (LowercaseLetter | UppercaseLetter | Digit | '_')+
   ;
 
 ConstantIdentifier
