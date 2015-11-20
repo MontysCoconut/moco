@@ -1,0 +1,14 @@
+// Testing: 1-Tuple function objects without 1-Tuples
+//
+// Expected Output: 1\n8\n
+
+// a function that takes exactly one tuple
+Int takeFirst( (Int, Int) t):
+    return t._1
+// and a function variable that points to this function
+(Int, Int) -> Int fn := takeFirst
+
+// call the function the standard way
+println(takeFirst((1,2)))
+// call the function variable with a tuple
+println( fn((8,2)) )

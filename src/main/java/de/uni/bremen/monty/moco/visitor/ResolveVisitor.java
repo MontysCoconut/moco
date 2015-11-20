@@ -431,6 +431,17 @@ public class ResolveVisitor extends VisitOnceVisitor {
 			}
 			Declaration callableDeclaration = overloadResolution(argTypes, scope.resolveFunction(node.getIdentifier()));
 
+			// if the parameter is just one tuple, we might have to unpack it
+			if ((callableDeclaration == null) && (argTypes.size() == 1)
+			        && (argTypes.get(0).getIdentifier().getSymbol().startsWith("Tuple"))) {
+				List<ClassDeclaration> argCls = ((ClassDeclarationVariation) argTypes.get(0)).getConcreteGenericTypes();
+				argTypes = new ArrayList<>(argCls.size());
+				for (ClassDeclaration cls : argCls) {
+					argTypes.add(cls);
+				}
+				callableDeclaration = overloadResolution(argTypes, scope.resolveFunction(node.getIdentifier()));
+			}
+
 			if (callableDeclaration instanceof FunctionDeclaration) {
 				FunctionDeclaration function = (FunctionDeclaration) callableDeclaration;
 				node.setDeclaration(function);
