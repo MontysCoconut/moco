@@ -165,6 +165,9 @@ public class ResolveVisitor extends VisitOnceVisitor {
 		if (declaration instanceof VariableDeclaration) {
 			VariableDeclaration variable = (VariableDeclaration) declaration;
 			node.setDeclaration(variable);
+
+			resolveClosureVariables(node, variable);
+
 			visitDoubleDispatched(variable);
 			node.setType(variable.getType());
 			if (!(scope instanceof ClassScope) && findEnclosingClass(node) == CoreClasses.voidType()) {
@@ -173,6 +176,33 @@ public class ResolveVisitor extends VisitOnceVisitor {
 					throw new UnknownIdentifierException(node.getIdentifier());
 				}
 			}
+		}
+	}
+
+	protected void resolveClosureVariables(VariableAccess access, VariableDeclaration declaration) {
+		// everything that is not an attribute (since attributes are always defined outside the current scope)
+		if (declaration.getDeclarationType() != VariableDeclaration.DeclarationType.ATTRIBUTE) {
+			Declaration declParent = (Declaration) declaration.getParentNodeByType(Declaration.class);
+			Declaration accessParent = (Declaration) access.getParentNodeByType(Declaration.class);
+
+			if (declParent != accessParent) {
+				if (!(declParent instanceof ModuleDeclaration)) {
+					FunctionDeclaration fn = ((FunctionDeclaration) accessParent);
+					VariableDeclaration closureVarDecl = fn.addClosureVariable(declaration);
+					access.setClosureVariable(true);
+					access.setDeclaration(closureVarDecl);
+				}
+			}
+		}
+	}
+
+	protected void resolveClosureVariablesForSelf(SelfExpression self) {
+		FunctionDeclaration selfParent = (FunctionDeclaration) self.getParentNodeByType(FunctionDeclaration.class);
+		// self expressions in unbound functions must be closure variables
+		if (selfParent != null && selfParent.isUnbound()) {
+			self.setInClosure();
+			selfParent.addClosureVariable(new VariableDeclaration(self.getPosition(), new Identifier("self"),
+			        self.getType(), VariableDeclaration.DeclarationType.VARIABLE));
 		}
 	}
 
@@ -216,6 +246,7 @@ public class ResolveVisitor extends VisitOnceVisitor {
 	public void visit(SelfExpression node) {
 		super.visit(node);
 		node.setType(findEnclosingClass(node));
+		resolveClosureVariablesForSelf(node);
 	}
 
 	/** {@inheritDoc} */
@@ -399,6 +430,17 @@ public class ResolveVisitor extends VisitOnceVisitor {
 				argTypes.add(exp.getType());
 			}
 			Declaration callableDeclaration = overloadResolution(argTypes, scope.resolveFunction(node.getIdentifier()));
+
+			// if the parameter is just one tuple, we might have to unpack it
+			if ((callableDeclaration == null) && (argTypes.size() == 1)
+			        && (argTypes.get(0).getIdentifier().getSymbol().startsWith("Tuple"))) {
+				List<ClassDeclaration> argCls = ((ClassDeclarationVariation) argTypes.get(0)).getConcreteGenericTypes();
+				argTypes = new ArrayList<>(argCls.size());
+				for (ClassDeclaration cls : argCls) {
+					argTypes.add(cls);
+				}
+				callableDeclaration = overloadResolution(argTypes, scope.resolveFunction(node.getIdentifier()));
+			}
 
 			if (callableDeclaration instanceof FunctionDeclaration) {
 				FunctionDeclaration function = (FunctionDeclaration) callableDeclaration;

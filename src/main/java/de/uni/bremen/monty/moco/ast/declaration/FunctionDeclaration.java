@@ -44,10 +44,10 @@ import de.uni.bremen.monty.moco.ast.expression.FunctionCall;
 import de.uni.bremen.monty.moco.ast.expression.WrappedFunctionCall;
 import de.uni.bremen.monty.moco.ast.statement.Assignment;
 import de.uni.bremen.monty.moco.ast.statement.ReturnStatement;
+import de.uni.bremen.monty.moco.ast.statement.Statement;
 import de.uni.bremen.monty.moco.visitor.BaseVisitor;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 /** A FunctionDeclaration represents the declaration of a function in the AST.
  * <p>
@@ -79,6 +79,8 @@ public class FunctionDeclaration extends TypeDeclaration {
 	private final boolean abstractMethod;
 
 	private boolean returnTypeMustBeInferred = false;
+
+	private Map<VariableDeclaration, VariableDeclaration> closureVars = new HashMap<>();
 
 	/** Constructor.
 	 *
@@ -396,10 +398,9 @@ public class FunctionDeclaration extends TypeDeclaration {
 		// add the new ones
 		Expression oldCall = oldRet.getParameter();
 		oldCall.setParentNode(getBody());
-		if (oldCall instanceof FunctionCall) {
-			getBody().addStatement((FunctionCall) oldCall);
-		} else if (oldCall instanceof WrappedFunctionCall) {
-			getBody().addStatement((WrappedFunctionCall) oldCall);
+
+		if (oldCall instanceof Statement) {
+			getBody().addStatement((Statement) oldCall);
 		} else {
 			throw new RuntimeException("invalid AST!");
 		}
@@ -413,5 +414,48 @@ public class FunctionDeclaration extends TypeDeclaration {
 			params += " " + param.getIdentifier().toString() + ", ";
 		}
 		return String.format("%s(%s)", getIdentifier().toString(), params);
+	}
+
+	private VariableDeclaration checkSelfVariable(VariableDeclaration var) {
+		if (var.getIdentifier().getSymbol().equals("self")) {
+			for (VariableDeclaration key : closureVars.keySet()) {
+				if (key.getIdentifier().getSymbol().equals("self")) {
+					return key;
+				}
+			}
+		}
+		return var;
+	}
+
+	public VariableDeclaration addClosureVariable(VariableDeclaration var) {
+		var = checkSelfVariable(var);
+		if (!closureVars.containsKey(var)) {
+			VariableDeclaration attr =
+			        new VariableDeclaration(var.getPosition(), var.getIdentifier(), var.getTypeIdentifier(),
+			                VariableDeclaration.DeclarationType.ATTRIBUTE);
+			attr.setParentNode(var.getParentNode());
+			attr.setScope(var.getScope());
+			attr.setType(var.getType());
+			closureVars.put(var, attr);
+			return attr;
+		}
+		return closureVars.get(var);
+	}
+
+	public boolean isClosure() {
+		return closureVars.size() > 0;
+	}
+
+	public VariableDeclaration getClosureVariable(VariableDeclaration var) {
+		var = checkSelfVariable(var);
+		return closureVars.get(var);
+	}
+
+	public Collection<VariableDeclaration> getClosureVariables() {
+		return closureVars.values();
+	}
+
+	public Collection<VariableDeclaration> getClosureVariableOriginalDeclarations() {
+		return closureVars.keySet();
 	}
 }

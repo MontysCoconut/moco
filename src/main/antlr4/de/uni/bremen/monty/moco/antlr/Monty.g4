@@ -2,6 +2,11 @@ grammar Monty;
 
 import lex;
 
+
+nativeAnnotation
+  : '@native'
+  ;
+
 compilationUnit
   : EndOfLine* moduleDeclaration EOF
   ;
@@ -28,7 +33,7 @@ independentDeclaration
   ;
 
 classDeclaration
-  : AbstractKeyword? 'class' type ('inherits' typeList)?
+  : nativeAnnotation? AbstractKeyword? 'class' type ('inherits' typeList)?
     ':' EndOfLine
     Indent
         (memberDeclaration+ | 'pass' EndOfLine)
@@ -83,7 +88,7 @@ typeList
   ;
 
 functionDeclaration
-  : (type)?
+  : nativeAnnotation? (type)?
     Identifier
     Lparenthesis parameterList? Rparenthesis ':' EndOfLine
     statementBlock
@@ -193,9 +198,9 @@ expressionList
   ;
 
 expression
-  : functionCall
-  | primary
+  : primary
   | functionExpression
+  | functionCall
   | ifExprThen=expression 'if' ifExpCondition=expression 'else' ifExprElse=expression
   | left=expression accessOperator right=expression
   | <assoc=right> (plusMinusOperator | notOperator) singleExpression=expression

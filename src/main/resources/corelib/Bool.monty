@@ -1,12 +1,12 @@
-class Bool:
-    + initializer(Bool b):
+@native class Bool:
+    + @native initializer(Bool b):
         pass
 
-    + Bool _not_():
+    + @native Bool _not_():
         pass
 
-    + Bool _eq_(Bool other):
+    + @native Bool _eq_(Bool other):
         pass
 
-    + Bool _neq_(Bool other):
+    + @native Bool _neq_(Bool other):
         pass

@@ -233,7 +233,8 @@ public class ASTBuilder extends MontyBaseVisitor<ASTNode> {
 	private void buildDefaultFunctions(boolean isFunction, List<DefaultParameterContext> defaultParameter,
 	        List<VariableDeclaration> allVariableDeclarations, List<VariableDeclaration> params,
 	        List<Expression> defaultExpression, List<VariableDeclaration> defaultVariableDeclaration,
-	        Identifier identifier, Token token, TypeContext typeContext, DeclarationType declarationTypeCopy) {
+	        Identifier identifier, Token token, TypeContext typeContext, DeclarationType declarationTypeCopy,
+	        boolean isNative) {
 
 		for (int defaultParameterIdx = 0; defaultParameterIdx < defaultParameter.size(); defaultParameterIdx++) {
 			Block block = new Block(position(token));
@@ -252,8 +253,12 @@ public class ASTBuilder extends MontyBaseVisitor<ASTNode> {
 				}
 			}
 
-			List<VariableDeclaration> subParams =
-			        allVariableDeclarations.subList(0, params.size() + defaultParameterIdx);
+			List<VariableDeclaration> subParams = new ArrayList<>(params.size() + defaultParameterIdx);
+			for (int i = 0; i < params.size() + defaultParameterIdx; i++) {
+				VariableDeclaration var = allVariableDeclarations.get(i);
+				subParams.add(new VariableDeclaration(var.getPosition(), var.getIdentifier(), var.getTypeIdentifier(),
+				        var.getDeclarationType()));
+			}
 
 			Expression expression =
 			        new FunctionCall(position(token), new ResolvableIdentifier(identifier.getSymbol()), l);
@@ -275,13 +280,15 @@ public class ASTBuilder extends MontyBaseVisitor<ASTNode> {
 			FunctionDeclaration funDecl =
 			        new FunctionDeclaration(position(token), identifier, block, subParams, declarationTypeCopy,
 			                returnTypeIdent);
+			funDecl.setNative(isNative);
 
 			currentBlocks.peek().addDeclaration(funDecl);
 		}
 	}
 
 	private FunctionDeclaration buildFunctions(boolean isFunction, ParameterListContext parameterListContext,
-	        Token token, TypeContext typeContext, StatementBlockContext statementBlockContext, Identifier identifier) {
+	        Token token, TypeContext typeContext, StatementBlockContext statementBlockContext, Identifier identifier,
+	        boolean isNative) {
 
 		FunctionDeclaration.DeclarationType declarationTypeCopy = currentFunctionContext;
 		List<VariableDeclaration> params = parameterListToVarDeclList(parameterListContext);
@@ -308,7 +315,8 @@ public class ASTBuilder extends MontyBaseVisitor<ASTNode> {
 		        identifier,
 		        token,
 		        typeContext,
-		        declarationTypeCopy);
+		        declarationTypeCopy,
+		        isNative);
 
 		FunctionDeclaration funDecl;
 
@@ -320,6 +328,7 @@ public class ASTBuilder extends MontyBaseVisitor<ASTNode> {
 		funDecl =
 		        new FunctionDeclaration(position(token), identifier, (Block) visit(statementBlockContext),
 		                allVariableDeclarations, declarationTypeCopy, returnTypeIdent);
+		funDecl.setNative(isNative);
 		if (funDecl.isUnbound()) {
 			FunctionWrapperFactory.generateWrapperClass(funDecl, tupleDeclarationFactory);
 			currentBlocks.peek().addDeclaration(funDecl.getWrapperClass());
@@ -350,6 +359,7 @@ public class ASTBuilder extends MontyBaseVisitor<ASTNode> {
 	@Override
 	public ASTNode visitFunctionDeclaration(FunctionDeclarationContext ctx) {
 		currentGeneratorReturnType.push(null);
+		boolean isNativeFunction = ctx.nativeAnnotation() != null;
 		FunctionDeclaration proc =
 		        buildFunctions(
 		                ctx.type() != null,
@@ -357,7 +367,8 @@ public class ASTBuilder extends MontyBaseVisitor<ASTNode> {
 		                ctx.getStart(),
 		                ctx.type(),
 		                ctx.statementBlock(),
-		                new Identifier(getText(ctx.Identifier())));
+		                new Identifier(getText(ctx.Identifier())),
+		                isNativeFunction);
 		// if the function does not have any return type, we have to add a return statement
 		if (ctx.type() == null) {
 			List<Statement> list = proc.getBody().getStatements();
@@ -398,8 +409,14 @@ public class ASTBuilder extends MontyBaseVisitor<ASTNode> {
 		allParams.addAll(params);
 		allParams.addAll(defaultParams);
 
+		List<VariableDeclaration> allParamsCopy = new ArrayList<>(allParams.size());
+		for (VariableDeclaration param : allParams) {
+			allParamsCopy.add(new VariableDeclaration(param.getPosition(), param.getIdentifier(),
+			        param.getTypeIdentifier(), param.getDeclarationType()));
+		}
+
 		ClassDeclaration iterator =
-		        GeneratorClassFactory.generateGeneratorIteratorClass(pos, allParams, body, returnType);
+		        GeneratorClassFactory.generateGeneratorIteratorClass(pos, allParamsCopy, body, returnType);
 		currentBlocks.peek().addDeclaration(iterator);
 
 		ClassDeclaration generator =

@@ -159,11 +159,22 @@ public class TypeConverter {
 			}
 		}
 
+		// generator functions
 		if (classDecl.isGenerator()) {
 			// create the structure
 			LLVMType contextStruct = addGeneratorContext(classDecl, mangledNodeName);
 			// add context struct as the last index to the class declaration
 			llvmClassTypeDeclarations.add(contextStruct);
+		}
+
+		// closures
+		FunctionDeclaration wrappedFunction = classDecl.getWrappedFunction();
+		if ((wrappedFunction != null) && (wrappedFunction.isClosure())) {
+			// create the structure
+			LLVMType closureContextStruct =
+			        addClosureContext(classDecl, wrappedFunction.getClosureVariables(), mangledNodeName);
+			// add context struct as the last index to the class declaration
+			llvmClassTypeDeclarations.add(closureContextStruct);
 		}
 
 		for (FunctionDeclaration function : classDecl.getVirtualMethodTable()) {
@@ -187,6 +198,27 @@ public class TypeConverter {
 		        llvmVMTDataIdentifier,
 		        true,
 		        llvmIdentifierFactory.constant(llvmVMTType, llvmVMTDataInitializer));
+	}
+
+	protected LLVMType addClosureContext(ClassDeclaration classDecl, Collection<VariableDeclaration> variables,
+	        String mangledNodeName) {
+		// declaration types inside the struct
+		List<LLVMType> llvmStructTypeDeclarations = new ArrayList<>();
+
+		// add state i8 pointer to context structure
+		llvmStructTypeDeclarations.add(LLVMTypeFactory.pointer(LLVMTypeFactory.int8()));
+		// add the variable declarations inside the generator to the struct
+		int attributeIndex = 1;
+		for (VariableDeclaration decl : variables) {
+			llvmStructTypeDeclarations.add(mapToLLVMType(decl.getType()));
+			decl.setAttributeIndex(attributeIndex);
+			attributeIndex += 1;
+		}
+
+		LLVMStructType llvmStructType = struct(mangledNodeName + "_closure_context");
+		constantContext.type(llvmStructType, llvmStructTypeDeclarations);
+
+		return llvmStructType;
 	}
 
 	protected LLVMType addGeneratorContext(ClassDeclaration classDecl, String mangledNodeName) {

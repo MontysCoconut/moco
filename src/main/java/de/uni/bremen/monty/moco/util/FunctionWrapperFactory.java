@@ -87,6 +87,7 @@ public class FunctionWrapperFactory {
 		function.setWrapperClass(wrapperClass);
 		function.setWrapperFunctionObjectDeclaration(functionObjectDeclaration);
 		function.setWrapperFunctionAssignment(functionObjectAssignment);
+		functionObjectAssignment.setCorrespondingFunctionWrapper(function);
 	}
 
 	protected static FunctionDeclaration createApplyMethod(FunctionDeclaration function,

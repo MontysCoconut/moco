@@ -124,6 +124,13 @@ public class CodeGenerationVisitor extends BaseVisitor {
 			llvmParameter.add(selfReference);
 		}
 
+		if (node.isClosure()) {
+			ClassDeclaration typeDeclaration = node.getWrapperClass();
+			LLVMType contextType = codeGenerator.mapToLLVMType(typeDeclaration);
+			LLVMIdentifier<LLVMType> ctxReference = llvmIdentifierFactory.newLocal("..ctx..", contextType, false);
+			llvmParameter.add(ctxReference);
+		}
+
 		for (VariableDeclaration param : node.getParameters()) {
 			LLVMType llvmType = codeGenerator.mapToLLVMType(param.getType());
 			llvmType = llvmType instanceof LLVMStructType ? pointer(llvmType) : llvmType;
@@ -196,29 +203,6 @@ public class CodeGenerationVisitor extends BaseVisitor {
 		codeGenerator.addNativeFunction(contextUtils.active(), returnType, llvmParameter, name);
 	}
 
-	private boolean isNative(ASTNode node) {
-		if ((node instanceof FunctionDeclaration) && (((FunctionDeclaration) node).isAbstract())) {
-			return false; // abstract methods are never native
-		}
-		while (node.getParentNode() != null) {
-			node = node.getParentNode();
-			if (node instanceof ModuleDeclaration) {
-				if (!((ModuleDeclaration) node).isNative()) {
-					return false;
-				}
-			}
-			if (node instanceof Package) {
-				if (((Package) node).isNativePackage()) {
-					return true;
-				}
-			} else if ((node instanceof ClassDeclaration) && (((ClassDeclaration) node).isFunctionWrapper())) {
-				return false; // function wrappers are never native,
-				              // because they are always automatically generated monty code
-			}
-		}
-		return false;
-	}
-
 	@Override
 	public void visit(Package node) {
 		if (node.getParentNode() == null) {
@@ -251,6 +235,47 @@ public class CodeGenerationVisitor extends BaseVisitor {
 		LLVMIdentifier<LLVMType> source = stack.pop();
 		LLVMIdentifier<LLVMType> target = stack.pop();
 		codeGenerator.assign(contextUtils.active(), target, source);
+
+		if (node.belongsToFunctionWrapper()) {
+			initializeClosureWrapper(node, source);
+		}
+	}
+
+	protected void initializeClosureWrapper(Assignment node, LLVMIdentifier<?> source) {
+		Position pos = node.getPosition();
+		FunctionDeclaration function = node.getCorrespondingFunctionWrapper();
+		if (function.isClosure()) {
+			ClassDeclaration functionWrapper = function.getWrapperClass();
+			for (VariableDeclaration var : function.getClosureVariableOriginalDeclarations()) {
+				VariableDeclaration localVar = function.getClosureVariable(var);
+				VariableAccess lvalue = new VariableAccess(pos, ResolvableIdentifier.convert(var.getIdentifier()));
+				lvalue.setLValue();
+				LLVMIdentifier<LLVMType> closureTarget =
+				        codeGenerator.accessClosureContextMember(
+				                contextUtils.active(),
+				                functionWrapper,
+				                localVar,
+				                lvalue,
+				                var.getType(),
+				                (LLVMIdentifier<LLVMPointer<LLVMType>>) source);
+
+				if (var.getIdentifier().getSymbol().equals("self")) {
+					SelfExpression self = new SelfExpression(pos);
+					self.setType(var.getType());
+					self.setParentNode(node.getParentNode());
+					visit(self);
+				} else {
+					VariableAccess varAccess =
+					        new VariableAccess(pos, ResolvableIdentifier.convert(var.getIdentifier()));
+					varAccess.setType(var.getType());
+					varAccess.setDeclaration(var);
+					varAccess.setParentNode(node.getParentNode());
+					visit(varAccess);
+				}
+				LLVMIdentifier<LLVMType> closureSource = stack.pop();
+				codeGenerator.assign(contextUtils.active(), closureTarget, closureSource);
+			}
+		}
 	}
 
 	@Override
@@ -327,7 +352,16 @@ public class CodeGenerationVisitor extends BaseVisitor {
 			                varDeclaration,
 			                node,
 			                type);
-
+		} else if (node.isClosureVariable()) {
+			ClassDeclaration containingClass =
+			        ((FunctionDeclaration) node.getParentNodeByType(FunctionDeclaration.class)).getWrapperClass();
+			llvmIdentifier =
+			        codeGenerator.accessClosureContextMember(
+			                contextUtils.active(),
+			                containingClass,
+			                varDeclaration,
+			                node,
+			                type);
 		} else if (varDeclaration.isAttribute()) {
 			LLVMIdentifier<?> leftIdentifier = stack.pop();
 			llvmIdentifier =
@@ -364,7 +398,22 @@ public class CodeGenerationVisitor extends BaseVisitor {
 	@Override
 	public void visit(SelfExpression node) {
 		TypeDeclaration type = useClassVariationIfApplicable(node.getType());
-		stack.push(codeGenerator.resolveLocalVarName("self", type, false));
+		// if 'self' is used inside a closure, we can not use the usual 'self'
+		if (node.isInClosure()) {
+			FunctionDeclaration funDecl = (FunctionDeclaration) node.getParentNodeByType(FunctionDeclaration.class);
+			ClassDeclaration containingClass = funDecl.getWrapperClass();
+			VariableAccess lvalue = new VariableAccess(new Position(), new ResolvableIdentifier("self"));
+
+			stack.push(codeGenerator.accessClosureContextMember(
+			        contextUtils.active(),
+			        containingClass,
+			        funDecl.getClosureVariable(new VariableDeclaration(new Position(), new Identifier("self"), type,
+			                VariableDeclaration.DeclarationType.VARIABLE)),
+			        lvalue,
+			        type));
+		} else {
+			stack.push(codeGenerator.resolveLocalVarName("self", type, false));
+		}
 	}
 
 	@SuppressWarnings("unchecked")
@@ -613,6 +662,26 @@ public class CodeGenerationVisitor extends BaseVisitor {
 			}
 		}
 
+		if (declaration.isClosure()) {
+			// the 'self' of a function wrapper implementation is passed as a context to the actual function
+			TypeDeclaration ctxType = useClassVariationIfApplicable(declaration.getWrapperClass());
+
+			LLVMIdentifier<LLVMPointer<LLVMType>> ctx;
+			// if we're inside the wrapper class' _apply_ method, use "self" as the function's context
+			if (declaration.getWrapperClass() == node.getParentNodeByType(ClassDeclaration.class)) {
+				ctx = codeGenerator.resolveLocalVarName("self", ctxType, false);
+			} else {
+				// if not, use the respective wrapper object
+				ctx =
+				        codeGenerator.resolveLocalVarName(
+				                nameMangler.mangleVariable(declaration.getWrapperFunctionObjectDeclaration()),
+				                ctxType,
+				                true);
+			}
+			expectedParameters.add(0, ctxType);
+			arguments.add(0, ctx);
+		}
+
 		if (declaration.isMethod() && !declaration.isInitializer()) {
 			if (declaration.isFunction()) {
 				stack.push((LLVMIdentifier<LLVMType>) codeGenerator.callMethod(
@@ -669,7 +738,7 @@ public class CodeGenerationVisitor extends BaseVisitor {
 		} else {
 			if (node.isFunction()) {
 				openNewFunctionScope();
-				if (isNative(node)) {
+				if (node.isNative()) {
 					addNativeFunction(node, returnType);
 				} else {
 					addFunction(node, returnType);
@@ -678,7 +747,7 @@ public class CodeGenerationVisitor extends BaseVisitor {
 				closeFunctionContext();
 			} else {
 				openNewFunctionScope();
-				if (isNative(node) && !node.isInitializer()) {
+				if (node.isNative() && !node.isInitializer()) {
 					addNativeFunction(node, returnType);
 				} else {
 					addFunction(node, returnType);

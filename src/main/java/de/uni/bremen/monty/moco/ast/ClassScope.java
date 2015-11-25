@@ -109,12 +109,16 @@ public class ClassScope extends Scope {
 	 * @param identifier
 	 *            the identifier to resolve
 	 * @return the list of function declarations */
-	protected List<FunctionDeclaration> resolveFunctionMember(ResolvableIdentifier identifier) {
-		List<FunctionDeclaration> result = new ArrayList<FunctionDeclaration>();
+	protected List<Declaration> resolveFunctionMember(ResolvableIdentifier identifier) {
+		List<Declaration> result = new ArrayList<>();
 
 		if (functions.containsKey(identifier)) {
 			result.addAll(functions.get(identifier));
 		}
+		if (members.containsKey(identifier)) {
+			result.add(members.get(identifier));
+		}
+
 		for (ClassScope scope : parentClassesScopes) {
 			result.addAll(scope.resolveFunctionMember(identifier));
 		}

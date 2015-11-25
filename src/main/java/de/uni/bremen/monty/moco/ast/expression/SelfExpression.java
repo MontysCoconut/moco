@@ -42,6 +42,7 @@ import de.uni.bremen.monty.moco.ast.Position;
 import de.uni.bremen.monty.moco.visitor.BaseVisitor;
 
 public class SelfExpression extends Expression {
+	private boolean inClosure = false;
 
 	public SelfExpression(Position position) {
 		super(position);
@@ -54,5 +55,13 @@ public class SelfExpression extends Expression {
 
 	@Override
 	public void visitChildren(BaseVisitor visitor) {
+	}
+
+	public void setInClosure() {
+		inClosure = true;
+	}
+
+	public boolean isInClosure() {
+		return inClosure;
 	}
 }

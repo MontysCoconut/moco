@@ -56,6 +56,8 @@ public abstract class BasicASTNode implements ASTNode {
 
 	private BitSet visitedFlags = new BitSet(NUMBER_OF_VISITORS);
 
+	private boolean isNativeNode = false;
+
 	/** Constructor.
 	 *
 	 * @param position
@@ -82,7 +84,7 @@ public abstract class BasicASTNode implements ASTNode {
 	 *
 	 * @return the parent node */
 	public ASTNode getParentNodeByType(Class type) {
-		ASTNode n = this;
+		ASTNode n = getParentNode();
 		while ((!type.isInstance(n)) && (n != null)) {
 			n = n.getParentNode();
 		}
@@ -127,5 +129,13 @@ public abstract class BasicASTNode implements ASTNode {
 	@Override
 	public BitSet getVisitedFlags() {
 		return visitedFlags;
+	}
+
+	public boolean isNative() {
+		return isNativeNode;
+	}
+
+	public void setNative(boolean isNative) {
+		isNativeNode = isNative;
 	}
 }

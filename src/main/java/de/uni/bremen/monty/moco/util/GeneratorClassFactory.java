@@ -180,13 +180,17 @@ public class GeneratorClassFactory {
 		for (int i = 0; i < defaultParams.size(); i++) {
 			Block body = new Block(pos);
 			List<VariableDeclaration> pars = new ArrayList<>();
-			pars.addAll(params);
+			for (VariableDeclaration par : params) {
+				pars.add(new VariableDeclaration(par.getPosition(), par.getIdentifier(), par.getTypeIdentifier(),
+				        par.getDeclarationType()));
+			}
 			List<Expression> arguments = new ArrayList<>(i + paramAccesses.size());
 			arguments.addAll(paramAccesses);
 
 			for (int j = 0; j < i; j++) {
 				VariableDeclaration var = defaultParams.get(j);
-				pars.add(var);
+				pars.add(new VariableDeclaration(var.getPosition(), var.getIdentifier(), var.getTypeIdentifier(),
+				        var.getDeclarationType()));
 				arguments.add(new VariableAccess(var.getPosition(), ResolvableIdentifier.convert(var.getIdentifier())));
 			}
 			for (int j = i; j < defaultParams.size(); j++) {
