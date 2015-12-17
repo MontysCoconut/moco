@@ -2,13 +2,13 @@
 Moco [![Build Status](https://travis-ci.org/MontysCoconut/moco.svg?branch=master)](https://travis-ci.org/MontysCoconut/moco)
 ====
 
-`moco` is a [Monty](http://www.informatik.uni-bremen.de/monty/) to
+`moco` is a [Monty](http://montyscoconut.github.io/) to
 [LLVM](http://llvm.org/) compiler built using
 [Java](https://www.java.com/en/), [ANTLR4](http://www.antlr.org/) and
 [LLVM](http://llvm.org/).
 
 Please read the [language
-specification](http://www.informatik.uni-bremen.de/monty/?p=downloads) for
+specification](http://montyscoconut.github.io/downloads.html) for
 details on the `Monty` programming language and refer to the [feature
 overview](FEATURES.md) for a list of implemented features.
 
