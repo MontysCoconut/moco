@@ -40,8 +40,10 @@ package de.uni.bremen.monty.moco;
 
 import de.uni.bremen.monty.moco.antlr.MontyParser;
 import de.uni.bremen.monty.moco.ast.AntlrAdapter;
+import de.uni.bremen.monty.moco.ast.CoreClasses;
 import de.uni.bremen.monty.moco.ast.Package;
 import de.uni.bremen.monty.moco.ast.PackageBuilder;
+import de.uni.bremen.monty.moco.ast.types.ConcreteType;
 import de.uni.bremen.monty.moco.util.*;
 import de.uni.bremen.monty.moco.visitor.*;
 
@@ -116,7 +118,7 @@ public class Main {
 		CodeGenerationVisitor cgv = new CodeGenerationVisitor();
 		BaseVisitor[] visitors =
 		        new BaseVisitor[] { new SetParentVisitor(), new DeclarationVisitor(), new ResolveVisitor(),
-		                new TypeCheckVisitor(), new ControlFlowVisitor(), cgv };
+						new VMTResolveVisitor(), new TypeCheckVisitor(), new ControlFlowVisitor(), cgv };
 
 		boolean everyThingIsAwesome = true;
 
@@ -134,6 +136,18 @@ public class Main {
 			if (visitor.foundError()) {
 				everyThingIsAwesome = false;
 				break;
+			}
+		}
+
+		if(everyThingIsAwesome) {
+			try {
+				cgv.visitAllClasses();
+			} catch (RuntimeException exception) {
+				cgv.logError(exception);
+				everyThingIsAwesome = false;
+			}
+			if (cgv.foundError()) {
+				everyThingIsAwesome = false;
 			}
 		}
 
@@ -227,6 +241,9 @@ public class Main {
     }
 
 	public static int mainWithStatusCode(String[] args) throws IOException, InterruptedException {
+		CoreClasses.reset();
+		ConcreteType.reset();
+
 		Namespace ns = parseArgs(args);
 
 		if (ns == null) {
@@ -259,12 +276,12 @@ public class Main {
 			(new PrintVisitor()).visitDoubleDispatched(ast);
 		}
 
+		String llvmCode = writer.toString();
 		if (emitAssembly) {
-			writeAssembly(outputFileName, inputFileName, writer.toString());
-			return 0;
+			writeAssembly(outputFileName, inputFileName, llvmCode);
 		}
 
-		File executable = buildExecutable(outputFileName, inputFileName, compileOnly, writer.toString());
+		File executable = buildExecutable(outputFileName, inputFileName, compileOnly, llvmCode);
 		if (!compileOnly) {
 			return runExecutable(executable);
 		}

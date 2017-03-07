@@ -43,7 +43,7 @@ import de.uni.bremen.monty.moco.ast.expression.Expression;
 import de.uni.bremen.monty.moco.visitor.BaseVisitor;
 
 public class ReturnStatement extends BasicASTNode implements Statement {
-	private Expression parameter;
+	private final Expression parameter;
 
 	/** Constructor.
 	 *

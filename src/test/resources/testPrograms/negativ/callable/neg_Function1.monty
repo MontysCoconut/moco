@@ -8,3 +8,4 @@ Int square(Int value):
    return value * value
 
 square(square)
+

@@ -41,11 +41,13 @@ package de.uni.bremen.monty.moco.ast;
 import de.uni.bremen.monty.moco.antlr.MontyBaseVisitor;
 import de.uni.bremen.monty.moco.antlr.MontyParser;
 import de.uni.bremen.monty.moco.antlr.MontyParser.*;
+import de.uni.bremen.monty.moco.antlr.MontyParser.TypeContext;
 import de.uni.bremen.monty.moco.ast.declaration.*;
 import de.uni.bremen.monty.moco.ast.declaration.FunctionDeclaration.DeclarationType;
 import de.uni.bremen.monty.moco.ast.expression.*;
 import de.uni.bremen.monty.moco.ast.expression.literal.*;
 import de.uni.bremen.monty.moco.ast.statement.*;
+import de.uni.bremen.monty.moco.ast.types.*;
 import de.uni.bremen.monty.moco.util.*;
 import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.misc.NotNull;
@@ -53,6 +55,8 @@ import org.antlr.v4.runtime.tree.TerminalNode;
 import org.apache.commons.io.FilenameUtils;
 
 import java.util.*;
+
+import static de.uni.bremen.monty.moco.ast.types.TypeContext.EMPTY;
 
 public class ASTBuilder extends MontyBaseVisitor<ASTNode> {
 	private final String fileName;
@@ -465,13 +469,13 @@ public class ASTBuilder extends MontyBaseVisitor<ASTNode> {
 		// if there is an 'abstract' keyword, the class is abstract
 		return createClass(
 		        position(ctx.getStart()),
-		        ctx.type(),
+		        ctx.typeDef(),
 		        ctx.typeList(),
 		        ctx.getTokens(MontyParser.AbstractKeyword).size() > 0,
 		        ctx.memberDeclaration());
 	}
 
-	protected ClassDeclaration createClass(Position pos, TypeContext className, TypeListContext inheritsFrom,
+	protected ClassDeclaration createClass(Position pos, TypeDefContext className, TypeListContext inheritsFrom,
 	        boolean isAbstract, List<MemberDeclarationContext> members) {
 		List<ResolvableIdentifier> superClasses = new ArrayList<>();
 		if (inheritsFrom != null) {
@@ -482,16 +486,16 @@ public class ASTBuilder extends MontyBaseVisitor<ASTNode> {
 			}
 		}
 
-		ArrayList<AbstractGenericType> genericTypes = new ArrayList<>();
+		ArrayList<TypeParameterDeclaration> genericTypes = new ArrayList<>();
 		ClassDeclaration cl =
 		        new ClassDeclaration(pos, convertResolvableIdentifier(className), superClasses, new Block(pos),
 		                isAbstract, genericTypes);
 
-		TypeContext type = className;
-		if (type.typeList() != null) {
-			for (TypeContext typeContext1 : type.typeList().type()) {
-				genericTypes.add(new AbstractGenericType(cl, position(typeContext1.getStart()),
-				        convertResolvableIdentifier(typeContext1)));
+		TypeDefContext type = className;
+		if (type.typeDefList() != null) {
+			for (BoundedTypeContext boundedTypeContext : type.typeDefList().boundedType()) {
+				genericTypes.add(new TypeParameterDeclaration(position(boundedTypeContext.getStart()),
+				        convertResolvableIdentifier(boundedTypeContext), getTypeBound(boundedTypeContext)));
 			}
 		}
 
@@ -529,6 +533,20 @@ public class ASTBuilder extends MontyBaseVisitor<ASTNode> {
 		}
 		currentBlocks.pop();
 		return cl;
+	}
+
+	private ResolvableIdentifier convertResolvableIdentifier(BoundedTypeContext boundedTypeContext) {
+		return new ResolvableIdentifier(boundedTypeContext.ClassIdentifier().toString());
+	}
+
+	private ResolvableIdentifier convertResolvableIdentifier(TypeDefContext className) {
+		return new ResolvableIdentifier(className.ClassIdentifier().toString());
+	}
+
+	private Optional<ResolvableIdentifier> getTypeBound(BoundedTypeContext typeContext) {
+		TypeBoundContext typeBoundContext = typeContext.
+				typeBound();
+		return Optional.ofNullable(typeBoundContext).map( t -> convertResolvableIdentifier(t.type()));
 	}
 
 	@Override
@@ -638,7 +656,7 @@ public class ASTBuilder extends MontyBaseVisitor<ASTNode> {
 
 		// ## MONTY: ## Int i := (_i as Just<Int>).getValue()
 		ResolvableIdentifier iteratorType =
-		        new ResolvableIdentifier("Just", Arrays.asList((ResolvableIdentifier) null));
+		        new ResolvableIdentifier("Just", Collections.singletonList(new ResolvableIdentifier("Type")));
 		Expression getValueExpr =
 		        new MemberAccess(pos, new CastExpression(pos, new VariableAccess(pos, maybeIdent), iteratorType,
 		                callGetNext), new FunctionCall(pos, new ResolvableIdentifier("getValue"),
@@ -1013,7 +1031,7 @@ public class ASTBuilder extends MontyBaseVisitor<ASTNode> {
 	}
 
 	private IsExpression visitIsExpression(ExpressionContext ctx) {
-		ResolvableIdentifier type = new ResolvableIdentifier(getText(ctx.ClassIdentifier()));
+		ResolvableIdentifier type = convertResolvableIdentifier(ctx.type());
 		tupleDeclarationFactory.checkTupleType(type);
 		return new IsExpression(position(ctx.getStart()), (Expression) visit(ctx.expr), type);
 	}
@@ -1293,7 +1311,7 @@ public class ASTBuilder extends MontyBaseVisitor<ASTNode> {
 	@Override
 	public ASTNode visitCaseClassDeclaration(CaseClassDeclarationContext ctx) {
 		Position pos = position(ctx.getStart());
-		ClassDeclaration classDecl = createClass(pos, ctx.type(), ctx.typeList(), false, ctx.memberDeclaration());
+		ClassDeclaration classDecl = createClass(pos, ctx.typeDef(), ctx.typeList(), false, ctx.memberDeclaration());
 
 		List<VariableDeclaration> parameterList =
 		        createParameterListWithoutDefaults(ctx.parameterListWithoutDefaults());
@@ -1318,10 +1336,13 @@ public class ASTBuilder extends MontyBaseVisitor<ASTNode> {
 		                DeclarationType.INITIALIZER, null);
 		classDecl.getBlock().addDeclaration(caseInit);
 		classDecl.getBlock().addDeclaration(createCaseEqMethod(pos, parameterList, classDecl));
-		currentBlocks.peek().addDeclaration(classDecl);
+		if(classDecl.getTypeParameterDeclarations().isEmpty()){
+			currentBlocks.peek().addDeclaration(classDecl);
 
-		// create the decompose function
-		return createDecomposerFunction(pos, parameterList, classDecl);
+			// create the decompose function
+			return createDecomposerFunction(pos, parameterList, classDecl);
+		}
+		return classDecl;
 	}
 
 	protected FunctionDeclaration createDecomposerFunction(Position pos, List<VariableDeclaration> parameterList,
@@ -1390,7 +1411,7 @@ public class ASTBuilder extends MontyBaseVisitor<ASTNode> {
 		body.addStatement(new ReturnStatement(pos, returnExpression));
 
 		return new FunctionDeclaration(pos, new ResolvableIdentifier("_eq_"), body,
-		        Arrays.asList(new VariableDeclaration(pos, paramIdent, classIdentifier,
+		        Arrays.asList(new VariableDeclaration(pos, paramIdent, TypeFactory.from(classDecl, EMPTY),
 		                VariableDeclaration.DeclarationType.PARAMETER)), DeclarationType.METHOD,
 		        ResolvableIdentifier.convert(CoreClasses.boolType().getIdentifier()));
 	}

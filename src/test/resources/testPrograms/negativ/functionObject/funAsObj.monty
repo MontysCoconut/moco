@@ -1,0 +1,6 @@
+Int square(Int x):
+    return x*x
+
+(Bool -> Int) sq := square
+
+println(sq(5))

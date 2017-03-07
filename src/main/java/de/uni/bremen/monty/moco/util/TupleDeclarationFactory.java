@@ -48,6 +48,8 @@ import de.uni.bremen.monty.moco.ast.expression.SelfExpression;
 import de.uni.bremen.monty.moco.ast.expression.VariableAccess;
 import de.uni.bremen.monty.moco.ast.statement.Assignment;
 import de.uni.bremen.monty.moco.ast.statement.ReturnStatement;
+import de.uni.bremen.monty.moco.ast.types.Type;
+import de.uni.bremen.monty.moco.ast.types.TypeVariable;
 
 import java.util.*;
 
@@ -93,19 +95,19 @@ public class TupleDeclarationFactory {
 		ClassDeclaration tupleType =
 		        new ClassDeclaration(new Position(), new Identifier("Tuple" + n),
 		                new ArrayList<ResolvableIdentifier>(), new Block(new Position()), false,
-		                new ArrayList<AbstractGenericType>());
+		                new ArrayList<TypeParameterDeclaration>());
 
 		// generate the initializer
 		FunctionDeclaration initializer =
 		        new FunctionDeclaration(new Position(), new Identifier("initializer"), new Block(new Position()),
 		                new ArrayList<VariableDeclaration>(), FunctionDeclaration.DeclarationType.INITIALIZER,
-		                (TypeDeclaration) null, false);
+		                (Type) null, false);
 
 		// process the generic type parameters
 		for (int i = 0; i < n; i++) {
 			// add the type parameter to the class
-			AbstractGenericType t = new AbstractGenericType(tupleType, new Position(), new Identifier("T" + i));
-			tupleType.getAbstractGenericTypes().add(t);
+			TypeParameterDeclaration t = new TypeParameterDeclaration(new Position(), new Identifier("T" + i), Optional.empty());
+			tupleType.getTypeParameterDeclarations().add(t);
 
 			// add an attribute with that type to the class
 			addTupleAttribute(tupleType, i, t);
@@ -121,17 +123,17 @@ public class TupleDeclarationFactory {
 		return tupleType;
 	}
 
-	protected void addTupleAttribute(ClassDeclaration tupleType, int i, AbstractGenericType t) {
+	protected void addTupleAttribute(ClassDeclaration tupleType, int i, TypeParameterDeclaration t) {
 		VariableDeclaration attr =
-		        new VariableDeclaration(new Position(), new Identifier("_" + (i + 1)), t,
+		        new VariableDeclaration(new Position(), new Identifier("_" + (i + 1)), new TypeVariable(t),
 		                VariableDeclaration.DeclarationType.ATTRIBUTE);
 		tupleType.getBlock().addDeclaration(attr);
 	}
 
-	protected void addTupleInitializerParameter(FunctionDeclaration initializer, int i, AbstractGenericType t) {
+	protected void addTupleInitializerParameter(FunctionDeclaration initializer, int i, TypeParameterDeclaration t) {
 		// add a parameter with that type to the initializer parameter list
 		VariableDeclaration param =
-		        new VariableDeclaration(new Position(), new Identifier("p" + (i + 1)), t,
+		        new VariableDeclaration(new Position(), new Identifier("p" + (i + 1)), new TypeVariable(t),
 		                VariableDeclaration.DeclarationType.PARAMETER);
 		initializer.getParameters().add(param);
 
@@ -149,23 +151,5 @@ public class TupleDeclarationFactory {
 			tupleClasses.add(createTupleType(n));
 		}
 		return tupleClasses;
-	}
-
-	public static boolean isTuple(ClassDeclaration type) {
-		String strIdent = type.getIdentifier().getSymbol();
-		if (strIdent.startsWith("Tuple")) {
-			int n;
-			try {
-				n = Integer.parseInt(strIdent.substring(5));
-			} catch (Exception e) {
-				return false;
-			}
-			if (type instanceof ClassDeclarationVariation) {
-				if (((ClassDeclarationVariation) type).getConcreteGenericTypes().size() == n) {
-					return true;
-				}
-			}
-		}
-		return false;
 	}
 }

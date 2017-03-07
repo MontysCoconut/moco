@@ -38,6 +38,8 @@
  */
 package de.uni.bremen.monty.moco.ast;
 
+import de.uni.bremen.monty.moco.ast.declaration.ModuleDeclaration;
+
 import java.util.BitSet;
 
 /** Baseclass for every node in the AST. */
@@ -83,12 +85,12 @@ public abstract class BasicASTNode implements ASTNode {
 	/** Get parent node.
 	 *
 	 * @return the parent node */
-	public ASTNode getParentNodeByType(Class type) {
+	public <T> T getParentNodeByType(Class<T> type) {
 		ASTNode n = getParentNode();
 		while ((!type.isInstance(n)) && (n != null)) {
 			n = n.getParentNode();
 		}
-		return n;
+		return (T) n;
 	}
 
 	/** Set parent node.

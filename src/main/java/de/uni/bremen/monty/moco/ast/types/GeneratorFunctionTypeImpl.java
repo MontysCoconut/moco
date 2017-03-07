@@ -36,47 +36,31 @@
  * You should have received a copy of the GNU General Public
  * License along with this library.
  */
-package de.uni.bremen.monty.moco.ast.declaration;
+package de.uni.bremen.monty.moco.ast.types;
 
-import de.uni.bremen.monty.moco.ast.ASTNode;
-import de.uni.bremen.monty.moco.ast.Identifier;
-import de.uni.bremen.monty.moco.ast.Position;
-import de.uni.bremen.monty.moco.visitor.BaseVisitor;
+import de.uni.bremen.monty.moco.ast.declaration.GeneratorFunctionDeclaration;
+import de.uni.bremen.monty.moco.ast.statement.YieldStatement;
 
-public class AbstractGenericType extends TypeDeclaration {
+import java.util.List;
+import java.util.stream.Collectors;
 
-	private ClassDeclaration definedIn;
+public class GeneratorFunctionTypeImpl extends FunctionTypeDecl implements GeneratorFunctionType {
 
-	/** Constructor.
-	 *
-	 * @param definedIn
-	 * @param position
-	 *            Position of this node
-	 * @param identifier
-	 *            the identifier */
-	public AbstractGenericType(ClassDeclaration definedIn, Position position, Identifier identifier) {
-		super(position, identifier);
-		this.definedIn = definedIn;
-	}
+    GeneratorFunctionTypeImpl(GeneratorFunctionDeclaration declaration, TypeContext context, List<? extends VariableType> parameter, Type returnType, PartialAppliedTypeInfo definingClass, PartialAppliedTypeInfo wrapperClass, VariableType wrapperFunctionObjects, List<? extends VariableType> closureVariables) {
+        super(declaration, context, parameter, returnType, definingClass, wrapperClass, wrapperFunctionObjects, closureVariables);
+    }
 
-	@Override
-	public void visit(BaseVisitor visitor) {
-		visitor.visit(this);
-	}
+    private GeneratorFunctionDeclaration getDeclaration(){
+        return (GeneratorFunctionDeclaration) super.declaration;
+    }
 
-	@Override
-	public void visitChildren(BaseVisitor visitor) {
+    @Override
+    public List<YieldStatement> getYieldStatements() {
+        return getDeclaration().getYieldStatements();
+    }
 
-	}
-
-	public ClassDeclaration getDefinedIn() {
-		return definedIn;
-	}
-
-	public boolean equals(Object other) {
-		if (other instanceof AbstractGenericType) {
-			return ((AbstractGenericType) other).getIdentifier().equals(getIdentifier());
-		}
-		return false;
-	}
+    @Override
+    public List<? extends VariableType> getVariableDeclarations() {
+        return getDeclaration().getVariableDeclarations().stream().map(d -> TypeFactory.from(d, context)).collect(Collectors.toList());
+    }
 }

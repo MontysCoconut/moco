@@ -40,7 +40,7 @@ package de.uni.bremen.monty.moco.ast.expression;
 
 import de.uni.bremen.monty.moco.ast.Position;
 import de.uni.bremen.monty.moco.ast.Scope;
-import de.uni.bremen.monty.moco.ast.declaration.TypeDeclaration;
+import de.uni.bremen.monty.moco.ast.types.Type;
 import de.uni.bremen.monty.moco.ast.statement.Statement;
 import de.uni.bremen.monty.moco.visitor.BaseVisitor;
 
@@ -88,7 +88,7 @@ public class WrappedFunctionCall extends Expression implements Statement {
 	}
 
 	@Override
-	public TypeDeclaration getType() {
+	public Type getType() {
 		if (functionCall != null) {
 			return functionCall.getType();
 		}

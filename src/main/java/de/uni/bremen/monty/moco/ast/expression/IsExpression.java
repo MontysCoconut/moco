@@ -39,14 +39,14 @@
 package de.uni.bremen.monty.moco.ast.expression;
 
 import de.uni.bremen.monty.moco.ast.*;
-import de.uni.bremen.monty.moco.ast.declaration.*;
+import de.uni.bremen.monty.moco.ast.types.Type;
 import de.uni.bremen.monty.moco.visitor.BaseVisitor;
 
 public class IsExpression extends Expression {
 
 	private Expression expression;
 	private ResolvableIdentifier isIdentifier;
-	private TypeDeclaration toType;
+	private Type toType;
 	private Expression inferTypeFrom;
 
 	public IsExpression(Position position, Expression expression, ResolvableIdentifier isIdentifier) {
@@ -69,11 +69,11 @@ public class IsExpression extends Expression {
 		return expression;
 	}
 
-	public void setToType(TypeDeclaration toType) {
+	public void setToType(Type toType) {
 		this.toType = toType;
 	}
 
-	public TypeDeclaration getToType() {
+	public Type getToType() {
 		return toType;
 	}
 

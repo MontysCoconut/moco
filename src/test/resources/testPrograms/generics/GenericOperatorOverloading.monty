@@ -1,0 +1,15 @@
+abstract class Number:
+  abstract Number _add_(Number a)
+  abstract print()
+
+case class Integer(Int v) inherits Number:
+  Number _add_(Number a):
+    return Integer((a as Integer).v + self.v)
+  print():
+    println(self.v)
+
+case class Adder<Nn inherits Number>(Nn n1, Nn n2):
+  Number add():
+    return self.n1 + self.n2
+
+Adder<Integer>(Integer(1), Integer(2)).add().print()

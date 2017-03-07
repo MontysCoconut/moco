@@ -10,12 +10,12 @@
 // ---------------------
 // 
 
-class Wrapper<Par>:
-    Par value
-    initializer(Par p):
+class Wrapper<Pas>:
+    Pas value
+    initializer(Pas p):
         self.value := p
 
-    Par getValue():
+    Pas getValue():
         return self.value
 
 

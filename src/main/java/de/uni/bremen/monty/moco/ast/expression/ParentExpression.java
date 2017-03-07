@@ -39,13 +39,13 @@
 package de.uni.bremen.monty.moco.ast.expression;
 
 import de.uni.bremen.monty.moco.ast.*;
-import de.uni.bremen.monty.moco.ast.declaration.*;
+import de.uni.bremen.monty.moco.ast.types.PartialAppliedTypeInfo;
 import de.uni.bremen.monty.moco.visitor.BaseVisitor;
 
 public class ParentExpression extends Expression {
 
 	private ResolvableIdentifier parentIdentifier;
-	private ClassDeclaration selfType;
+	private PartialAppliedTypeInfo selfType;
 
 	public ParentExpression(Position position, ResolvableIdentifier parentIdentifier) {
 		super(position);
@@ -56,11 +56,11 @@ public class ParentExpression extends Expression {
 		return parentIdentifier;
 	}
 
-	public ClassDeclaration getSelfType() {
+	public PartialAppliedTypeInfo getSelfType() {
 		return selfType;
 	}
 
-	public void setSelfType(ClassDeclaration selfType) {
+	public void setSelfType(PartialAppliedTypeInfo selfType) {
 		this.selfType = selfType;
 	}
 

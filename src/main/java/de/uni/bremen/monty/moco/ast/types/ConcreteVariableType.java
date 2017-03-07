@@ -36,36 +36,28 @@
  * You should have received a copy of the GNU General Public
  * License along with this library.
  */
-package de.uni.bremen.monty.moco.ast.declaration;
+package de.uni.bremen.monty.moco.ast.types;
 
-import java.util.ArrayList;
+import de.uni.bremen.monty.moco.ast.declaration.VariableDeclaration;
 
-public class ConcreteProcDecl extends FunctionDeclaration {
-	private final ClassDeclarationVariation variation;
+public class ConcreteVariableType extends VariableType {
+    private final TypeContext context;
 
-	public ConcreteProcDecl(ClassDeclarationVariation variation, FunctionDeclaration abstractDecl) {
-		super(abstractDecl.getPosition(), abstractDecl.getIdentifier(), abstractDecl.getBody(),
-		        new ArrayList<VariableDeclaration>(), abstractDecl.getDeclarationType(),
-		        abstractDecl.getReturnTypeIdentifier(), abstractDecl.isAbstract());
-		this.variation = variation;
-		setParentNode(variation);
-		setVMTIndex(abstractDecl.getVMTIndex());
-	}
+    ConcreteVariableType(VariableDeclaration declaration, ConcreteType returnType, TypeContext context) {
+        super(declaration, returnType);
+        this.context = context;
+    }
 
-	public ConcreteProcDecl(ClassDeclarationVariation variation, FunctionDeclaration abstractDecl,
-	        TypeDeclaration returnType) {
-		super(abstractDecl.getPosition(), abstractDecl.getIdentifier(), abstractDecl.getBody(),
-		        new ArrayList<VariableDeclaration>(), abstractDecl.getDeclarationType(), returnType,
-		        abstractDecl.isAbstract());
-		this.variation = variation;
-		setParentNode(variation);
-		setVMTIndex(abstractDecl.getVMTIndex());
-		setScope(abstractDecl.getScope());
-	}
+    @Override
+    public ConcreteType getType() {
+        return (ConcreteType) super.getType();
+    }
 
-	@Override
-	public ClassDeclarationVariation getDefiningClass() {
-		return variation;
-	}
+    public TypeContext getContext() {
+        return context;
+    }
 
+    public VariableDeclaration getDeclaration() {
+        return declaration;
+    }
 }

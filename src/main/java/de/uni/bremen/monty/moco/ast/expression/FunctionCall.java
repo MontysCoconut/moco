@@ -40,8 +40,8 @@ package de.uni.bremen.monty.moco.ast.expression;
 
 import de.uni.bremen.monty.moco.ast.Position;
 import de.uni.bremen.monty.moco.ast.ResolvableIdentifier;
-import de.uni.bremen.monty.moco.ast.declaration.FunctionDeclaration;
 import de.uni.bremen.monty.moco.ast.statement.Statement;
+import de.uni.bremen.monty.moco.ast.types.FunctionType;
 import de.uni.bremen.monty.moco.visitor.BaseVisitor;
 
 import java.util.List;
@@ -49,7 +49,7 @@ import java.util.List;
 public class FunctionCall extends Expression implements Statement {
 	private final ResolvableIdentifier identifier;
 	protected final List<Expression> arguments;
-	private FunctionDeclaration declaration;
+	private FunctionType declaration;
 
 	public FunctionCall(Position position, ResolvableIdentifier identifier, List<Expression> arguments) {
 		super(position);
@@ -86,13 +86,13 @@ public class FunctionCall extends Expression implements Statement {
 	}
 
 	/** @return the declaration */
-	public FunctionDeclaration getDeclaration() {
+	public FunctionType getDeclaration() {
 		return declaration;
 	}
 
 	/** @param declaration
 	 *            the declaration to set */
-	public void setDeclaration(FunctionDeclaration declaration) {
+	public void setDeclaration(FunctionType declaration) {
 		this.declaration = declaration;
 	}
 }

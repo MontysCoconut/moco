@@ -1,1 +1,1 @@
-TypeCheckVisitor caught error in ClassDeclaration at file: AbstractMethodInheritedInClass.monty, line: 4, char: 0: The non-abstract class 'StdOutLogger' inherits an abstract method 'log', which has not been implemented!
+TypeCheckVisitor caught error in StdOutLogger:ClassDeclaration at file: AbstractMethodInheritedInClass.monty, line: 4, char: 0: The non-abstract class 'StdOutLogger' inherits an abstract method 'log', which has not been implemented!

@@ -42,6 +42,8 @@ import de.uni.bremen.monty.moco.ast.AccessModifier;
 import de.uni.bremen.monty.moco.ast.BasicASTNode;
 import de.uni.bremen.monty.moco.ast.Identifier;
 import de.uni.bremen.monty.moco.ast.Position;
+import org.apache.commons.lang3.builder.EqualsBuilder;
+import org.apache.commons.lang3.builder.HashCodeBuilder;
 
 /** The baseclass of every declaration.
  * <p>
@@ -74,5 +76,25 @@ public abstract class Declaration extends BasicASTNode {
 	 * @return the identifier */
 	public Identifier getIdentifier() {
 		return identifier;
+	}
+
+	@Override
+	public boolean equals(Object o) {
+		if (this == o) return true;
+
+		if (o == null || getClass() != o.getClass()) return false;
+
+		Declaration that = (Declaration) o;
+
+		return new EqualsBuilder()
+				.append(identifier, that.identifier)
+				.isEquals();
+	}
+
+	@Override
+	public int hashCode() {
+		return new HashCodeBuilder(17, 37)
+				.append(identifier)
+				.toHashCode();
 	}
 }

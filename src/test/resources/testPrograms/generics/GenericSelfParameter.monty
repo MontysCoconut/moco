@@ -1,0 +1,21 @@
+class Ab<Ba>:
+  - Ba b
+  + initializer(Ba v):
+    self.b := v
+
+  + Ba getB():
+    return self.b
+
+  + Ab<Ba> getSelf():
+    return self
+
+  + setSelfContent(Ab<Ba> ab):
+    self.b := ab.getB()
+
+
+Ab<String> x := Ab<String>("Monty!")
+x := x.getSelf()
+println(x.getB())
+
+x.setSelfContent(Ab<String>("Monty!!"))
+println(x.getB())

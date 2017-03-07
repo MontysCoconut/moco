@@ -56,4 +56,8 @@ public class MontyBaseException extends RuntimeException {
 	public ASTNode getNode() {
 		return node;
 	}
+
+	public void setNode(ASTNode node) {
+		this.node = node;
+	}
 }

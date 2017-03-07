@@ -72,7 +72,7 @@ independentDeclaration
   ;
 
 classDeclaration
-  : nativeAnnotation? AbstractKeyword? 'class' type ('inherits' typeList)?
+  : nativeAnnotation? AbstractKeyword? 'class' typeDef ('inherits' typeList)?
     ':' EndOfLine
     Indent
         (memberDeclaration+ | 'pass' EndOfLine)
@@ -80,7 +80,7 @@ classDeclaration
   ;
 
 caseClassDeclaration
-  : 'case' 'class' type '(' (parameterListWithoutDefaults)? ')' ('inherits' typeList)?
+  : 'case' 'class' typeDef '(' (parameterListWithoutDefaults)? ')' ('inherits' typeList)?
     (':' EndOfLine
     Indent
         (memberDeclaration+ | 'pass' EndOfLine)
@@ -115,11 +115,27 @@ arrow
   : '->'
   ;
 
+typeDef
+  : ClassIdentifier ('<' typeDefList '>')?
+  ;
+
+typeDefList
+  : boundedType (',' boundedType)*
+  ;
+
+boundedType
+  : ClassIdentifier (typeBound)? ('<' typeList '>')?
+  ;
+
 type
   : ClassIdentifier ('<' typeList '>')?
   | '(' (type (',' type)+)? ')'
   | type arrow type
   | '(' type arrow type ')'
+  ;
+
+typeBound
+  : 'inherits' type
   ;
 
 typeList
@@ -252,7 +268,7 @@ expression
   | left=expression andOperator right=expression
   | left=expression orOperator right=expression
   | expr=expression asOperator type
-  | expr=expression isOperator ClassIdentifier
+  | expr=expression isOperator type
   | listComprehension
   ;
 

@@ -38,13 +38,13 @@
  */
 package de.uni.bremen.monty.moco.util;
 
-import de.uni.bremen.monty.moco.ast.declaration.Declaration;
+import de.uni.bremen.monty.moco.ast.types.MemberType;
 
-public class OverloadCandidate {
-	private Declaration declaration;
+public class OverloadCandidate<T extends MemberType> {
+	private T declaration;
 	private int score;
 
-	public OverloadCandidate(Declaration declaration, int score) {
+	public OverloadCandidate(T declaration, int score) {
 		this.declaration = declaration;
 		this.score = score;
 	}
@@ -57,7 +57,7 @@ public class OverloadCandidate {
 		this.score = score;
 	}
 
-	public Declaration getDeclaration() {
+	public T getDeclaration() {
 		return declaration;
 	}
 }

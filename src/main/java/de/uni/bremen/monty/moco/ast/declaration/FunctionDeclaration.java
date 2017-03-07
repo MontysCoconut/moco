@@ -41,11 +41,12 @@ package de.uni.bremen.monty.moco.ast.declaration;
 import de.uni.bremen.monty.moco.ast.*;
 import de.uni.bremen.monty.moco.ast.expression.Expression;
 import de.uni.bremen.monty.moco.ast.expression.FunctionCall;
-import de.uni.bremen.monty.moco.ast.expression.WrappedFunctionCall;
 import de.uni.bremen.monty.moco.ast.statement.Assignment;
 import de.uni.bremen.monty.moco.ast.statement.ReturnStatement;
 import de.uni.bremen.monty.moco.ast.statement.Statement;
+import de.uni.bremen.monty.moco.ast.types.*;
 import de.uni.bremen.monty.moco.visitor.BaseVisitor;
+import de.uni.bremen.monty.moco.visitor.VisitOnceVisitor;
 
 import java.util.*;
 
@@ -74,7 +75,7 @@ public class FunctionDeclaration extends TypeDeclaration {
 
 	/** The return returnType. */
 	private ResolvableIdentifier returnTypeIdentifier;
-	private TypeDeclaration returnType;
+	private Type returnType;
 
 	private final boolean abstractMethod;
 
@@ -123,31 +124,7 @@ public class FunctionDeclaration extends TypeDeclaration {
 	}
 
 	public FunctionDeclaration(Position position, Identifier identifier, Block body,
-	        List<VariableDeclaration> parameters, ResolvableIdentifier returnTypeIdentifier) {
-		this(position, identifier, body, parameters, DeclarationType.UNBOUND, returnTypeIdentifier);
-	}
-
-	/** Constructor
-	 *
-	 * @param position
-	 *            * Position of this node
-	 * @param identifier
-	 *            the identifier
-	 * @param body
-	 *            the body of this function
-	 * @param parameters
-	 *            the parameters of this function
-	 * @param returnType
-	 *            the return returnType */
-	public FunctionDeclaration(Position position, Identifier identifier, Block body,
-	        List<VariableDeclaration> parameters, ClassDeclaration returnType) {
-		this(position, identifier, body, parameters,
-		        returnType != null ? ResolvableIdentifier.convert(returnType.getIdentifier()) : null);
-		this.returnType = returnType;
-	}
-
-	public FunctionDeclaration(Position position, Identifier identifier, Block body,
-	        List<VariableDeclaration> parameters, DeclarationType declarationType, TypeDeclaration returnType,
+	        List<VariableDeclaration> parameters, DeclarationType declarationType, Type returnType,
 	        boolean isAbstract) {
 		this(position, identifier, body, parameters, declarationType,
 		        returnType != null ? ResolvableIdentifier.convert(returnType.getIdentifier()) : null, isAbstract);
@@ -158,15 +135,18 @@ public class FunctionDeclaration extends TypeDeclaration {
 	 *
 	 * @return the return returnType */
 	public ResolvableIdentifier getReturnTypeIdentifier() {
+		if (returnTypeIdentifier == null && !returnTypeMustBeInferred) {
+			return ResolvableIdentifier.convert(Types.voidType().getIdentifier());
+		}
 		return returnTypeIdentifier;
 	}
 
 	/** get the returnType.
 	 *
 	 * @return the returnType */
-	public TypeDeclaration getReturnType() {
-		if (returnType == null) {
-			return CoreClasses.voidType();
+	public Type getReturnType() {
+		if (returnType == null && !returnTypeMustBeInferred) {
+			return Types.voidType();
 		}
 		return returnType;
 	}
@@ -174,7 +154,7 @@ public class FunctionDeclaration extends TypeDeclaration {
 	/** set the returnType
 	 *
 	 * @param returnType */
-	public void setReturnType(TypeDeclaration returnType) {
+	public void setReturnType(Type returnType) {
 		if (this.returnType != null) return;
 		this.returnType = returnType;
 	}
@@ -227,7 +207,7 @@ public class FunctionDeclaration extends TypeDeclaration {
 
 	public ClassDeclaration getDefiningClass() {
 		if (isMethod() || isInitializer()) {
-			return (ClassDeclaration) getParentNodeByType(ClassDeclaration.class);
+			return getParentNodeByType(ClassDeclaration.class);
 		}
 		return null;
 	}
@@ -254,6 +234,9 @@ public class FunctionDeclaration extends TypeDeclaration {
 		for (VariableDeclaration variableDeclaration : parameters) {
 			visitor.visitDoubleDispatched(variableDeclaration);
 		}
+//		if(wrapperFunctionObjectDeclaration != null){
+//			visitor.visitDoubleDispatched(wrapperFunctionAssignment);
+//		}
 		visitor.visitDoubleDispatched(body);
 	}
 
@@ -268,51 +251,29 @@ public class FunctionDeclaration extends TypeDeclaration {
 		return !isProcedure();
 	}
 
-	/** Check equality of two types taking into account the AST object hierachy.
-	 * <p>
-	 *
-	 * @param other
-	 *            the other TypeDeclaration to check against
-	 * @return if equal */
-	@Override
-	public boolean matchesType(TypeDeclaration other) {
-		if (!super.matchesType(other)) {
-			return false;
-		}
-		if (!(other instanceof FunctionDeclaration)) {
-			return false;
-		}
-		List<VariableDeclaration> otherParameter = ((FunctionDeclaration) other).getParameters();
-		if (parameters.size() != otherParameter.size()) {
-			return false;
-		}
-		for (int i = 0; i < parameters.size(); i++) {
-			if (!parameters.get(i).getType().matchesType(otherParameter.get(i).getType())) {
-				return false;
-			}
-		}
-		FunctionDeclaration proc = ((FunctionDeclaration) other);
-
-		return !((proc.getReturnType() != null) && (proc.getReturnType() != CoreClasses.voidType()))
-		        || returnType.matchesType(proc.getReturnType());
-	}
-
-	public boolean overridesFunction(FunctionDeclaration other) {
+	public boolean overridesFunction(FunctionType other) {
+//		ClassDeclaration thisClass = this.getParentNodeByType(ClassDeclaration.class); // List
+//		ClassDeclaration otherClass = other.getParentNodeByType(ClassDeclaration.class); // Collection
+//		if(thisClass.isAssignableFrom(otherClass)){
+//			throw new RuntimeException("this Function must be invoked from the super class");
+//		}
+//		if(thisClass.getSuperClassDeclarations())
 		if (!other.getIdentifier().getSymbol().equals(getIdentifier().getSymbol())) {
 			return false;
 		}
-		List<VariableDeclaration> otherParameter = other.getParameters();
+		List<? extends Type> otherParameter = other.getParameterTypes();
 		if (parameters.size() != otherParameter.size()) {
 			return false;
 		}
 		for (int i = 0; i < parameters.size(); i++) {
-			if (!parameters.get(i).getType().matchesTypeExactly(otherParameter.get(i).getType())) {
+			Type type = otherParameter.get(i);
+			if (!parameters.get(i).getType().matchesTypeExactly(type)) {
 				return false;
 			}
 		}
 
-		return !((other.getReturnType() != null) && (other.getReturnType() != CoreClasses.voidType()))
-		        || returnType.matchesType(other.getReturnType());
+		return !((other.getReturnType() != null) && (!other.getReturnType().isVoid()))
+		        || returnType.isAssignableFrom(other.getReturnType());
 	}
 
 	public boolean isAbstract() {
@@ -347,18 +308,19 @@ public class FunctionDeclaration extends TypeDeclaration {
 		return returnTypeMustBeInferred;
 	}
 
-	public void setInferredReturnType(TypeDeclaration type) {
+	public void setInferredReturnType(Type type, VisitOnceVisitor visitor) {
 		returnType = type;
 		returnTypeIdentifier = ResolvableIdentifier.convert(type.getIdentifier());
 
 		ResolvableIdentifier retIdent = returnTypeIdentifier;
 		FunctionDeclaration applyMethod = wrapperClass.getMethods().get(0);
 
-		if (CoreClasses.voidType().equals(type)) {
+		if (type.isVoid()) {
 			returnTypeIdentifier = null;
 			retIdent = new ResolvableIdentifier("Tuple0");
 			applyMethod.setReturnTypeIdentifier(retIdent);
-			applyMethod.setReturnType(getScope().resolveType(retIdent));
+			Type tuple0Type = getScope().resolveType(retIdent, visitor);
+			applyMethod.setReturnType(tuple0Type);
 
 			splitReturnStatement(false);
 			applyMethod.splitReturnStatement(true);
@@ -374,7 +336,7 @@ public class FunctionDeclaration extends TypeDeclaration {
 		genericWrapper.getGenericTypes().add(retIdent);
 	}
 
-	protected void splitReturnStatement(boolean tupleInsteadOfVoid) {
+	protected ReturnStatement splitReturnStatement(boolean tupleInsteadOfVoid) {
 		ReturnStatement oldRet = (ReturnStatement) getBody().getStatements().get(getBody().getStatements().size() - 1);
 
 		// create a new return statement
@@ -406,6 +368,7 @@ public class FunctionDeclaration extends TypeDeclaration {
 			throw new RuntimeException("invalid AST!");
 		}
 		getBody().addStatement(newRet);
+		return newRet;
 	}
 
 	public String toString() {

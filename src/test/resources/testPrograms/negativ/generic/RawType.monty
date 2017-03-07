@@ -1,0 +1,5 @@
+class Tuple<Fst, Snd>:
+  pass
+
+Tuple()
+

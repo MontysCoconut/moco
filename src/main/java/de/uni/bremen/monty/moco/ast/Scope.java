@@ -39,15 +39,15 @@
 package de.uni.bremen.monty.moco.ast;
 
 import de.uni.bremen.monty.moco.ast.declaration.*;
+import de.uni.bremen.monty.moco.ast.types.*;
 import de.uni.bremen.monty.moco.exception.InvalidExpressionException;
 import de.uni.bremen.monty.moco.exception.RedeclarationException;
 import de.uni.bremen.monty.moco.exception.UnknownIdentifierException;
 import de.uni.bremen.monty.moco.exception.UnknownTypeException;
+import de.uni.bremen.monty.moco.visitor.VisitOnceVisitor;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.stream.Collectors;
 
 /** A scope in which an identifier is associated with a declaration.
  * <p>
@@ -103,15 +103,19 @@ public class Scope {
 	 *            the identifier to resolve
 	 * @return the declaration */
 	public Declaration resolve(ResolvableIdentifier identifier) {
+		return _resolve(identifier).orElseThrow(() -> new UnknownIdentifierException(identifier));
+	}
+
+	protected Optional<Declaration> _resolve(ResolvableIdentifier identifier) {
 		Declaration declaration = members.get(identifier);
 
 		if (declaration != null) {
-			return declaration;
+			return Optional.of(declaration);
 		}
 		if (functions.containsKey(identifier)) {
 			List<FunctionDeclaration> functionDeclarations = functions.get(identifier);
 			if (functionDeclarations.size() == 1) {
-				return functionDeclarations.get(0).getWrapperFunctionObjectDeclaration();
+				return Optional.ofNullable(functionDeclarations.get(0).getWrapperFunctionObjectDeclaration());
 			} else if (functionDeclarations.size() > 1) {
 				throw new InvalidExpressionException(null, "Accessing the identifier '" + identifier.getSymbol()
 				        + "' without a cast is ambiguous, since there are " + functionDeclarations.size()
@@ -119,10 +123,10 @@ public class Scope {
 			}
 		}
 		if (parent != null) {
-			return parent.resolve(identifier);
+			return parent._resolve(identifier);
 		}
 
-		throw new UnknownIdentifierException(identifier);
+		return Optional.empty();
 	}
 
 	/** Resolve an identifier for a type declaration.
@@ -130,16 +134,9 @@ public class Scope {
 	 * @param identifier
 	 *            the identifier to resolve
 	 * @return the declaration */
-	public TypeDeclaration resolveType(ResolvableIdentifier identifier) {
-		try {
-			Declaration declaration = resolve(identifier);
-			if (declaration instanceof TypeDeclaration) {
-				return resolveGenericClass((TypeDeclaration) declaration, identifier);
-			}
-			throw new UnknownTypeException(identifier);
-		} catch (UnknownIdentifierException e) {
-			throw new UnknownTypeException(identifier);
-		}
+	public Type resolveType(ResolvableIdentifier identifier, VisitOnceVisitor visitor) {
+		Optional<Type> maybeType = tryToResolveType(identifier, visitor);
+		return maybeType.map(t -> t.extend(getContext())).orElseThrow(() -> new UnknownTypeException(identifier));
 	}
 
 	/** Tries to resolve an identifier for a type declaration.
@@ -147,13 +144,22 @@ public class Scope {
 	 * @param identifier
 	 *            the identifier to resolve
 	 * @return the declaration or null */
-	public TypeDeclaration tryToResolveType(ResolvableIdentifier identifier) {
+	public Optional<Type> tryToResolveType(ResolvableIdentifier identifier, VisitOnceVisitor visitor) {
 		try {
-			return resolveType(identifier);
-		} catch (UnknownTypeException e) {
-			return null;
+			return _resolve(identifier).flatMap((declaration) -> {
+                if (declaration instanceof TypeDeclaration) {
+                    List<Type> resolvedGenericTypes = resolveGenericIdentifier(identifier, visitor);
+                    visitor.visitDoubleDispatched(declaration);
+                    if (declaration instanceof ClassDeclaration) {
+                        TypeContext context = TypeContext.from((ClassDeclaration) declaration, resolvedGenericTypes);
+                        return Optional.of(TypeFactory.from((ClassDeclaration) declaration, context));
+                    }
+					return Optional.of(new TypeVariable((TypeParameterDeclaration) declaration));
+                }
+                return Optional.empty();
+            });
 		} catch (InvalidExpressionException e) {
-			return null;
+			return Optional.empty();
 		}
 	}
 
@@ -162,25 +168,49 @@ public class Scope {
 	 * @param identifier
 	 *            the identifier to resolve
 	 * @return the list of function declarations */
-	public List<Declaration> resolveFunction(ResolvableIdentifier identifier) {
-		List<Declaration> result = new ArrayList<Declaration>();
+	public List<FunctionType> resolveFunction(ResolvableIdentifier identifier, VisitOnceVisitor visitor) {
+		return _resolveFunction(identifier, visitor).orElseThrow(() -> new UnknownIdentifierException(identifier));
+	}
 
+	public Optional<List<FunctionType>> _resolveFunction(ResolvableIdentifier identifier, VisitOnceVisitor visitor) {
+		List<FunctionType> result = new ArrayList<>();
 		if (functions.containsKey(identifier)) {
-			result.addAll(functions.get(identifier));
+			List<FunctionType> functionDeclarations = getResolvedFunctions(identifier, visitor);
+			result.addAll(functionDeclarations);
 		}
 		if (members.containsKey(identifier)) {
-			result.add(members.get(identifier));
-		}
-		if (parent != null) {
-			try {
-				result.addAll(parent.resolveFunction(identifier));
-			} catch (UnknownIdentifierException e) {
+			Declaration declaration = members.get(identifier);
+			if(isFunctionVariable(declaration)) {
+				result.add(TypeFactory.createFunction((VariableDeclaration) declaration));
 			}
 		}
-		if (result.isEmpty()) {
-			throw new UnknownIdentifierException(identifier);
+		if (parent != null) {
+			result.addAll(parent._resolveFunction(identifier, visitor).orElse(Collections.emptyList()));
 		}
-		return result;
+		if (result.isEmpty()) {
+			return Optional.empty();
+		}
+		return Optional.of(result);
+	}
+
+	public boolean isFunctionVariable(Declaration declaration) {
+		return declaration instanceof VariableDeclaration && ((VariableDeclaration) declaration).getType().isAssignableFrom(Types.functionType());
+	}
+
+	protected List<FunctionType> getResolvedFunctions(ResolvableIdentifier identifier, VisitOnceVisitor visitor) {
+		return functions.get(identifier).stream().map((declaration) -> {
+			visitor.visitDoubleDispatched(declaration);
+			return TypeFactory.from(declaration, TypeContext.EMPTY);
+		}).collect(Collectors.toList());
+	}
+
+	private List<Type> resolveGenericIdentifier(ResolvableIdentifier identifier, VisitOnceVisitor visitor) {
+		ArrayList<Type> genericIdentifier = new ArrayList<>();
+		for (ResolvableIdentifier resolvableIdentifier : identifier.getGenericTypes()) {
+			Type typeInfo = resolveType(resolvableIdentifier,visitor);
+			genericIdentifier.add(typeInfo);
+		}
+		return genericIdentifier;
 	}
 
 	/** Associate an identifier with a declaration.
@@ -228,29 +258,14 @@ public class Scope {
 	 *            the declaration
 	 * @throws RedeclarationException
 	 *             if this is invalid overloading */
-	public void define(Identifier identifier, FunctionDeclaration declaration) throws RedeclarationException {
+	private void define(Identifier identifier, FunctionDeclaration declaration) throws RedeclarationException {
 		if (!functions.containsKey(identifier)) {
 			functions.put(identifier, new ArrayList<FunctionDeclaration>());
 		}
 		functions.get(identifier).add(declaration);
 	}
 
-	private TypeDeclaration resolveGenericClass(TypeDeclaration originalType, ResolvableIdentifier genericIdentifier) {
-		List<ResolvableIdentifier> genericTypes = genericIdentifier.getGenericTypes();
-		if (!genericTypes.isEmpty() && originalType instanceof ClassDeclaration) {
-			ClassDeclaration originalClass = (ClassDeclaration) originalType;
-			ArrayList<ClassDeclaration> concreteGenerics = new ArrayList<>();
-			for (ResolvableIdentifier genericType : genericTypes) {
-				TypeDeclaration decl = resolveType(genericType);
-				decl = resolveGenericClass(decl, genericType);
-
-				if (decl instanceof AbstractGenericType) {
-					return originalType;
-				}
-				concreteGenerics.add((ClassDeclaration) decl);
-			}
-			return originalClass.getVariation(genericIdentifier, concreteGenerics);
-		}
-		return originalType;
+	public TypeContext getContext() {
+		return TypeContext.EMPTY;
 	}
 }

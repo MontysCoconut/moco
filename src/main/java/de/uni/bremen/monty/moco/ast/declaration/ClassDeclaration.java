@@ -38,10 +38,8 @@
  */
 package de.uni.bremen.monty.moco.ast.declaration;
 
-import de.uni.bremen.monty.moco.ast.Block;
-import de.uni.bremen.monty.moco.ast.Identifier;
-import de.uni.bremen.monty.moco.ast.Position;
-import de.uni.bremen.monty.moco.ast.ResolvableIdentifier;
+import de.uni.bremen.monty.moco.ast.*;
+import de.uni.bremen.monty.moco.ast.types.PartialAppliedTypeInfo;
 import de.uni.bremen.monty.moco.visitor.BaseVisitor;
 
 import java.util.ArrayList;
@@ -53,21 +51,21 @@ import java.util.List;
  * A ClassDeclaration has a list of superclasses and a list of nested declarations. It can be used as a type. */
 public class ClassDeclaration extends TypeDeclaration {
 
-	private final List<AbstractGenericType> abstractGenericTypes;
+	private final List<TypeParameterDeclaration> typeParameterDeclarations;
 
 	/** Identifier of superclasses. */
 	private final List<ResolvableIdentifier> superClassIdentifiers;
 
 	/** Superclasses. */
-	private final List<TypeDeclaration> superClassDeclarations = new ArrayList<>();
+	private final List<PartialAppliedTypeInfo> superClassDeclarations = new ArrayList<>();
+
+	private final boolean dummy;
 
 	/** The generated default initializer to be called from every user defined initializer. */
 	private FunctionDeclaration defaultInitializer;
 
 	/** Block with assignments **/
 	private Block block;
-
-	private final List<ClassDeclarationVariation> variations;
 
 	/** The virtal method table for this class */
 	private List<FunctionDeclaration> virtualMethodTable = new ArrayList<>();
@@ -77,7 +75,7 @@ public class ClassDeclaration extends TypeDeclaration {
 
 	/** The last index for the attributes of this class. This counter starts at `1` as index 0 is reserved for a pointer
 	 * to the vmt. */
-	private int lastAttributeIndex = 1;
+	private int lastAttributeIndex = -1;
 
 	private boolean abstractClass = false;
 
@@ -98,21 +96,31 @@ public class ClassDeclaration extends TypeDeclaration {
 		super(position, identifier);
 		this.block = block;
 		this.superClassIdentifiers = superClasses;
-		this.abstractGenericTypes = Collections.emptyList();
-		this.variations = Collections.emptyList();
+		this.typeParameterDeclarations = Collections.emptyList();
+		this.dummy = false;
+	}
+
+	public ClassDeclaration(Position position, Identifier identifier, List<ResolvableIdentifier> superClasses,
+							Block block, boolean dummy) {
+		super(position, identifier);
+		this.block = block;
+		this.superClassIdentifiers = superClasses;
+		this.typeParameterDeclarations = Collections.emptyList();
+		this.dummy = dummy;
 	}
 
 	public ClassDeclaration(Position position, Identifier identifier, List<ResolvableIdentifier> superClassIdentifiers,
-	        Block block, boolean isAbstract, List<AbstractGenericType> abstractGenericTypes) {
+	        Block block, boolean isAbstract, List<TypeParameterDeclaration> typeParameterDeclarations) {
 		super(position, identifier);
 		this.superClassIdentifiers = superClassIdentifiers;
 		this.block = block;
-		this.abstractGenericTypes = abstractGenericTypes;
-		this.variations = new ArrayList<>(abstractGenericTypes.size());
+		this.typeParameterDeclarations = typeParameterDeclarations;
 		this.abstractClass = isAbstract;
+		this.dummy = false;
 	}
 
 	/** Get the list of declarations and assignments.
+	 *
 	 *
 	 * @return the block with declarations and assignments */
 	public Block getBlock() {
@@ -134,20 +142,8 @@ public class ClassDeclaration extends TypeDeclaration {
 	/** Get the list of direct superclasses this class inherits from.
 	 *
 	 * @return the superclasses */
-	public List<TypeDeclaration> getSuperClassDeclarations() {
+	public List<PartialAppliedTypeInfo> getSuperClassDeclarations() {
 		return superClassDeclarations;
-	}
-
-	/** Get a list of all the declarations of superclasses and this one. */
-	public List<ClassDeclaration> getSuperClassDeclarationsRecursive() {
-		List<ClassDeclaration> allSuperClassDeclarations = new ArrayList<>();
-		for (TypeDeclaration superClass : superClassDeclarations) {
-			if (superClass instanceof ClassDeclaration) {
-				allSuperClassDeclarations.addAll(((ClassDeclaration) superClass).getSuperClassDeclarationsRecursive());
-			}
-		}
-		allSuperClassDeclarations.add(this);
-		return allSuperClassDeclarations;
 	}
 
 	/** set the last attribute index.
@@ -187,8 +183,8 @@ public class ClassDeclaration extends TypeDeclaration {
 		this.defaultInitializer = defaultInitializer;
 	}
 
-	public List<AbstractGenericType> getAbstractGenericTypes() {
-		return abstractGenericTypes;
+	public List<TypeParameterDeclaration> getTypeParameterDeclarations() {
+		return typeParameterDeclarations;
 	}
 
 	/** {@inheritDoc} */
@@ -200,47 +196,8 @@ public class ClassDeclaration extends TypeDeclaration {
 	/** {@inheritDoc} */
 	@Override
 	public void visitChildren(BaseVisitor visitor) {
-		for (AbstractGenericType abstractGenericType : abstractGenericTypes) {
-			visitor.visitDoubleDispatched(abstractGenericType);
-		}
-		for (ClassDeclarationVariation variation : variations) {
-			visitor.visitDoubleDispatched(variation);
-		}
+		typeParameterDeclarations.forEach(visitor::visitDoubleDispatched);
 		visitor.visitDoubleDispatched(block);
-	}
-
-	/** {@inheritDoc} */
-	@Override
-	public boolean matchesType(TypeDeclaration other) {
-		if (super.matchesType(other)) {
-			return true;
-		}
-		if (other instanceof ClassDeclaration) {
-			for (TypeDeclaration parentClass : superClassDeclarations) {
-				if (parentClass.matchesType(other)) {
-					return true;
-				}
-			}
-		}
-		return false;
-	}
-
-	public void addVariation(ClassDeclarationVariation variation) {
-		variations.add(variation);
-	}
-
-	public List<ClassDeclarationVariation> getVariations() {
-		return variations;
-	}
-
-	public TypeDeclaration getVariation(ResolvableIdentifier genericIdentifier,
-	        ArrayList<ClassDeclaration> concreteGenerics) {
-		for (ClassDeclarationVariation variation : getVariations()) {
-			if (variation.getConcreteGenericTypes().equals(concreteGenerics)) {
-				return variation;
-			}
-		}
-		return new ClassDeclarationVariation(this, genericIdentifier, concreteGenerics);
 	}
 
 	public List<FunctionDeclaration> getMethods() {
@@ -271,5 +228,24 @@ public class ClassDeclaration extends TypeDeclaration {
 
 	public void setGenerator(boolean gen) {
 		_isGenerator = gen;
+	}
+
+	public ClassScope getScope() {
+		return (ClassScope) super.getScope();
+	}
+
+	public String toString(){
+		Object abstractGenericTypes = getTypeParameterDeclarations().isEmpty() ? "" : getTypeParameterDeclarations();
+		String symbol;
+		if(isFunctionWrapper()) {
+			symbol = getWrappedFunction().getIdentifier().toString();
+		} else {
+			symbol = getIdentifier().getSymbol();
+		}
+		return symbol + abstractGenericTypes;
+	}
+
+	public boolean isDummy() {
+		return dummy;
 	}
 }

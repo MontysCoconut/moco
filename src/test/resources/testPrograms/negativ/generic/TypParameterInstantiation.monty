@@ -1,0 +1,3 @@
+class Wrapper<Tt>:
+  f():
+    Tt t := Tt()

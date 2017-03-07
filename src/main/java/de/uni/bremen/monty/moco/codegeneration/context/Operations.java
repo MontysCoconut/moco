@@ -39,8 +39,7 @@
 
 package de.uni.bremen.monty.moco.codegeneration.context;
 
-import de.uni.bremen.monty.moco.ast.CoreClasses;
-import de.uni.bremen.monty.moco.ast.declaration.TypeDeclaration;
+import de.uni.bremen.monty.moco.ast.types.Types;
 import de.uni.bremen.monty.moco.codegeneration.Native;
 import de.uni.bremen.monty.moco.codegeneration.CodeGenerator;
 import de.uni.bremen.monty.moco.codegeneration.context.CodeContext.FcmpOperand;
@@ -150,7 +149,7 @@ public class Operations {
 		return codeGenerator.boxType(
 		        c,
 		        (LLVMIdentifier<LLVMType>) (LLVMIdentifier<?>) resultPointer,
-		        CoreClasses.stringType());
+		        Types.stringType());
 	}
 
 	@Native("M.System.F.read$M.String.C.String$M.Int.C.Int")
@@ -164,7 +163,7 @@ public class Operations {
 		return codeGenerator.boxType(
 		        c,
 		        (LLVMIdentifier<LLVMType>) (LLVMIdentifier<?>) resultPointer,
-		        CoreClasses.stringType());
+				Types.stringType());
 	}
 
 	@Native("M.Object.C.Object.F._eq_$M.Bool.C.Bool$M.Object.C.Object")
@@ -355,7 +354,7 @@ public class Operations {
 
 		codeGenerator.checkArrayBounds(c, arrayStructPointer, index);
 		LLVMIdentifier<LLVMType> result =
-		        llvmIdentifierFactory.newLocal(codeGenerator.mapToLLVMType(CoreClasses.objectType()));
+		        llvmIdentifierFactory.newLocal(codeGenerator.mapToLLVMType(Types.objectType()));
 		c.getelementptr(
 		        result,
 		        arrayStructPointer,
@@ -374,7 +373,7 @@ public class Operations {
 
 		codeGenerator.checkArrayBounds(c, arrayStructPointer, index);
 
-		LLVMType elementType = codeGenerator.mapToLLVMType((TypeDeclaration) CoreClasses.objectType());
+		LLVMType elementType = codeGenerator.mapToLLVMType(Types.objectType());
 		LLVMIdentifier<LLVMPointer<LLVMType>> element = llvmIdentifierFactory.newLocal(pointer(elementType));
 
 		c.getelementptr(
