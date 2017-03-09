@@ -44,18 +44,11 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
-import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.PrintStream;
 import java.util.Arrays;
 import java.util.Collection;
 
-import static de.uni.bremen.monty.moco.IntegrationTestUtils.*;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.is;
-import static org.hamcrest.Matchers.isEmptyString;
 import static org.junit.runners.Parameterized.Parameters;
 
 @Ignore
@@ -75,25 +68,6 @@ public class CompileLatestTestProgramsTest extends CompileFilesBaseTest {
 
 	@Test
 	public void compileProgramTest() throws IOException, InterruptedException {
-		final PrintStream bufferOut = System.out;
-		final PrintStream bufferErr = System.err;
-		final ByteArrayOutputStream outStream = setStdout();
-		final ByteArrayOutputStream errorStream = setStdErr(file);
-
-		if (inputFileExists(file)) {
-			System.setProperty("testrun.readFromFile", changeFileExtension(file, ".input"));
-		}
-		Main.main(new String[] { "-e", file.getAbsolutePath() });
-
-		if (outputFileExists(file)) {
-			assertThat(getOutput(errorStream), is(isEmptyString()));
-			assertThat(getOutput(outStream), is(expectedResultFromFile(file)));
-		} else {
-			assertThat(getOutput(errorStream), is(expectedErrorFromFile(file)));
-			assertThat(getOutput(outStream), is(isEmptyString()));
-		}
-		System.clearProperty("testrun.readFromFile");
-		System.setOut(bufferOut);
-		System.setErr(bufferErr);
+		runTest();
 	}
 }

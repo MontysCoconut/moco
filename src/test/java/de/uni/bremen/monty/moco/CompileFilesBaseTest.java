@@ -38,16 +38,21 @@
  */
 package de.uni.bremen.monty.moco;
 
-import de.uni.bremen.monty.moco.util.MultiOutputStream;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang3.StringUtils;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.io.FilenameFilter;
-import java.net.URI;
+import java.io.IOException;
+import java.io.PrintStream;
 import java.net.URISyntaxException;
-
 import java.util.Arrays;
 import java.util.Collection;
+
+import static de.uni.bremen.monty.moco.IntegrationTestUtils.*;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.isEmptyString;
 
 public class CompileFilesBaseTest {
 	protected File file;
@@ -91,6 +96,30 @@ public class CompileFilesBaseTest {
 		}
 
 		return latestModifiedMontyProgram;
+	}
+
+	protected void runTest() throws IOException, InterruptedException {
+		final PrintStream bufferOut = System.out;
+		final PrintStream bufferErr = System.err;
+		final ByteArrayOutputStream outStream = setStdout();
+		final ByteArrayOutputStream errorStream = setStdErr(file);
+
+		if (inputFileExists(file)) {
+			System.setProperty("testrun.readFromFile", changeFileExtension(file, ".input"));
+		}
+		Main.main(new String[] { "-e", file.getAbsolutePath() });
+
+		if (outputFileExists(file)) {
+			assertThat(getOutput(errorStream), is(isEmptyString()));
+			assertThat(getOutput(outStream), is(expectedResultFromFile(file)));
+		} else {
+			// chop the last char to not contain /n in the string
+			assertThat(StringUtils.chop(getOutput(errorStream)), is(expectedErrorFromFile(file)));
+			assertThat(getOutput(outStream), is(isEmptyString()));
+		}
+		System.clearProperty("testrun.readFromFile");
+		System.setOut(bufferOut);
+		System.setErr(bufferErr);
 	}
 
 }

@@ -38,21 +38,14 @@
  */
 package de.uni.bremen.monty.moco;
 
-import static de.uni.bremen.monty.moco.IntegrationTestUtils.*;
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.PrintStream;
-import java.util.Collection;
-import org.apache.commons.lang3.StringUtils;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.is;
-import static org.hamcrest.Matchers.isEmptyString;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
+
+import java.io.File;
+import java.io.IOException;
+import java.util.Collection;
 
 @RunWith(Parameterized.class)
 public class CompileTestProgramsTest extends CompileFilesBaseTest {
@@ -70,27 +63,7 @@ public class CompileTestProgramsTest extends CompileFilesBaseTest {
 
 	@Test
 	public void compileProgramTest() throws IOException, InterruptedException {
-		final PrintStream bufferOut = System.out;
-		final PrintStream bufferErr = System.err;
-		final ByteArrayOutputStream outStream = setStdout();
-		final ByteArrayOutputStream errorStream = setStdErr(file);
-
-		if (inputFileExists(file)) {
-			System.setProperty("testrun.readFromFile", changeFileExtension(file, ".input"));
-		}
-		Main.main(new String[] { "-e", file.getAbsolutePath() });
-
-		if (outputFileExists(file)) {
-			assertThat(getOutput(errorStream), is(isEmptyString()));
-			assertThat(getOutput(outStream), is(expectedResultFromFile(file)));
-		} else {
-			// chop the last char to not contain /n in the string
-			assertThat(StringUtils.chop(getOutput(errorStream)), is(expectedErrorFromFile(file)));
-			assertThat(getOutput(outStream), is(isEmptyString()));
-		}
-		System.clearProperty("testrun.readFromFile");
-		System.setOut(bufferOut);
-		System.setErr(bufferErr);
+		runTest();
 	}
 
 }
