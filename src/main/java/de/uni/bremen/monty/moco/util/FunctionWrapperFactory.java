@@ -146,7 +146,7 @@ public class FunctionWrapperFactory {
 		// the return type of the method is either the return type of the original function,
 		// or empty tuple if it was a procedure.
 		ResolvableIdentifier returnTypeIdentifier =
-		        function.getReturnTypeIdentifier() != null ? function.getReturnTypeIdentifier() : tupleFactory.getTupleIdentifier(new ArrayList<ResolvableIdentifier>());
+		        function.isFunction() ? function.getReturnTypeIdentifier() : tupleFactory.getTupleIdentifier(new ArrayList<ResolvableIdentifier>());
 
 		// create a list containing the only parameter of the method
 		List<VariableDeclaration> methodParams = new ArrayList<>(1);

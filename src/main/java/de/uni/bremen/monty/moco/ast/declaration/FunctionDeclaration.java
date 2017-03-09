@@ -57,9 +57,9 @@ public class FunctionDeclaration extends TypeDeclaration {
 		INITIALIZER, DEFAULT_INITIALIZER, METHOD, UNBOUND
 	}
 
-	ClassDeclaration wrapperClass = null;
-	VariableDeclaration wrapperFunctionObjectDeclaration = null;
-	Assignment wrapperFunctionAssignment = null;
+	private ClassDeclaration wrapperClass = null;
+	private VariableDeclaration wrapperFunctionObjectDeclaration = null;
+	private Assignment wrapperFunctionAssignment = null;
 
 	/** The declarations and statements within this declaration. */
 	private final Block body;
@@ -118,7 +118,7 @@ public class FunctionDeclaration extends TypeDeclaration {
 
 	public FunctionDeclaration(Position position, Identifier identifier, Block body,
 	        List<VariableDeclaration> parameters) {
-		this(position, identifier, body, parameters, DeclarationType.UNBOUND, (ResolvableIdentifier) null);
+		this(position, identifier, body, parameters, DeclarationType.UNBOUND, null);
 		returnTypeMustBeInferred = true;
 	}
 
@@ -259,12 +259,13 @@ public class FunctionDeclaration extends TypeDeclaration {
 
 	/** @return true if the procedure has no return type */
 	public boolean isProcedure() {
-		return returnTypeIdentifier == null;
+		return returnTypeIdentifier == null
+		        || new ResolvableIdentifier(CoreClasses.VOID_SYMBOL).equals(returnTypeIdentifier);
 	}
 
 	/** @return true if the function has a return type */
 	public boolean isFunction() {
-		return returnTypeIdentifier != null;
+		return !isProcedure();
 	}
 
 	/** Check equality of two types taking into account the AST object hierachy.

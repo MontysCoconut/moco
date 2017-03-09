@@ -49,10 +49,12 @@ public class CoreClasses {
 
 	private static Map<String, ClassDeclaration> coreClasses = new HashMap<String, ClassDeclaration>();
 
+	public static final String VOID_SYMBOL = "__void";
+
 	static {
 		// TODO find name for void that is not a valid identifier
 		String[] classNames =
-		        new String[] { "Object", "Char", "String", "Int", "Float", "Bool", "Array", "__void", "Function" };
+		        new String[] { "Object", "Char", "String", "Int", "Float", "Bool", "Array", VOID_SYMBOL, "Function" };
 		for (String name : classNames) {
 			CoreClasses.setCoreClass(name, new ClassDeclaration(new Position("Dummy_" + name, 0, 0), new Identifier(
 			        name), Collections.<ResolvableIdentifier> emptyList(), new Block(
@@ -97,6 +99,6 @@ public class CoreClasses {
 	}
 
 	public static ClassDeclaration voidType() {
-		return coreClasses.get("__void");
+		return coreClasses.get(VOID_SYMBOL);
 	}
 }

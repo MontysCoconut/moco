@@ -230,7 +230,7 @@ public class ASTBuilder extends MontyBaseVisitor<ASTNode> {
 		return new WrappedFunctionCall(position(ctx.getStart()), func);
 	}
 
-	private void buildDefaultFunctions(boolean isFunction, List<DefaultParameterContext> defaultParameter,
+	private void buildDefaultFunctions(List<DefaultParameterContext> defaultParameter,
 	        List<VariableDeclaration> allVariableDeclarations, List<VariableDeclaration> params,
 	        List<Expression> defaultExpression, List<VariableDeclaration> defaultVariableDeclaration,
 	        Identifier identifier, Token token, TypeContext typeContext, DeclarationType declarationTypeCopy,
@@ -267,11 +267,9 @@ public class ASTBuilder extends MontyBaseVisitor<ASTNode> {
 				expression = new MemberAccess(position(token), new SelfExpression(position(token)), expression);
 			}
 
-			ResolvableIdentifier returnTypeIdent = null;
-			if (isFunction) {
+			ResolvableIdentifier returnTypeIdent = convertTypeContext(typeContext);
+			if (typeContext != null) {
 				block.addStatement(new ReturnStatement(new Position(), expression));
-				returnTypeIdent = convertResolvableIdentifier(typeContext);
-				tupleDeclarationFactory.checkTupleType(returnTypeIdent);
 			} else {
 				block.addStatement((Statement) expression);
 				block.addStatement(new ReturnStatement(new Position(), null));
@@ -286,8 +284,8 @@ public class ASTBuilder extends MontyBaseVisitor<ASTNode> {
 		}
 	}
 
-	private FunctionDeclaration buildFunctions(boolean isFunction, ParameterListContext parameterListContext,
-	        Token token, TypeContext typeContext, StatementBlockContext statementBlockContext, Identifier identifier,
+	private FunctionDeclaration buildFunctions(ParameterListContext parameterListContext, Token token,
+	        TypeContext typeContext, StatementBlockContext statementBlockContext, Identifier identifier,
 	        boolean isNative) {
 
 		FunctionDeclaration.DeclarationType declarationTypeCopy = currentFunctionContext;
@@ -306,7 +304,6 @@ public class ASTBuilder extends MontyBaseVisitor<ASTNode> {
 		allVariableDeclarations.addAll(defaultVariableDeclaration);
 
 		buildDefaultFunctions(
-		        isFunction,
 		        defaultParameter,
 		        allVariableDeclarations,
 		        params,
@@ -320,11 +317,8 @@ public class ASTBuilder extends MontyBaseVisitor<ASTNode> {
 
 		FunctionDeclaration funDecl;
 
-		ResolvableIdentifier returnTypeIdent = null;
-		if (isFunction) {
-			returnTypeIdent = convertResolvableIdentifier(typeContext);
-			tupleDeclarationFactory.checkTupleType(returnTypeIdent);
-		}
+		ResolvableIdentifier returnTypeIdent = convertTypeContext(typeContext);
+
 		funDecl =
 		        new FunctionDeclaration(position(token), identifier, (Block) visit(statementBlockContext),
 		                allVariableDeclarations, declarationTypeCopy, returnTypeIdent);
@@ -339,16 +333,23 @@ public class ASTBuilder extends MontyBaseVisitor<ASTNode> {
 		return funDecl;
 	}
 
-	private FunctionDeclaration buildAbstractMethod(boolean functionDeclaration,
-	        ParameterListContext parameterListContext, Token token, TypeContext typeContext, Identifier identifier) {
+	private ResolvableIdentifier convertTypeContext(TypeContext typeContext) {
+		ResolvableIdentifier returnTypeIdent;
+		if (typeContext != null) {
+			returnTypeIdent = convertResolvableIdentifier(typeContext);
+			tupleDeclarationFactory.checkTupleType(returnTypeIdent);
+		} else {
+			returnTypeIdent = new ResolvableIdentifier(CoreClasses.VOID_SYMBOL);
+		}
+		return returnTypeIdent;
+	}
+
+	private FunctionDeclaration buildAbstractMethod(ParameterListContext parameterListContext, Token token,
+	        TypeContext typeContext, Identifier identifier) {
 
 		List<VariableDeclaration> params = parameterListToVarDeclList(parameterListContext);
 
-		ResolvableIdentifier typeIdent = null;
-		if (typeContext != null) {
-			typeIdent = convertResolvableIdentifier(typeContext);
-			tupleDeclarationFactory.checkTupleType(typeIdent);
-		}
+		ResolvableIdentifier typeIdent = convertTypeContext(typeContext);
 
 		FunctionDeclaration procDecl =
 		        new FunctionDeclaration(position(token), identifier, new Block(position(token)), params,
@@ -361,14 +362,8 @@ public class ASTBuilder extends MontyBaseVisitor<ASTNode> {
 		currentGeneratorReturnType.push(null);
 		boolean isNativeFunction = ctx.nativeAnnotation() != null;
 		FunctionDeclaration proc =
-		        buildFunctions(
-		                ctx.type() != null,
-		                ctx.parameterList(),
-		                ctx.getStart(),
-		                ctx.type(),
-		                ctx.statementBlock(),
-		                new Identifier(getText(ctx.Identifier())),
-		                isNativeFunction);
+		        buildFunctions(ctx.parameterList(), ctx.getStart(), ctx.type(), ctx.statementBlock(), new Identifier(
+		                getText(ctx.Identifier())), isNativeFunction);
 		// if the function does not have any return type, we have to add a return statement
 		if (ctx.type() == null) {
 			List<Statement> list = proc.getBody().getStatements();
@@ -539,7 +534,6 @@ public class ASTBuilder extends MontyBaseVisitor<ASTNode> {
 	@Override
 	public ASTNode visitAbstractMethodDeclaration(AbstractMethodDeclarationContext ctx) {
 		return buildAbstractMethod(
-		        true,
 		        ctx.parameterList(),
 		        ctx.getStart(),
 		        ctx.type(),
