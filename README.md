@@ -18,13 +18,13 @@ Installing Dependencies
 Linux (Ubuntu)
 --------------
 
-Install [LLVM](http://llvm.org/) and a JRE 7.
+Install [LLVM](http://llvm.org/) and a JRE 8.
 
     sudo apt-get install llvm
     sudo apt-get install default-jre
 
 If you want to build `moco` yourself you'll need to install the following
-dependencies and a JDK 7.
+dependencies and a JDK 8.
 
     sudo apt-get install git
     sudo apt-get install maven
@@ -37,7 +37,7 @@ You can also install Graphviz to generate class diagrams. This is optional.
 Mac OS X
 --------
 
-> **Note:** Please make sure you have [homebrew](http://brew.sh/) and a JRE 7
+> **Note:** Please make sure you have [homebrew](http://brew.sh/) and a JRE 8
 installed.
 
 Install [LLVM](http://llvm.org/) using homebrew:
@@ -45,7 +45,7 @@ Install [LLVM](http://llvm.org/) using homebrew:
     brew install llvm
 
 If you want to build `moco` yourself you'll need to install the following
-dependencies and a JDK 7.
+dependencies and a JDK 8.
 
     brew install git
     brew install maven
@@ -64,7 +64,7 @@ Windows
 To use [LLVM](http://llvm.org/) you'll need to download and install the
 following executables. In addition you'll need to download and extract the
 `llvm-3.4-tools-windows.7z` archive into the `bin\` directory of your LLVM
-installation. To run the executable .jar file you'll also need a JRE 7.
+installation. To run the executable .jar file you'll also need a JRE 8.
 
 
 - http://www.microsoft.com/de-DE/download/details.aspx?id=40784 (the **x86 and
@@ -73,7 +73,7 @@ installation. To run the executable .jar file you'll also need a JRE 7.
 - https://github.com/CRogers/LLVM-Windows-Binaries/releases/download/v3.4/llvm-3.4-tools-windows.7z
 
 If you want to build `moco` yourself you'll need to install the following
-dependencies and a JDK 7. These examples use the
+dependencies and a JDK 8. These examples use the
 [chocolatey](https://chocolatey.org/) package manager.
 
     choco install maven
