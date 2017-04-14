@@ -4,5 +4,5 @@
 //
 // Expected error
 
-Array a := []
-print(a.get(0) as Int)
+Array<Object> a := []
+print(a.get(0))

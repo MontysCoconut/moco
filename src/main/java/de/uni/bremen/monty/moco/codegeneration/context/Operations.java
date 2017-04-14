@@ -332,7 +332,7 @@ public class Operations {
 		return c.binaryOperation("srem", arg1, arg2, llvmIdentifierFactory.newLocal(arg1.getType(), false));
 	}
 
-	@Native("M.Array.C.Array.F.length$M.Int.C.Int")
+	@Native("M.Array.C.NativeArray.F.length$M.Int.C.Int")
 	public LLVMIdentifier<LLVMType> arrayLength(CodeContext c, LLVMIdentifier<LLVMPointer> arrayPointer) {
 		LLVMIdentifier<LLVMPointer<LLVMStructType>> arrayStructPointer =
 		        (LLVMIdentifier<LLVMPointer<LLVMStructType>>) (LLVMIdentifier<?>) arrayPointer;
@@ -346,7 +346,7 @@ public class Operations {
 		return codeGenerator.resolveIfNeeded(c, result);
 	}
 
-	@Native("M.Array.C.Array.F.get$M.Object.C.Object$M.Int.C.Int")
+	@Native("M.Array.C.NativeArray.F.get$M.Object.C.Object$M.Int.C.Int")
 	public LLVMIdentifier<LLVMType> arrayAccess(CodeContext c, LLVMIdentifier<LLVMPointer> arrayPointer,
 	        LLVMIdentifier<LLVMInt> index) {
 		LLVMIdentifier<LLVMPointer<LLVMStructType>> arrayStructPointer =
@@ -364,7 +364,7 @@ public class Operations {
 		return result;
 	}
 
-	@Native("M.Array.C.Array.P.set$M.Int.C.Int$M.Object.C.Object")
+	@Native("M.Array.C.NativeArray.P.set$M.Int.C.Int$M.Object.C.Object")
 	public void arraySet(CodeContext c, LLVMIdentifier<LLVMPointer> arrayPointer, LLVMIdentifier<LLVMInt> index,
 	        LLVMIdentifier<LLVMType> value) {
 

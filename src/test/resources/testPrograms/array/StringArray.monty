@@ -1,0 +1,13 @@
+Array<String> hw := ["Hallo ", "World"]
+Array<String> em := Array<String>(["!"])
+
+println(hw.length())
+println(em.length())
+
+hw.set(1, "Welt")
+String world := hw.get(1)
+String e := em.get(0)
+
+print(hw.get(0))
+print(world)
+println(e)

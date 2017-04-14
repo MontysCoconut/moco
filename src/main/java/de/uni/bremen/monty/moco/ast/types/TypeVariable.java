@@ -39,6 +39,7 @@
 package de.uni.bremen.monty.moco.ast.types;
 
 import de.uni.bremen.monty.moco.ast.Identifier;
+import de.uni.bremen.monty.moco.ast.ResolvableIdentifier;
 import de.uni.bremen.monty.moco.ast.Scope;
 import de.uni.bremen.monty.moco.ast.declaration.TypeParameterDeclaration;
 import de.uni.bremen.monty.moco.ast.declaration.ClassDeclaration;
@@ -126,5 +127,9 @@ public class TypeVariable extends Type {
     @Override
     public String toString() {
         return declaration.getIdentifier().getSymbol();
+    }
+
+    public ResolvableIdentifier getResolvableIdentifier() {
+        return new ResolvableIdentifier(declaration.getIdentifier().getSymbol());
     }
 }

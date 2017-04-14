@@ -40,6 +40,7 @@ package de.uni.bremen.monty.moco.ast.types;
 
 import de.uni.bremen.monty.moco.ast.CoreClasses;
 import de.uni.bremen.monty.moco.ast.Identifier;
+import de.uni.bremen.monty.moco.ast.ResolvableIdentifier;
 import de.uni.bremen.monty.moco.ast.Scope;
 import de.uni.bremen.monty.moco.ast.declaration.ClassDeclaration;
 
@@ -118,4 +119,6 @@ public abstract class Type {
     public abstract boolean isTuple();
 
     public abstract boolean isFunction();
+
+    public abstract ResolvableIdentifier getResolvableIdentifier();
 }

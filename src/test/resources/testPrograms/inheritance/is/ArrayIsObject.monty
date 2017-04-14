@@ -6,7 +6,7 @@
 
 Object a := [42]
 
-if a is Array:
+if a is Array<Int>:
     print("Ok(Array)")
 else:
     print("Nope(Array)")

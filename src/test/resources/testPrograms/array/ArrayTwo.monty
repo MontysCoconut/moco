@@ -4,10 +4,10 @@
 //
 // Expected output: 011011
 
-Array a := [0, 1]
-print(a.get(0) as Int)
-print(a.get(1) as Int)
+Array<Int> a := [0, 1]
+print(a.get(0))
+print(a.get(1))
 a.set(0, 10)
 a.set(1, 11)
-print(a.get(0) as Int)
-print(a.get(1) as Int)
+print(a.get(0))
+print(a.get(1))

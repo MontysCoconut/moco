@@ -4,7 +4,7 @@
 //
 // Expected output: 010
 
-Array a := [0]
-print(a.get(0) as Int)
+Array<Int> a := [0]
+print(a.get(0))
 a.set(0, 10)
-print(a.get(0) as Int)
+print(a.get(0))

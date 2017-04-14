@@ -60,7 +60,7 @@ public class CoreClasses {
 		coreClasses = new HashMap<>();
 		// TODO find name for void that is not a valid identifier
 		String[] classNames =
-		        new String[] { "Object", "Char", "String", "Int", "Float", "Bool", "Array", VOID_SYMBOL, "Function" };
+		        new String[] { "Object", "Char", "String", "Int", "Float", "Bool", "NativeArray", VOID_SYMBOL, "Function" };
 		for (String name : classNames) {
 			CoreClasses.setCoreClass(name, new ClassDeclaration(new Position("Dummy_" + name, 0, 0), new Identifier(
 			        name), Collections.emptyList(), new Block(
@@ -97,7 +97,7 @@ public class CoreClasses {
 	}
 
 	public static ClassDeclaration arrayType() {
-		return coreClasses.get("Array");
+		return coreClasses.get("NativeArray");
 	}
 
 	public static ClassDeclaration functionType() {

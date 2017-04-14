@@ -40,12 +40,14 @@ package de.uni.bremen.monty.moco.ast.types;
 
 import de.uni.bremen.monty.moco.ast.ClassScope;
 import de.uni.bremen.monty.moco.ast.Identifier;
+import de.uni.bremen.monty.moco.ast.ResolvableIdentifier;
 import de.uni.bremen.monty.moco.ast.declaration.ClassDeclaration;
 import de.uni.bremen.monty.moco.ast.declaration.FunctionDeclaration;
 import de.uni.bremen.monty.moco.visitor.VisitOnceVisitor;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class PartialAppliedTypeInfo extends Type {
 
@@ -210,5 +212,9 @@ public class PartialAppliedTypeInfo extends Type {
 
     public void visit(VisitOnceVisitor visitor) {
         visitor.visitDoubleDispatched(declaration);
+    }
+
+    public ResolvableIdentifier getResolvableIdentifier() {
+        return new ResolvableIdentifier(declaration.getIdentifier().getSymbol(), partialAppliedTypes.stream().map(r -> r.getResolvableIdentifier()).collect(Collectors.toList()));
     }
 }

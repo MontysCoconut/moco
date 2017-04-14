@@ -918,7 +918,9 @@ public class ASTBuilder extends MontyBaseVisitor<ASTNode> {
 			for (ExpressionContext eContext : ctx.arrayLiteral().expression()) {
 				elements.add((Expression) visit(eContext));
 			}
-			return new ArrayLiteral(position(ctx.getStart()), elements);
+			ArrayLiteral arrayLiteral = new ArrayLiteral(position(ctx.getStart()), elements);
+			ResolvableIdentifier top = new ResolvableIdentifier("Object"); //This should be infered or the Bottom Type
+			return new FunctionCall(position(ctx.getStart()), new ResolvableIdentifier("Array", Arrays.asList(top)), Arrays.asList(arrayLiteral));
 		} else if (ctx.rangeLiteral() != null) {
 			ArrayList<Expression> parameters = new ArrayList<>();
 			for (ExpressionContext eContext : ctx.rangeLiteral().expression()) {

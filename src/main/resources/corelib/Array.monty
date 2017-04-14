@@ -1,12 +1,30 @@
-@native class Array:
-    + @native initializer(Array a):
-        pass
+@native class NativeArray:
+  + @native initializer(NativeArray a):
+    pass
 
-    + @native Int length():
-        pass
+  + @native Int length():
+    pass
 
-    + @native Object get(Int index):
-        pass
+  + @native Object get(Int index):
+    pass
 
-    + @native set(Int index, Object element):
-        pass
+  + @native set(Int index, Object element):
+    pass
+
+class Array<Type>:
+  - NativeArray underlying
+
+  + initializer(Array<Type> copy):
+    self.underlying := copy.underlying
+
+  + initializer(NativeArray underlying):
+    self.underlying := underlying
+
+  + Int length():
+    return self.underlying.length()
+
+  + Type get(Int index):
+    return self.underlying.get(index) as Type
+
+  + set(Int index, Type element):
+    self.underlying.set(index,element)

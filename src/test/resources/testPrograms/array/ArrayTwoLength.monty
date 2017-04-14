@@ -4,5 +4,5 @@
 //
 // Expected output: 2
 
-Array a := [0, 1]
+Array<Int> a := [0, 1]
 print(a.length())

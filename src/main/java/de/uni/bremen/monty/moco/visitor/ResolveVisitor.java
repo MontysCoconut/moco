@@ -55,6 +55,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import java.util.Arrays;
 
 /** This visitor must traverse the entire AST and resolve variables and types. */
 public class ResolveVisitor extends VisitOnceVisitor {
@@ -318,8 +319,27 @@ public class ResolveVisitor extends VisitOnceVisitor {
 	/** {@inheritDoc} */
 	@Override
 	public void visit(ArrayLiteral node) {
-		node.setType(Types.arrayType());
 		super.visit(node);
+		Type genericType;
+		if(node.getEntries().isEmpty()){
+			Type arrayType = Types.objectType(); //Should be the Bottom type
+			genericType = arrayType;
+		} else {
+			Type firstType = node.getEntries().get(0).getType();
+			for (Expression expression : node.getEntries()) {
+				if (!expression.getType().matchesTypeExactly(firstType)) {
+					throw new RuntimeException("All Types of an Array must be the same");
+				}
+			}
+			genericType = firstType;
+		}
+		ResolvableIdentifier genericTypeIdentifier = ((ConcreteType)genericType).getResolvableIdentifier();
+		ConcreteType arrayType = (ConcreteType) node.getScope().resolveType(new ResolvableIdentifier("Array", Arrays.asList(genericTypeIdentifier)), this);
+		FunctionCall parentNode = (FunctionCall) node.getParentNode();
+		parentNode.setType(arrayType);
+		parentNode.getIdentifier().getGenericTypes().set(0,genericTypeIdentifier);
+		node.setType(Types.arrayType());
+
 	}
 
 	/** {@inheritDoc} */
@@ -388,7 +408,9 @@ public class ResolveVisitor extends VisitOnceVisitor {
 				throw new InvalidExpressionException(node, "The abstract class '" + identifier.toString()
 				        + "' must not be instantiated");
 			}
-			node.setType(classDecl);
+			if(node.getType() == null) {
+				node.setType(classDecl);
+			}
 			FunctionType initializer = findMatchingInitializer(node, classDecl);
 			initializer = (initializer != null) ? initializer : classDecl.getDefaultInitializer();
 			node.setDeclaration(initializer);
