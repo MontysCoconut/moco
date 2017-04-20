@@ -61,28 +61,7 @@ You can also install Graphviz to generate class diagrams. This is optional.
 Windows
 -------
 
-To use [LLVM](http://llvm.org/) you'll need to download and install the
-following executables. In addition you'll need to download and extract the
-`llvm-3.4-tools-windows.7z` archive into the `bin\` directory of your LLVM
-installation. To run the executable .jar file you'll also need a JRE 8.
-
-
-- http://www.microsoft.com/de-DE/download/details.aspx?id=40784 (the **x86 and
-  the x64** version)
-- http://llvm.org/releases/3.4/LLVM-3.4-win32.exe
-- https://github.com/CRogers/LLVM-Windows-Binaries/releases/download/v3.4/llvm-3.4-tools-windows.7z
-
-If you want to build `moco` yourself you'll need to install the following
-dependencies and a JDK 8. These examples use the
-[chocolatey](https://chocolatey.org/) package manager.
-
-    choco install maven
-    choco install java.jdk
-    choco install git.commandline
-
-You can also install Graphviz to generate class diagrams. This is optional.
-
-    choco install graphviz
+Currently Windows is not supported.
 
 Building
 ========
