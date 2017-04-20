@@ -205,7 +205,7 @@ public class Main {
 		return outputFile;
 	}
 
-	private static void runExecutable(File executable) throws IOException, InterruptedException {
+	private static int runExecutable(File executable) throws IOException, InterruptedException {
 		ProcessBuilder processBuilder = new ProcessBuilder(executable.getAbsolutePath());
 
 		String readFromFile = System.getProperty("testrun.readFromFile");
@@ -215,15 +215,22 @@ public class Main {
 			processBuilder.redirectInput(ProcessBuilder.Redirect.INHERIT);
 		}
 		Process process = processBuilder.start();
+		int statusCode = process.waitFor();
 		System.err.print(IOUtils.toString(process.getErrorStream()));
 		System.out.print(IOUtils.toString(process.getInputStream()));
+		return statusCode;
 	}
 
-	public static void main(String[] args) throws IOException, InterruptedException {
+    public static void main(String[] args) throws IOException, InterruptedException {
+        int statusCode = mainWithStatusCode(args);
+        System.exit(statusCode);
+    }
+
+	public static int mainWithStatusCode(String[] args) throws IOException, InterruptedException {
 		Namespace ns = parseArgs(args);
 
 		if (ns == null) {
-			return;
+			return 1;
 		}
 
 		String inputFileName = ns.get("file");
@@ -236,7 +243,7 @@ public class Main {
 
 		if (debugParseTree) {
 			debugParseTree(inputFileName);
-			return;
+			return 0;
 		}
 
 		StringWriter writer = new StringWriter();
@@ -245,7 +252,7 @@ public class Main {
 		Package ast = buildPackage(inputFileName);
 
 		if (!visitVisitors(ast, stopOnFirstError, writer.getBuffer())) {
-			return;
+			return 1;
 		}
 
 		if (printAST) {
@@ -254,12 +261,13 @@ public class Main {
 
 		if (emitAssembly) {
 			writeAssembly(outputFileName, inputFileName, writer.toString());
-			return;
+			return 0;
 		}
 
 		File executable = buildExecutable(outputFileName, inputFileName, compileOnly, writer.toString());
 		if (!compileOnly) {
-			runExecutable(executable);
+			return runExecutable(executable);
 		}
+		return 0;
 	}
 }

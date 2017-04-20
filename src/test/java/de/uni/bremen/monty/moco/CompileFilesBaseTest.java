@@ -107,10 +107,11 @@ public class CompileFilesBaseTest {
 		if (inputFileExists(file)) {
 			System.setProperty("testrun.readFromFile", changeFileExtension(file, ".input"));
 		}
-		Main.main(new String[] { "-e", file.getAbsolutePath() });
+		int statusCode = Main.mainWithStatusCode(new String[]{"-e", "-S", file.getAbsolutePath()});
 
 		if (outputFileExists(file)) {
 			assertThat(getOutput(errorStream), is(isEmptyString()));
+			assertThat(statusCode, is(0));
 			assertThat(getOutput(outStream), is(expectedResultFromFile(file)));
 		} else {
 			// chop the last char to not contain /n in the string
