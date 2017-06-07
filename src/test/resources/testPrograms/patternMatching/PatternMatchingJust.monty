@@ -1,0 +1,13 @@
+printMaybe(Maybe<String> m):
+  case m of:
+      Just<String>(String value):
+          println(value)
+      Nothing<String>():
+          println("empty")
+
+String decompose(Just<String> l):
+    return (l.getValue())
+
+printMaybe(Nothing<String>())
+printMaybe(Just<String>("Hello"))
+printMaybe(Just<String>("World"))

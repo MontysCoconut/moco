@@ -99,6 +99,7 @@ public class ResolvableIdentifier extends Identifier {
 			for (ResolvableIdentifier generic : getGenericTypes()) {
 				generics += generic != null ? generic.toString() + ", " : "?, ";
 			}
+			generics = generics.substring(0, generics.length()-2);
 			generics += ">";
 		}
 		return getSymbol() + generics;

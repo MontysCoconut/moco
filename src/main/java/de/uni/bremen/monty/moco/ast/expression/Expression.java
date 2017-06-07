@@ -39,7 +39,7 @@
 package de.uni.bremen.monty.moco.ast.expression;
 
 import de.uni.bremen.monty.moco.ast.*;
-import de.uni.bremen.monty.moco.ast.declaration.TypeDeclaration;
+import de.uni.bremen.monty.moco.ast.types.Type;
 
 /** The base class for every expression.
  * <p>
@@ -47,7 +47,7 @@ import de.uni.bremen.monty.moco.ast.declaration.TypeDeclaration;
 public abstract class Expression extends BasicASTNode {
 
 	/** The type. */
-	private TypeDeclaration type;
+	private Type type;
 
 	/** Constructor.
 	 *
@@ -61,14 +61,14 @@ public abstract class Expression extends BasicASTNode {
 	 *
 	 * @param type
 	 *            the new type */
-	public void setType(TypeDeclaration type) {
+	public void setType(Type type) {
 		this.type = type;
 	}
 
 	/** Get the type.
 	 *
 	 * @return the type */
-	public TypeDeclaration getType() {
+	public Type getType() {
 		return type;
 	}
 }

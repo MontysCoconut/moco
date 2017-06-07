@@ -1,0 +1,4 @@
+Int a := 5
+Bool b := a
+
+println(b)

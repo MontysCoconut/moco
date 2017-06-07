@@ -1,0 +1,7 @@
+class SayHello:
+  sayHello():
+    println("Hello")
+
+case class Wrapper<Tt inherits SayHello>(Tt t)
+
+Wrapper<Int>(3).t.sayHello()

@@ -71,13 +71,22 @@ public class BaseVisitor {
 			onEnterEachNode(node);
 			node.visit(this);
 			onExitEachNode(node);
-		} catch (RuntimeException exception) {
-			errorCounter += 1;
-			if (stopOnFirstError) {
-				throw exception;
-			} else {
-				logError(exception);
+		} catch (MontyBaseException e) {
+			if (e.getNode() == null) {
+				e.setNode(node);
 			}
+			handleError(e);
+		} catch (RuntimeException exception) {
+			handleError(exception);
+		}
+	}
+
+	private void handleError(RuntimeException exception) {
+		errorCounter += 1;
+		if (stopOnFirstError) {
+			throw exception;
+		} else {
+			logError(exception);
 		}
 	}
 
@@ -88,10 +97,14 @@ public class BaseVisitor {
 	public String getNodeInformation(ASTNode node) {
 		if (node == null) {
 			return "null";
-		} else if (node.getPosition() != null) {
-			return String.format("%s at %s", node.toString(), node.getPosition().toString());
 		}
-		return node.toString();
+		String nodeS = node.toString();
+		String nodeClass = node.getClass().getSimpleName();
+		String nodeString = nodeS.equals(nodeClass) ? nodeClass : nodeS + ":" + nodeClass;
+		if (node.getPosition() != null) {
+			return String.format("%s at %s", nodeString, node.getPosition().toString());
+		}
+		return nodeString;
 	}
 
 	/** Log an exception.
@@ -139,11 +152,11 @@ public class BaseVisitor {
 		onExitChildrenEachNode(node);
 	}
 
-	/** Visitor method to visit a AbstractGenericType.
+	/** Visitor method to visit a TypeParameterDeclaration.
 	 *
 	 * @param node
 	 *            the node to visit */
-	public void visit(AbstractGenericType node) {
+	public void visit(TypeParameterDeclaration node) {
 		onEnterChildrenEachNode(node);
 		node.visitChildren(this);
 		onExitChildrenEachNode(node);

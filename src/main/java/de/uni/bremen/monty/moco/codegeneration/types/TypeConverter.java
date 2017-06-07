@@ -39,8 +39,8 @@
 
 package de.uni.bremen.monty.moco.codegeneration.types;
 
-import de.uni.bremen.monty.moco.ast.CoreClasses;
 import de.uni.bremen.monty.moco.ast.declaration.*;
+import de.uni.bremen.monty.moco.ast.types.*;
 import de.uni.bremen.monty.moco.codegeneration.NameMangler;
 import de.uni.bremen.monty.moco.codegeneration.context.CodeContext;
 import de.uni.bremen.monty.moco.codegeneration.context.CodeContext.Linkage;
@@ -52,11 +52,10 @@ import java.util.*;
 import static de.uni.bremen.monty.moco.codegeneration.types.LLVMTypeFactory.*;
 
 public class TypeConverter {
-	private Map<TypeDeclaration, LLVMType> typeMap = new HashMap<>();
+	private Map<ConcreteType, LLVMType> typeMap = new HashMap<>();
 	private LLVMIdentifierFactory llvmIdentifierFactory;
 	private CodeContext constantContext;
 	private NameMangler nameMangler;
-	private Stack<ClassDeclarationVariation> currentClassDeclVar = new Stack<>();
 
 	public TypeConverter(LLVMIdentifierFactory llvmIdentifierFactory, CodeContext constantContext,
 	        NameMangler nameMangler) {
@@ -67,15 +66,15 @@ public class TypeConverter {
 	}
 
 	private void initPreDefinedTypes() {
-		typeMap.put(CoreClasses.voidType(), voidType());
+		typeMap.put(Types.voidType(), voidType());
 	}
 
-	private LLVMPointer<LLVMFunctionType> convertType(FunctionDeclaration type) {
+	private LLVMPointer<LLVMFunctionType> convertType(ConcreteFunctionType type) {
 		List<LLVMType> parameter = new ArrayList<>();
 		if (type.getDeclarationType().equals(FunctionDeclaration.DeclarationType.METHOD)) {
-			parameter.add(mapToLLVMType(mapAbstractGenericToConcreteIfApplicable(type.getDefiningClass())));
+			parameter.add(mapToLLVMType(type.getDefiningClass()));
 		}
-		for (VariableDeclaration varDecl : type.getParameters()) {
+		for (ConcreteVariableType varDecl : type.getParameter()) {
 			parameter.add(mapToLLVMType(varDecl.getType()));
 		}
 		if (type.isFunction()) {
@@ -84,26 +83,12 @@ public class TypeConverter {
 		return pointer(function(voidType(), parameter));
 	}
 
-	private LLVMPointer<LLVMStructType> convertType(ClassDeclaration type) {
-		return pointer(struct(nameMangler.mangleClass(type)));
+	private <T extends LLVMType> T convertType(ConcreteType type) {
+		return (T)pointer(struct(nameMangler.mangleClass(type)));
 	}
 
-	private <T extends LLVMType> T convertType(TypeDeclaration type) {
-		if (type instanceof FunctionDeclaration) {
-			LLVMPointer<LLVMFunctionType> llvmFunctionTypeLLVMPointer = convertType((FunctionDeclaration) type);
-			return (T) llvmFunctionTypeLLVMPointer;
-		}
-		return (T) convertType((ClassDeclaration) type);
-	}
-
-	private void addType(TypeDeclaration typeDecl) {
-		if (typeDecl instanceof ClassDeclaration) {
-			addClass((ClassDeclaration) typeDecl);
-		}
-	}
-
-	private void addClass(ClassDeclaration classDecl) {
-		String mangledNodeName = nameMangler.mangleClass(classDecl);
+	private void addType(ConcreteType concreteType) {
+		String mangledNodeName = nameMangler.mangleClass(concreteType);
 		LLVMStructType llvmClassType = struct(mangledNodeName);
 		List<LLVMType> llvmClassTypeDeclarations = new ArrayList<>();
 
@@ -112,72 +97,72 @@ public class TypeConverter {
 		llvmClassTypeDeclarations.add(pointer(llvmVMTType));
 
 		LLVMIdentifier<LLVMType> llvmVMTDataIdentifier =
-		        llvmIdentifierFactory.newGlobal(mangledNodeName + "_vmt_data", (LLVMType) llvmVMTType);
+		        llvmIdentifierFactory.newGlobal(mangledNodeName + "_vmt_data", llvmVMTType);
 		List<LLVMIdentifier<LLVMType>> llvmVMTDataInitializer = new ArrayList<>();
 
-		List<ClassDeclaration> recursiveSuperClassDeclarations = classDecl.getSuperClassDeclarationsRecursive();
+		List<ConcreteType> recursiveSuperClassDeclarations = concreteType.getSuperClassDeclarationsRecursive();
 		LLVMArrayType llvmCTDataType = array(pointer(int8()), recursiveSuperClassDeclarations.size() + 1);
 		LLVMIdentifier<LLVMType> llvmCTDataIdentifier =
-		        llvmIdentifierFactory.newGlobal(mangledNodeName + "_ct_data", (LLVMType) llvmCTDataType);
+		        llvmIdentifierFactory.newGlobal(mangledNodeName + "_ct_data", llvmCTDataType);
 		List<LLVMIdentifier<LLVMType>> llvmCTDataInitializer = new ArrayList<>();
 
 		llvmVMTTypeDeclarations.add(pointer(llvmCTDataType));
 		llvmVMTDataInitializer.add((LLVMIdentifier<LLVMType>) (LLVMIdentifier<?>) llvmIdentifierFactory.pointerTo(llvmCTDataIdentifier));
 
-		for (ClassDeclaration classDeclaration : recursiveSuperClassDeclarations) {
+		for (ConcreteType classDeclaration : recursiveSuperClassDeclarations) {
 			// Ensure that addType() was called for this classDeclaration so that a VMT/CT was generated.
 			mapToLLVMType(classDeclaration);
 			String mangledClass = nameMangler.mangleClass(classDeclaration);
 			LLVMIdentifier<LLVMType> vmtDataIdent =
-			        llvmIdentifierFactory.newGlobal(mangledClass + "_vmt_data", (LLVMType) pointer(struct(mangledClass
+			        llvmIdentifierFactory.newGlobal(mangledClass + "_vmt_data", pointer(struct(mangledClass
 			                + "_vmt_type")));
 			llvmCTDataInitializer.add(llvmIdentifierFactory.bitcast(vmtDataIdent, pointer(int8())));
 		}
 		llvmCTDataInitializer.add((LLVMIdentifier<LLVMType>) (LLVMIdentifier<?>) llvmIdentifierFactory.constantNull(pointer(int8())));
 
-		if (classDecl == CoreClasses.intType()) {
+		if (concreteType.equals(Types.intType())) {
 			llvmClassTypeDeclarations.add(LLVMTypeFactory.int64());
-		} else if (classDecl == CoreClasses.boolType()) {
+		} else if (concreteType.equals(Types.boolType())) {
 			llvmClassTypeDeclarations.add(LLVMTypeFactory.int1());
-		} else if (classDecl == CoreClasses.floatType()) {
+		} else if (concreteType.equals(Types.floatType())) {
 			llvmClassTypeDeclarations.add(LLVMTypeFactory.double64());
-		} else if (classDecl == CoreClasses.charType()) {
+		} else if (concreteType.equals(Types.charType())) {
 			llvmClassTypeDeclarations.add(LLVMTypeFactory.int8());
-		} else if (classDecl == CoreClasses.stringType()) {
+		} else if (concreteType.equals(Types.stringType())) {
 			llvmClassTypeDeclarations.add(LLVMTypeFactory.pointer(LLVMTypeFactory.int8()));
-		} else if (classDecl == CoreClasses.arrayType()) {
-			LLVMType llvmType = mapToLLVMType((TypeDeclaration) CoreClasses.objectType());
+		} else if (concreteType.equals(Types.arrayType())) {
+			LLVMType llvmType = mapToLLVMType(Types.objectType());
 			LLVMType array = struct(Arrays.asList(LLVMTypeFactory.int64(), LLVMTypeFactory.array(llvmType, 0)));
 			llvmClassTypeDeclarations.add(LLVMTypeFactory.pointer(array));
 		}
 
-		for (ClassDeclaration classDeclaration : recursiveSuperClassDeclarations) {
-			for (Declaration decl : classDeclaration.getBlock().getDeclarations()) {
-				if (decl instanceof VariableDeclaration) {
-					llvmClassTypeDeclarations.add(mapToLLVMType(((VariableDeclaration) decl).getType()));
-				}
+		for (ConcreteType classDeclaration : recursiveSuperClassDeclarations) {
+			for (ConcreteVariableType decl : classDeclaration.getVariables()) {
+				llvmClassTypeDeclarations.add(mapToLLVMType(decl.getType()));
 			}
 		}
 
 		// generator functions
-		if (classDecl.isGenerator()) {
+		if (concreteType.isGenerator()) {
 			// create the structure
-			LLVMType contextStruct = addGeneratorContext(classDecl, mangledNodeName);
+			LLVMType contextStruct = addGeneratorContext(concreteType, mangledNodeName);
 			// add context struct as the last index to the class declaration
 			llvmClassTypeDeclarations.add(contextStruct);
 		}
 
 		// closures
-		FunctionDeclaration wrappedFunction = classDecl.getWrappedFunction();
-		if ((wrappedFunction != null) && (wrappedFunction.isClosure())) {
-			// create the structure
-			LLVMType closureContextStruct =
-			        addClosureContext(classDecl, wrappedFunction.getClosureVariables(), mangledNodeName);
-			// add context struct as the last index to the class declaration
-			llvmClassTypeDeclarations.add(closureContextStruct);
+		if (concreteType.hasWrappedFunction()) {
+			ConcreteFunctionType wrappedFunction = concreteType.getWrappedFunction();
+			if (wrappedFunction.isClosure()) {
+                // create the structure
+                LLVMType closureContextStruct =
+                        addClosureContext(concreteType, wrappedFunction.getClosureVariables(), mangledNodeName);
+                // add context struct as the last index to the class declaration
+                llvmClassTypeDeclarations.add(closureContextStruct);
+            }
 		}
 
-		for (FunctionDeclaration function : classDecl.getVirtualMethodTable()) {
+		for (ConcreteFunctionType function : concreteType.getVirtualMethods()) {
 			if (!function.isInitializer()) {
 				LLVMType signature = mapToLLVMType(function);
 				llvmVMTTypeDeclarations.add(signature);
@@ -200,8 +185,8 @@ public class TypeConverter {
 		        llvmIdentifierFactory.constant(llvmVMTType, llvmVMTDataInitializer));
 	}
 
-	protected LLVMType addClosureContext(ClassDeclaration classDecl, Collection<VariableDeclaration> variables,
-	        String mangledNodeName) {
+	protected LLVMType addClosureContext(ConcreteType classDecl, Collection<ConcreteVariableType> variables,
+										 String mangledNodeName) {
 		// declaration types inside the struct
 		List<LLVMType> llvmStructTypeDeclarations = new ArrayList<>();
 
@@ -209,7 +194,7 @@ public class TypeConverter {
 		llvmStructTypeDeclarations.add(LLVMTypeFactory.pointer(LLVMTypeFactory.int8()));
 		// add the variable declarations inside the generator to the struct
 		int attributeIndex = 1;
-		for (VariableDeclaration decl : variables) {
+		for (ConcreteVariableType decl : variables) {
 			llvmStructTypeDeclarations.add(mapToLLVMType(decl.getType()));
 			decl.setAttributeIndex(attributeIndex);
 			attributeIndex += 1;
@@ -221,11 +206,12 @@ public class TypeConverter {
 		return llvmStructType;
 	}
 
-	protected LLVMType addGeneratorContext(ClassDeclaration classDecl, String mangledNodeName) {
-		GeneratorFunctionDeclaration inFunction = null;
-		for (FunctionDeclaration fun : classDecl.getMethods()) {
+	protected LLVMType addGeneratorContext(ConcreteType classDecl, String mangledNodeName) {
+		ConcreteGeneratorFunctionType inFunction = null;
+
+		for (ConcreteFunctionType fun : classDecl.getMethods()) {
 			if (fun.getIdentifier().getSymbol().equals("getNext")) {
-				inFunction = (GeneratorFunctionDeclaration) fun;
+				inFunction = (ConcreteGeneratorFunctionType) fun;
 				break;
 			}
 		}
@@ -236,7 +222,7 @@ public class TypeConverter {
 		// add state i8 pointer to context structure
 		llvmStructTypeDeclarations.add(LLVMTypeFactory.pointer(LLVMTypeFactory.int8()));
 		// add the variable declarations inside the generator to the struct
-		for (VariableDeclaration decl : inFunction.getVariableDeclarations()) {
+		for (ConcreteVariableType decl : inFunction.getVariableDeclarations()) {
 			llvmStructTypeDeclarations.add(mapToLLVMType(decl.getType()));
 		}
 
@@ -246,22 +232,11 @@ public class TypeConverter {
 		return llvmStructType;
 	}
 
-	public LLVMPointer<LLVMStructType> mapToLLVMType(ClassDeclaration type) {
-		return (LLVMPointer<LLVMStructType>) mapToLLVMType((TypeDeclaration) type);
+	public LLVMPointer<LLVMFunctionType> mapToLLVMType(ConcreteFunctionType type) {
+		return convertType(type);
 	}
 
-	public LLVMPointer<LLVMFunctionType> mapToLLVMType(FunctionDeclaration type) {
-		return (LLVMPointer<LLVMFunctionType>) mapToLLVMType((TypeDeclaration) type);
-	}
-
-	public <T extends LLVMType> T mapToLLVMType(TypeDeclaration type) {
-		if (type instanceof AbstractGenericType) {
-			ClassDeclaration concreteType =
-			        getCurrentClassDeclarationVariation().mapAbstractToConcrete((AbstractGenericType) type);
-			T t = (T) mapToLLVMType(concreteType);
-			return t;
-		}
-
+	public <T extends LLVMType> T mapToLLVMType(ConcreteType type) {
 		T llvmType = (T) typeMap.get(type);
 		if (llvmType == null) {
 			llvmType = convertType(type);
@@ -269,29 +244,5 @@ public class TypeConverter {
 			addType(type);
 		}
 		return llvmType;
-	}
-
-	public void pushClassDeclarationVariation(ClassDeclarationVariation var) {
-		currentClassDeclVar.push(var);
-	}
-
-	public ClassDeclarationVariation getCurrentClassDeclarationVariation() {
-		if (currentClassDeclVar.isEmpty()) {
-			return null;
-		}
-		return currentClassDeclVar.peek();
-	}
-
-	public void popClassDeclarationVariation() {
-		if (!currentClassDeclVar.isEmpty()) {
-			currentClassDeclVar.pop();
-		}
-	}
-
-	public TypeDeclaration mapAbstractGenericToConcreteIfApplicable(ClassDeclaration type) {
-		if ((type.getAbstractGenericTypes().isEmpty()) || (type instanceof ClassDeclarationVariation)) {
-			return type;
-		}
-		return getCurrentClassDeclarationVariation().mapAbstractGenericToConcrete(type);
 	}
 }

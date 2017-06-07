@@ -59,11 +59,7 @@ public class TupleLiteral extends FunctionCall {
 
 	public void setConcreteTupleType() {
 		for (Expression entry : arguments) {
-			if (entry.getType() instanceof ClassDeclaration) {
-				getIdentifier().getGenericTypes().add(ResolvableIdentifier.convert(entry.getType().getIdentifier()));
-			} else {
-				throw new RuntimeException("TYPE:: " + entry.getType());
-			}
+			getIdentifier().getGenericTypes().add(ResolvableIdentifier.convert(entry.getType().getIdentifier()));
 		}
 	}
 }

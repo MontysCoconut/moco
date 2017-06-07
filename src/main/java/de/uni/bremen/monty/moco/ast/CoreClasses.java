@@ -47,16 +47,24 @@ import java.util.Collections;
 
 public class CoreClasses {
 
-	private static Map<String, ClassDeclaration> coreClasses = new HashMap<String, ClassDeclaration>();
+	public static final String OBJECT_SYMBOL = "Object";
+	public static final String VOID_SYMBOL = "__void";
+
+	private static Map<String, ClassDeclaration> coreClasses;
 
 	static {
+		reset();
+	}
+
+	public static void reset() {
+		coreClasses = new HashMap<>();
 		// TODO find name for void that is not a valid identifier
 		String[] classNames =
-		        new String[] { "Object", "Char", "String", "Int", "Float", "Bool", "Array", "__void", "Function" };
+		        new String[] { "Object", "Char", "String", "Int", "Float", "Bool", "NativeArray", VOID_SYMBOL, "Function" };
 		for (String name : classNames) {
 			CoreClasses.setCoreClass(name, new ClassDeclaration(new Position("Dummy_" + name, 0, 0), new Identifier(
-			        name), Collections.<ResolvableIdentifier> emptyList(), new Block(
-			        new Position("Dummy_" + name, 1, 0))));
+			        name), Collections.emptyList(), new Block(
+			        new Position("Dummy_" + name, 1, 0)), true));
 		}
 	}
 
@@ -65,7 +73,7 @@ public class CoreClasses {
 	}
 
 	public static ClassDeclaration objectType() {
-		return coreClasses.get("Object");
+		return coreClasses.get(OBJECT_SYMBOL);
 	}
 
 	public static ClassDeclaration charType() {
@@ -89,7 +97,7 @@ public class CoreClasses {
 	}
 
 	public static ClassDeclaration arrayType() {
-		return coreClasses.get("Array");
+		return coreClasses.get("NativeArray");
 	}
 
 	public static ClassDeclaration functionType() {
@@ -97,6 +105,6 @@ public class CoreClasses {
 	}
 
 	public static ClassDeclaration voidType() {
-		return coreClasses.get("__void");
+		return coreClasses.get(VOID_SYMBOL);
 	}
 }

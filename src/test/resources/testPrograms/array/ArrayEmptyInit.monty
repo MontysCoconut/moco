@@ -4,4 +4,4 @@
 //
 // Expected output:
 
-Array a := []
+Array<Object> a := []

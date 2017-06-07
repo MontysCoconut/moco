@@ -39,10 +39,10 @@
 package de.uni.bremen.monty.moco.codegeneration;
 
 import de.uni.bremen.monty.moco.ast.ASTNode;
-import de.uni.bremen.monty.moco.ast.CoreClasses;
 import de.uni.bremen.monty.moco.ast.declaration.*;
 import de.uni.bremen.monty.moco.ast.expression.VariableAccess;
 import de.uni.bremen.monty.moco.ast.expression.literal.StringLiteral;
+import de.uni.bremen.monty.moco.ast.types.*;
 import de.uni.bremen.monty.moco.codegeneration.context.CodeContext;
 import de.uni.bremen.monty.moco.codegeneration.context.CodeContext.LLVMFunctionAttribute;
 import de.uni.bremen.monty.moco.codegeneration.context.CodeContext.Linkage;
@@ -53,7 +53,6 @@ import de.uni.bremen.monty.moco.codegeneration.identifier.LLVMIdentifierFactory;
 import de.uni.bremen.monty.moco.codegeneration.types.*;
 import de.uni.bremen.monty.moco.codegeneration.voodoo.BlackMagic;
 
-import java.lang.reflect.Type;
 import java.util.*;
 
 import static de.uni.bremen.monty.moco.codegeneration.types.LLVMTypeFactory.*;
@@ -126,7 +125,7 @@ public class CodeGenerator {
 	}
 
 	private List<LLVMIdentifier<? extends LLVMType>> resolveArgumentsIfNeeded(CodeContext c,
-	        List<LLVMIdentifier<?>> arguments, List<TypeDeclaration> parameters) {
+	        List<LLVMIdentifier<?>> arguments, List<ConcreteType> parameters) {
 		List<LLVMIdentifier<? extends LLVMType>> resolvedArguments = new ArrayList<>(arguments.size());
 		for (int i = 0; i < arguments.size(); i++) {
 			LLVMIdentifier<LLVMType> resolvedArgument = resolveIfNeeded(c, (LLVMIdentifier<LLVMType>) arguments.get(i));
@@ -140,18 +139,18 @@ public class CodeGenerator {
 	        List<LLVMIdentifier<?>> arguments) {
 		List<LLVMIdentifier<? extends LLVMType>> unboxedArguments = new ArrayList<>(arguments.size());
 		for (LLVMIdentifier<?> llvmIdentifier : arguments) {
-			if (llvmIdentifier.getType().equals(mapToLLVMType(CoreClasses.intType()))) {
+			if (llvmIdentifier.getType().equals(mapToLLVMType(Types.intType()))) {
 				unboxedArguments.add(unboxType(c, (LLVMIdentifier<LLVMType>) llvmIdentifier, int64()));
-			} else if (llvmIdentifier.getType().equals(mapToLLVMType(CoreClasses.boolType()))) {
+			} else if (llvmIdentifier.getType().equals(mapToLLVMType(Types.boolType()))) {
 				unboxedArguments.add(unboxType(c, (LLVMIdentifier<LLVMType>) llvmIdentifier, int1()));
-			} else if (llvmIdentifier.getType().equals(mapToLLVMType(CoreClasses.floatType()))) {
+			} else if (llvmIdentifier.getType().equals(mapToLLVMType(Types.floatType()))) {
 				unboxedArguments.add(unboxType(c, (LLVMIdentifier<LLVMType>) llvmIdentifier, double64()));
-			} else if (llvmIdentifier.getType().equals(mapToLLVMType(CoreClasses.charType()))) {
+			} else if (llvmIdentifier.getType().equals(mapToLLVMType(Types.charType()))) {
 				unboxedArguments.add(unboxType(c, (LLVMIdentifier<LLVMType>) llvmIdentifier, int8()));
-			} else if (llvmIdentifier.getType().equals(mapToLLVMType(CoreClasses.stringType()))) {
+			} else if (llvmIdentifier.getType().equals(mapToLLVMType(Types.stringType()))) {
 				unboxedArguments.add(unboxType(c, (LLVMIdentifier<LLVMType>) llvmIdentifier, pointer(int8())));
-			} else if (llvmIdentifier.getType().equals(mapToLLVMType(CoreClasses.arrayType()))) {
-				LLVMType llvmType = mapToLLVMType((TypeDeclaration) CoreClasses.objectType());
+			} else if (llvmIdentifier.getType().equals(mapToLLVMType(Types.arrayType()))) {
+				LLVMType llvmType = mapToLLVMType(Types.objectType());
 				LLVMType array = pointer(struct(Arrays.asList(int64(), array(llvmType, 0))));
 				unboxedArguments.add(unboxType(c, (LLVMIdentifier<LLVMType>) llvmIdentifier, array));
 			} else {
@@ -173,7 +172,7 @@ public class CodeGenerator {
 	}
 
 	private LLVMIdentifier<LLVMPointer<LLVMType>> getVMTPointer(CodeContext c,
-	        LLVMIdentifier<LLVMPointer<LLVMType>> selfReference, ClassDeclaration classDeclaration) {
+	        LLVMIdentifier<LLVMPointer<LLVMType>> selfReference, ConcreteType classDeclaration) {
 		String s = nameMangler.mangleClass(classDeclaration);
 		LLVMPointer<LLVMType> vmtType = pointer((LLVMType) struct(s + "_vmt_type"));
 		LLVMIdentifier<LLVMPointer<LLVMType>> vmtPointer = llvmIdentifierFactory.newLocal(vmtType, true);
@@ -186,15 +185,15 @@ public class CodeGenerator {
 	}
 
 	private LLVMIdentifier<LLVMPointer<LLVMFunctionType>> getFunctionPointer(CodeContext c,
-	        LLVMIdentifier<LLVMPointer<LLVMType>> selfReference, FunctionDeclaration declaration) {
+	        LLVMIdentifier<LLVMPointer<LLVMType>> selfReference, ConcreteFunctionType declaration) {
 		LLVMIdentifier<LLVMPointer<LLVMType>> vmtPointer =
 		        getVMTPointer(
 		                c,
 		                selfReference,
-		                (ClassDeclaration) mapAbstractGenericToConcreteIfApplicable(declaration.getDefiningClass()));
+		                declaration.getDefiningClass());
 
-		LLVMPointer<LLVMFunctionType> functionType = mapToLLVMType(declaration);
-		LLVMIdentifier<LLVMPointer<LLVMFunctionType>> functionPointer = llvmIdentifierFactory.newLocal(functionType);
+		LLVMPointer<LLVMFunctionType> ConcreteFunctionType = mapToLLVMType(declaration);
+		LLVMIdentifier<LLVMPointer<LLVMFunctionType>> functionPointer = llvmIdentifierFactory.newLocal(ConcreteFunctionType);
 		c.getelementptr(
 		        functionPointer,
 		        resolveIfNeeded(c, vmtPointer),
@@ -203,7 +202,7 @@ public class CodeGenerator {
 		return functionPointer;
 	}
 
-	public void buildConstructor(CodeContext c, ClassDeclaration classDeclaration) {
+	public void buildConstructor(CodeContext c, ConcreteType classDeclaration) {
 		List<LLVMIdentifier<? extends LLVMType>> llvmParameter = new ArrayList<>();
 		String mangledClass = nameMangler.mangleClass(classDeclaration);
 		String constructorName = mangledClass + "_constructor";
@@ -222,7 +221,7 @@ public class CodeGenerator {
 		returnValue(c, (LLVMIdentifier) selfReference, classDeclaration);
 	}
 
-	public LLVMIdentifier<LLVMType> callConstructor(CodeContext c, ClassDeclaration classDeclaration) {
+	public LLVMIdentifier<LLVMType> callConstructor(CodeContext c, ConcreteType classDeclaration) {
 		LLVMIdentifier<LLVMType> result = llvmIdentifierFactory.newLocal(mapToLLVMType(classDeclaration), false);
 		LLVMIdentifier<LLVMType> signature =
 		        llvmIdentifierFactory.newGlobal(
@@ -251,14 +250,14 @@ public class CodeGenerator {
 		return node2label.get(node);
 	}
 
-	public LLVMIdentifier<LLVMType> declareGlobalVariable(CodeContext c, String name, TypeDeclaration type) {
+	public LLVMIdentifier<LLVMType> declareGlobalVariable(CodeContext c, String name, ConcreteType type) {
 		LLVMType llvmType = mapToLLVMType(type);
 		LLVMIdentifier<LLVMType> variable = llvmIdentifierFactory.newGlobal(name, llvmType);
 		c.global(Linkage.priv, variable, false);
 		return variable;
 	}
 
-	public LLVMIdentifier<LLVMType> declareLocalVariable(CodeContext c, String name, TypeDeclaration type) {
+	public LLVMIdentifier<LLVMType> declareLocalVariable(CodeContext c, String name, ConcreteType type) {
 		LLVMType llvmType = mapToLLVMType(type);
 
 		LLVMIdentifier<LLVMType> variable = llvmIdentifierFactory.newLocal(name, llvmType, true);
@@ -266,13 +265,13 @@ public class CodeGenerator {
 		return variable;
 	}
 
-	public <T extends LLVMType> LLVMIdentifier<T> resolveLocalVarName(String name, TypeDeclaration type,
+	public <T extends LLVMType> LLVMIdentifier<T> resolveLocalVarName(String name, ConcreteType type,
 	        boolean resolvable) {
 		T llvmType = mapToLLVMType(type);
 		return llvmIdentifierFactory.newLocal(name, llvmType, resolvable);
 	}
 
-	public <T extends LLVMType> LLVMIdentifier<T> resolveGlobalVarName(String name, TypeDeclaration type) {
+	public <T extends LLVMType> LLVMIdentifier<T> resolveGlobalVarName(String name, ConcreteType type) {
 		T llvmType = mapToLLVMType(type);
 		return llvmIdentifierFactory.newGlobal(name, llvmType);
 	}
@@ -289,7 +288,7 @@ public class CodeGenerator {
 		active.label("entry");
 	}
 
-	public void addFunction(CodeContext c, TypeDeclaration returnType,
+	public void addFunction(CodeContext c, ConcreteType returnType,
 	        List<LLVMIdentifier<? extends LLVMType>> llvmParameter, String name) {
 		LLVMType llvmReturnType = mapToLLVMType(returnType);
 		c.define(
@@ -298,7 +297,7 @@ public class CodeGenerator {
 		c.label("entry");
 	}
 
-	public void addNativeFunction(CodeContext c, TypeDeclaration returnType,
+	public void addNativeFunction(CodeContext c, ConcreteType returnType,
 	        List<LLVMIdentifier<? extends LLVMType>> llvmParameter, String name) {
 		addFunction(c, returnType, llvmParameter, name);
 
@@ -316,7 +315,7 @@ public class CodeGenerator {
 			returnValue(
 			        c,
 			        (LLVMIdentifier<LLVMType>) (LLVMIdentifier<?>) llvmIdentifierFactory.voidId(),
-			        CoreClasses.voidType());
+			        Types.voidType());
 		}
 	}
 
@@ -324,7 +323,7 @@ public class CodeGenerator {
 		c.ret(llvmIdentifierFactory.constant(int32(), 0));
 	}
 
-	public void returnValue(CodeContext c, LLVMIdentifier<LLVMType> returnValue, TypeDeclaration expectedType) {
+	public void returnValue(CodeContext c, LLVMIdentifier<LLVMType> returnValue, ConcreteType expectedType) {
 		LLVMIdentifier<LLVMType> resolved = resolveIfNeeded(c, returnValue);
 		LLVMIdentifier<LLVMType> casted = castIfNeeded(c, resolved, mapToLLVMType(expectedType));
 		c.ret(casted);
@@ -387,7 +386,7 @@ public class CodeGenerator {
 	}
 
 	public LLVMIdentifier<LLVMType> accessMember(CodeContext c, LLVMIdentifier<LLVMPointer<LLVMType>> pointer,
-	        int attributeOffset, TypeDeclaration type, boolean load) {
+												 int attributeOffset, ConcreteType type, boolean load) {
 
 		LLVMIdentifier<LLVMType> result = llvmIdentifierFactory.newLocal(mapToLLVMType(type), load);
 		c.getelementptr(
@@ -398,8 +397,8 @@ public class CodeGenerator {
 		return result;
 	}
 
-	public LLVMIdentifier<LLVMType> accessClosureContextMember(CodeContext c, ClassDeclaration closureClass,
-	        VariableDeclaration varDecl, VariableAccess varAccess, TypeDeclaration variableType,
+	public LLVMIdentifier<LLVMType> accessClosureContextMember(CodeContext c, ConcreteType closureClass,
+	        VariableDeclaration varDecl, VariableAccess varAccess, ConcreteType variableType,
 	        LLVMIdentifier<LLVMPointer<LLVMType>> context) {
 
 		LLVMType contextType = LLVMTypeFactory.struct(nameMangler.mangleClass(closureClass) + "_closure_context");
@@ -415,15 +414,15 @@ public class CodeGenerator {
 		return result;
 	}
 
-	public LLVMIdentifier<LLVMType> accessClosureContextMember(CodeContext c, ClassDeclaration closureClass,
-	        VariableDeclaration varDecl, VariableAccess varAccess, TypeDeclaration variableType) {
+	public LLVMIdentifier<LLVMType> accessClosureContextMember(CodeContext c, ConcreteType closureClass,
+	        VariableDeclaration varDecl, VariableAccess varAccess, ConcreteType variableType) {
 
 		LLVMIdentifier<LLVMPointer<LLVMType>> self = resolveLocalVarName("..ctx..", closureClass, false);
 		return accessClosureContextMember(c, closureClass, varDecl, varAccess, variableType, self);
 	}
 
-	public LLVMIdentifier<LLVMType> accessContextMember(CodeContext c, ClassDeclaration generatorClass,
-	        VariableDeclaration varDecl, VariableAccess varAccess, TypeDeclaration variableType) {
+	public LLVMIdentifier<LLVMType> accessContextMember(CodeContext c, ConcreteType generatorClass,
+	        VariableDeclaration varDecl, VariableAccess varAccess, ConcreteType variableType) {
 
 		LLVMType contextType = LLVMTypeFactory.struct(nameMangler.mangleClass(generatorClass) + "_context");
 
@@ -446,8 +445,8 @@ public class CodeGenerator {
 	}
 
 	public LLVMIdentifier<LLVMType> accessGeneratorJumpPointer(CodeContext c,
-	        LLVMIdentifier<LLVMPointer<LLVMType>> pointer, ClassDeclaration generatorClass, int attributeOffset,
-	        boolean load) {
+															   LLVMIdentifier<LLVMPointer<LLVMType>> pointer, ConcreteType generatorClass, int attributeOffset,
+															   boolean load) {
 
 		LLVMType contextType = LLVMTypeFactory.struct(nameMangler.mangleClass(generatorClass) + "_context");
 		LLVMType jumpPrtType = LLVMTypeFactory.pointer(LLVMTypeFactory.int8());
@@ -464,13 +463,22 @@ public class CodeGenerator {
 		return pointervar;
 	}
 
-	public <T extends LLVMType> T mapToLLVMType(TypeDeclaration type) {
+	public <T extends LLVMType> T mapToLLVMType(ConcreteVariableType type) {
+		return typeConverter.mapToLLVMType(type.getType());
+	}
+
+
+	public LLVMPointer<LLVMFunctionType> mapToLLVMType(ConcreteFunctionType type) {
+		return typeConverter.mapToLLVMType(type);
+	}
+
+	public <T extends LLVMType> T mapToLLVMType(ConcreteType type) {
 		return typeConverter.mapToLLVMType(type);
 	}
 
 	public LLVMIdentifier<LLVMPointer<LLVMType>> castClass(CodeContext c,
-	        LLVMIdentifier<LLVMPointer<LLVMType>> pointer, ClassDeclaration sourceType, ClassDeclaration resultType,
-	        String labelPrefix) {
+														   LLVMIdentifier<LLVMPointer<LLVMType>> pointer, ConcreteType sourceType, ConcreteType resultType,
+														   String labelPrefix) {
 
 		String successLabel = labelPrefix + ".success";
 		String failureLabel = labelPrefix + ".failure";
@@ -487,14 +495,14 @@ public class CodeGenerator {
 	}
 
 	public LLVMIdentifier<LLVMPointer<LLVMType>> castClassUnchecked(CodeContext c,
-	        LLVMIdentifier<LLVMPointer<LLVMType>> pointer, ClassDeclaration sourceType, ClassDeclaration resultType) {
+	        LLVMIdentifier<LLVMPointer<LLVMType>> pointer, ConcreteType resultType) {
 
 		pointer = resolveIfNeeded(c, pointer);
-		return castIfNeeded(c, pointer, (LLVMPointer<LLVMType>) mapToLLVMType(resultType));
+		return castIfNeeded(c, pointer, mapToLLVMType(resultType));
 	}
 
 	public LLVMIdentifier<LLVMBool> isClass(CodeContext c, LLVMIdentifier<LLVMPointer<LLVMType>> pointer,
-	        ClassDeclaration sourceType, ClassDeclaration resultType) {
+											ConcreteType sourceType, ConcreteType resultType) {
 
 		pointer = resolveIfNeeded(c, pointer);
 		LLVMIdentifier<LLVMPointer<LLVMType>> vmt = getVMTPointer(c, pointer, sourceType);
@@ -534,8 +542,8 @@ public class CodeGenerator {
 		c.callVoid((LLVMIdentifier<LLVMType>) (LLVMIdentifier<?>) boundsCheckSignature, array, index);
 	}
 
-	public LLVMIdentifier<?> call(CodeContext c, String functionName, TypeDeclaration returnType,
-	        List<LLVMIdentifier<?>> arguments, List<TypeDeclaration> parameters) {
+	public LLVMIdentifier<?> call(CodeContext c, String functionName, ConcreteType returnType,
+	        List<LLVMIdentifier<?>> arguments, List<ConcreteType> parameters) {
 		LLVMType llvmReturnType = mapToLLVMType(returnType);
 		LLVMIdentifier<LLVMType> functionSignature = llvmIdentifierFactory.newGlobal(functionName, llvmReturnType);
 		List<LLVMIdentifier<? extends LLVMType>> resolvedArguments = resolveArgumentsIfNeeded(c, arguments, parameters);
@@ -546,25 +554,25 @@ public class CodeGenerator {
 	}
 
 	public void callVoid(CodeContext c, String functionName, List<LLVMIdentifier<?>> arguments,
-	        List<TypeDeclaration> parameters) {
+	        List<ConcreteType> parameters) {
 		List<LLVMIdentifier<?>> resolvedArguments = resolveArgumentsIfNeeded(c, arguments, parameters);
 		c.callVoid(llvmIdentifierFactory.newGlobal(functionName, (LLVMType) voidType()), resolvedArguments);
 	}
 
-	public LLVMIdentifier<?> callMethod(CodeContext c, FunctionDeclaration declaration,
-	        List<LLVMIdentifier<?>> arguments, List<TypeDeclaration> parameters) {
+	public LLVMIdentifier<?> callMethod(CodeContext c, ConcreteFunctionType declaration,
+	        List<LLVMIdentifier<?>> arguments, List<ConcreteType> parameters) {
 		List<LLVMIdentifier<? extends LLVMType>> resolvedArguments = resolveArgumentsIfNeeded(c, arguments, parameters);
 
 		LLVMIdentifier<LLVMPointer<LLVMFunctionType>> functionPointer =
 		        getFunctionPointer(c, (LLVMIdentifier<LLVMPointer<LLVMType>>) resolvedArguments.get(0), declaration);
 		return c.call(
 		        (LLVMIdentifier) resolveIfNeeded(c, functionPointer),
-		        llvmIdentifierFactory.newLocal(mapToLLVMType(declaration.getReturnType()), false),
+		        llvmIdentifierFactory.newLocal(mapToLLVMType((ConcreteType) declaration.getReturnType()), false),
 		        resolvedArguments);
 	}
 
-	public void callVoidMethod(CodeContext c, FunctionDeclaration declaration, List<LLVMIdentifier<?>> arguments,
-	        List<TypeDeclaration> parameters) {
+	public void callVoidMethod(CodeContext c, ConcreteFunctionType declaration, List<LLVMIdentifier<?>> arguments,
+							   List<ConcreteType> parameters) {
 		List<LLVMIdentifier<?>> resolvedArguments = resolveArgumentsIfNeeded(c, arguments, parameters);
 
 		LLVMIdentifier<LLVMPointer<LLVMFunctionType>> functionPointer =
@@ -598,7 +606,7 @@ public class CodeGenerator {
 
 	public LLVMIdentifier<LLVMPointer<LLVMStructType>> buildArray(CodeContext c, List<LLVMIdentifier<?>> elements) {
 
-		LLVMType elementType = mapToLLVMType((TypeDeclaration) CoreClasses.objectType());
+		LLVMType elementType = mapToLLVMType(Types.objectType());
 		LLVMType lengthFieldType = int64();
 		LLVMArrayType rawArrayType = array(elementType, 0);
 		LLVMStructType arrayStructType = struct(Arrays.asList(lengthFieldType, rawArrayType));
@@ -635,9 +643,9 @@ public class CodeGenerator {
 		return arrayPointerVar;
 	}
 
-	public LLVMIdentifier<LLVMType> boxType(CodeContext c, LLVMIdentifier<LLVMType> toBox, TypeDeclaration type) {
+	public LLVMIdentifier<LLVMType> boxType(CodeContext c, LLVMIdentifier<LLVMType> toBox, ConcreteType type) {
 
-		LLVMIdentifier<LLVMType> boxedValue = callConstructor(c, (ClassDeclaration) type);
+		LLVMIdentifier<LLVMType> boxedValue = callConstructor(c, type);
 		LLVMIdentifier<LLVMType> boxedValueField = llvmIdentifierFactory.newLocal(toBox.getType());
 		c.getelementptr(
 		        boxedValueField,
@@ -663,21 +671,5 @@ public class CodeGenerator {
 
 		c.load(sourcePointer, targetPointer);
 		return targetPointer;
-	}
-
-	public void pushClassDeclarationVariation(ClassDeclarationVariation var) {
-		typeConverter.pushClassDeclarationVariation(var);
-	}
-
-	public ClassDeclarationVariation getCurrentClassDeclarationVariation() {
-		return typeConverter.getCurrentClassDeclarationVariation();
-	}
-
-	public void popClassDeclarationVariation() {
-		typeConverter.popClassDeclarationVariation();
-	}
-
-	public TypeDeclaration mapAbstractGenericToConcreteIfApplicable(ClassDeclaration classDecl) {
-		return typeConverter.mapAbstractGenericToConcreteIfApplicable(classDecl);
 	}
 }

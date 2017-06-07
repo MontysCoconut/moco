@@ -1,0 +1,13 @@
+abstract class Writeable:
+  + abstract write()
+
+case class StringWriter(String s) inherits Writeable:
+  + write():
+    println(self.s)
+
+case class Writers<Wr inherits Writeable>(Wr w):
+  + write():
+    self.w.write()
+
+StringWriter("Hallo").write()
+Writers<StringWriter>(StringWriter("World!")).write()

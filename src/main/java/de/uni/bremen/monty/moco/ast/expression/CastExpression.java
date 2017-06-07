@@ -39,7 +39,9 @@
 package de.uni.bremen.monty.moco.ast.expression;
 
 import de.uni.bremen.monty.moco.ast.*;
+import de.uni.bremen.monty.moco.ast.types.Type;
 import de.uni.bremen.monty.moco.visitor.BaseVisitor;
+import de.uni.bremen.monty.moco.visitor.ResolveVisitor;
 
 public class CastExpression extends Expression {
 
@@ -93,31 +95,18 @@ public class CastExpression extends Expression {
 		return expression;
 	}
 
-	public boolean typeParameterMustBeInferred() {
-		return inferTypeParameterFrom != null;
-	}
-
-	public void inferTypeParameter() {
-		if (inferTypeParameterFrom.getType().getIdentifier() instanceof ResolvableIdentifier) {
-			ResolvableIdentifier otherIdent = (ResolvableIdentifier) inferTypeParameterFrom.getType().getIdentifier();
-			int max = Math.min(otherIdent.getGenericTypes().size(), castIdentifier.getGenericTypes().size());
-			for (int i = 0; i < max; i++) {
-				castIdentifier.getGenericTypes().set(i, otherIdent.getGenericTypes().get(i));
-			}
-		}
+	public Type inferType(ResolveVisitor visitor) {
+		if (inferTypeParameterFrom != null) {
+			Scope inferScope = inferTypeParameterFrom.getType().getScope();
+			return inferScope.resolveType(castIdentifier, visitor);
+		} else if(inferTypeFrom != null) {
+			visitor.visitDoubleDispatched(inferTypeFrom);
+			return inferTypeFrom.getType();
+		} else throw new RuntimeException("Type doesn't need to be infered");
 	}
 
 	public boolean typeMustBeInferred() {
-		return inferTypeFrom != null;
-	}
-
-	public Expression getExpressionToInferFrom() {
-		return inferTypeFrom;
-	}
-
-	public void inferType() {
-		setType(inferTypeFrom.getType());
-		castIdentifier = ResolvableIdentifier.convert(getType().getIdentifier());
+		return inferTypeFrom != null || inferTypeParameterFrom != null;
 	}
 
 	@Override

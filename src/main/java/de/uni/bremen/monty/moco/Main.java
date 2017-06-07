@@ -40,8 +40,10 @@ package de.uni.bremen.monty.moco;
 
 import de.uni.bremen.monty.moco.antlr.MontyParser;
 import de.uni.bremen.monty.moco.ast.AntlrAdapter;
+import de.uni.bremen.monty.moco.ast.CoreClasses;
 import de.uni.bremen.monty.moco.ast.Package;
 import de.uni.bremen.monty.moco.ast.PackageBuilder;
+import de.uni.bremen.monty.moco.ast.types.ConcreteType;
 import de.uni.bremen.monty.moco.util.*;
 import de.uni.bremen.monty.moco.visitor.*;
 
@@ -116,7 +118,7 @@ public class Main {
 		CodeGenerationVisitor cgv = new CodeGenerationVisitor();
 		BaseVisitor[] visitors =
 		        new BaseVisitor[] { new SetParentVisitor(), new DeclarationVisitor(), new ResolveVisitor(),
-		                new TypeCheckVisitor(), new ControlFlowVisitor(), cgv };
+						new VMTResolveVisitor(), new TypeCheckVisitor(), new ControlFlowVisitor(), cgv };
 
 		boolean everyThingIsAwesome = true;
 
@@ -134,6 +136,18 @@ public class Main {
 			if (visitor.foundError()) {
 				everyThingIsAwesome = false;
 				break;
+			}
+		}
+
+		if(everyThingIsAwesome) {
+			try {
+				cgv.visitAllClasses();
+			} catch (RuntimeException exception) {
+				cgv.logError(exception);
+				everyThingIsAwesome = false;
+			}
+			if (cgv.foundError()) {
+				everyThingIsAwesome = false;
 			}
 		}
 
@@ -205,7 +219,7 @@ public class Main {
 		return outputFile;
 	}
 
-	private static void runExecutable(File executable) throws IOException, InterruptedException {
+	private static int runExecutable(File executable) throws IOException, InterruptedException {
 		ProcessBuilder processBuilder = new ProcessBuilder(executable.getAbsolutePath());
 
 		String readFromFile = System.getProperty("testrun.readFromFile");
@@ -215,15 +229,25 @@ public class Main {
 			processBuilder.redirectInput(ProcessBuilder.Redirect.INHERIT);
 		}
 		Process process = processBuilder.start();
+		int statusCode = process.waitFor();
 		System.err.print(IOUtils.toString(process.getErrorStream()));
 		System.out.print(IOUtils.toString(process.getInputStream()));
+		return statusCode;
 	}
 
-	public static void main(String[] args) throws IOException, InterruptedException {
+    public static void main(String[] args) throws IOException, InterruptedException {
+        int statusCode = mainWithStatusCode(args);
+        System.exit(statusCode);
+    }
+
+	public static int mainWithStatusCode(String[] args) throws IOException, InterruptedException {
+		CoreClasses.reset();
+		ConcreteType.reset();
+
 		Namespace ns = parseArgs(args);
 
 		if (ns == null) {
-			return;
+			return 1;
 		}
 
 		String inputFileName = ns.get("file");
@@ -236,7 +260,7 @@ public class Main {
 
 		if (debugParseTree) {
 			debugParseTree(inputFileName);
-			return;
+			return 0;
 		}
 
 		StringWriter writer = new StringWriter();
@@ -245,21 +269,22 @@ public class Main {
 		Package ast = buildPackage(inputFileName);
 
 		if (!visitVisitors(ast, stopOnFirstError, writer.getBuffer())) {
-			return;
+			return 1;
 		}
 
 		if (printAST) {
 			(new PrintVisitor()).visitDoubleDispatched(ast);
 		}
 
+		String llvmCode = writer.toString();
 		if (emitAssembly) {
-			writeAssembly(outputFileName, inputFileName, writer.toString());
-			return;
+			writeAssembly(outputFileName, inputFileName, llvmCode);
 		}
 
-		File executable = buildExecutable(outputFileName, inputFileName, compileOnly, writer.toString());
+		File executable = buildExecutable(outputFileName, inputFileName, compileOnly, llvmCode);
 		if (!compileOnly) {
-			runExecutable(executable);
+			return runExecutable(executable);
 		}
+		return 0;
 	}
 }

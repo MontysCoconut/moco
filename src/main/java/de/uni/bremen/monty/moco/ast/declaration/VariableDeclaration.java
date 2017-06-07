@@ -42,6 +42,7 @@ import de.uni.bremen.monty.moco.ast.Identifier;
 import de.uni.bremen.monty.moco.ast.Position;
 import de.uni.bremen.monty.moco.ast.ResolvableIdentifier;
 import de.uni.bremen.monty.moco.ast.expression.Expression;
+import de.uni.bremen.monty.moco.ast.types.Type;
 import de.uni.bremen.monty.moco.visitor.BaseVisitor;
 
 public class VariableDeclaration extends Declaration {
@@ -50,8 +51,8 @@ public class VariableDeclaration extends Declaration {
 	}
 
 	private ResolvableIdentifier typeIdentifier;
-	private TypeDeclaration type;
-	private DeclarationType declarationType;
+	private Type type;
+	private final DeclarationType declarationType;
 	private boolean isGlobal;
 	private Expression inferTypeFrom = null;
 
@@ -60,11 +61,13 @@ public class VariableDeclaration extends Declaration {
 
 	public VariableDeclaration(Position position, Identifier identifier, ResolvableIdentifier typeIdentifier,
 	        DeclarationType declarationType) {
-		this(position, identifier, typeIdentifier);
+		super(position, identifier);
+		this.typeIdentifier = typeIdentifier;
 		this.declarationType = declarationType;
+		attributeIndex = -1;
 	}
 
-	public VariableDeclaration(Position position, Identifier identifier, TypeDeclaration type,
+	public VariableDeclaration(Position position, Identifier identifier, Type type,
 	        DeclarationType declarationType) {
 		super(position, identifier);
 		this.declarationType = declarationType;
@@ -82,11 +85,6 @@ public class VariableDeclaration extends Declaration {
 	public VariableDeclaration(Position position, Identifier identifier, Expression inferTypeFrom) {
 		this(position, identifier, (ResolvableIdentifier) null);
 		this.inferTypeFrom = inferTypeFrom;
-	}
-
-	/** set the declaration type */
-	public void setDeclarationType(DeclarationType type) {
-		this.declarationType = type;
 	}
 
 	/** get the declaration type
@@ -118,14 +116,14 @@ public class VariableDeclaration extends Declaration {
 	/** get the type.
 	 *
 	 * @return the type */
-	public TypeDeclaration getType() {
+	public Type getType() {
 		return type;
 	}
 
 	/** set the type
 	 *
 	 * @param type */
-	public void setType(TypeDeclaration type) {
+	public void setType(Type type) {
 		if (this.type != null) return;
 		this.type = type;
 	}

@@ -1,1 +1,1 @@
-ResolveVisitor caught error in FunctionCall at file: neg_Function1.monty, line: 10, char: 0: Arguments of function call do not match declaration.
+ResolveVisitor caught error in FunctionCall at file: neg_Function1.monty, line: 10, char: 0: Could not find matching Function for Identifier "square" with arguments: "[square]"

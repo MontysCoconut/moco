@@ -1,0 +1,14 @@
+class Aa:
+  sayHello():
+    println("Hello")
+
+class Bb inherits Aa:
+  sayWorld():
+    println("World")
+
+case class Foo<Tt, Ss inherits Tt>(Tt t, Ss s)
+
+Foo<Bb,Aa> foo := Foo<Bb,Aa>(Bb(),Aa())
+foo.s.sayHello()
+foo.t.sayHello()
+foo.t.sayWorld()

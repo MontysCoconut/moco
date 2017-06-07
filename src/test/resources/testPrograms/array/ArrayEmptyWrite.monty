@@ -4,5 +4,5 @@
 //
 // Expected error
 
-Array a := []
+Array<Object> a := []
 a.set(0, 0)

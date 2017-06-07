@@ -38,10 +38,7 @@
  */
 package de.uni.bremen.monty.moco.util;
 
-import de.uni.bremen.monty.moco.ast.Block;
-import de.uni.bremen.monty.moco.ast.Identifier;
-import de.uni.bremen.monty.moco.ast.Position;
-import de.uni.bremen.monty.moco.ast.ResolvableIdentifier;
+import de.uni.bremen.monty.moco.ast.*;
 import de.uni.bremen.monty.moco.ast.declaration.ClassDeclaration;
 import de.uni.bremen.monty.moco.ast.declaration.FunctionDeclaration;
 import de.uni.bremen.monty.moco.ast.declaration.VariableDeclaration;
@@ -51,6 +48,8 @@ import de.uni.bremen.monty.moco.ast.expression.VariableAccess;
 import de.uni.bremen.monty.moco.ast.statement.Assignment;
 import de.uni.bremen.monty.moco.ast.statement.ReturnStatement;
 import de.uni.bremen.monty.moco.ast.statement.UnpackAssignment;
+import de.uni.bremen.monty.moco.ast.types.TypeContext;
+import de.uni.bremen.monty.moco.ast.types.TypeFactory;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -77,7 +76,7 @@ public class FunctionWrapperFactory {
 
 		// create a variable and store an instance of the wrapper in it
 		VariableDeclaration functionObjectDeclaration =
-		        new VariableDeclaration(pos, varIdentifier, wrapperClass, VariableDeclaration.DeclarationType.VARIABLE);
+		        new VariableDeclaration(pos, varIdentifier, TypeFactory.from(wrapperClass, TypeContext.EMPTY), VariableDeclaration.DeclarationType.VARIABLE);
 		Assignment functionObjectAssignment =
 		        new Assignment(pos, new VariableAccess(pos,
 		                ResolvableIdentifier.convert(functionObjectDeclaration.getIdentifier())), new FunctionCall(pos,
@@ -131,7 +130,7 @@ public class FunctionWrapperFactory {
 		}
 
 		// either return the real return value (if function has a return value or if the return type must be inferred)
-		if ((function.isFunction()) || (function.isReturnTypeToBeInferred())) {
+		if (function.isReturnTypeToBeInferred() || function.isFunction()) {
 			body.addStatement(new ReturnStatement(pos, new FunctionCall(pos,
 			        ResolvableIdentifier.convert(function.getIdentifier()), localVariables)));
 		}
@@ -146,7 +145,7 @@ public class FunctionWrapperFactory {
 		// the return type of the method is either the return type of the original function,
 		// or empty tuple if it was a procedure.
 		ResolvableIdentifier returnTypeIdentifier =
-		        function.getReturnTypeIdentifier() != null ? function.getReturnTypeIdentifier() : tupleFactory.getTupleIdentifier(new ArrayList<ResolvableIdentifier>());
+		        function.isFunction() ? function.getReturnTypeIdentifier() : tupleFactory.getTupleIdentifier(new ArrayList<ResolvableIdentifier>());
 
 		// create a list containing the only parameter of the method
 		List<VariableDeclaration> methodParams = new ArrayList<>(1);
@@ -156,7 +155,7 @@ public class FunctionWrapperFactory {
 		// compose the actual method
 		FunctionDeclaration applyMethod =
 		        new FunctionDeclaration(pos, new Identifier("_apply_"), body, methodParams,
-		                FunctionDeclaration.DeclarationType.METHOD, returnTypeIdentifier, false);
+						FunctionDeclaration.DeclarationType.METHOD, returnTypeIdentifier, false);
 		return applyMethod;
 	}
 }

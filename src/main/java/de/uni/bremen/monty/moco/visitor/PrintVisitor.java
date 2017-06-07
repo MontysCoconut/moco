@@ -47,6 +47,7 @@ import de.uni.bremen.monty.moco.ast.expression.literal.FloatLiteral;
 import de.uni.bremen.monty.moco.ast.expression.literal.IntegerLiteral;
 import de.uni.bremen.monty.moco.ast.expression.literal.StringLiteral;
 import de.uni.bremen.monty.moco.ast.statement.Assignment;
+import de.uni.bremen.monty.moco.ast.types.Type;
 
 /** This visitor traverses the AST and prints useful information to stdout. */
 public class PrintVisitor extends BaseVisitor {
@@ -75,8 +76,8 @@ public class PrintVisitor extends BaseVisitor {
 	public void visit(FunctionCall node) {
 		printIndent("Symbol: " + node.getIdentifier());
 		String parameters = "";
-		for (VariableDeclaration parameter : node.getDeclaration().getParameters()) {
-			parameters += parameter.getTypeIdentifier() + " " + parameter.getIdentifier() + ", ";
+		for (Type parameter : node.getDeclaration().getParameterTypes()) {
+			parameters += parameter.getIdentifier() + ", ";
 		}
 		printIndent("Parameters: (" + parameters + ")");
 	}

@@ -39,8 +39,7 @@
 
 package de.uni.bremen.monty.moco.codegeneration.context;
 
-import de.uni.bremen.monty.moco.ast.CoreClasses;
-import de.uni.bremen.monty.moco.ast.declaration.TypeDeclaration;
+import de.uni.bremen.monty.moco.ast.types.Types;
 import de.uni.bremen.monty.moco.codegeneration.Native;
 import de.uni.bremen.monty.moco.codegeneration.CodeGenerator;
 import de.uni.bremen.monty.moco.codegeneration.context.CodeContext.FcmpOperand;
@@ -150,7 +149,7 @@ public class Operations {
 		return codeGenerator.boxType(
 		        c,
 		        (LLVMIdentifier<LLVMType>) (LLVMIdentifier<?>) resultPointer,
-		        CoreClasses.stringType());
+		        Types.stringType());
 	}
 
 	@Native("M.System.F.read$M.String.C.String$M.Int.C.Int")
@@ -164,7 +163,7 @@ public class Operations {
 		return codeGenerator.boxType(
 		        c,
 		        (LLVMIdentifier<LLVMType>) (LLVMIdentifier<?>) resultPointer,
-		        CoreClasses.stringType());
+				Types.stringType());
 	}
 
 	@Native("M.Object.C.Object.F._eq_$M.Bool.C.Bool$M.Object.C.Object")
@@ -333,7 +332,7 @@ public class Operations {
 		return c.binaryOperation("srem", arg1, arg2, llvmIdentifierFactory.newLocal(arg1.getType(), false));
 	}
 
-	@Native("M.Array.C.Array.F.length$M.Int.C.Int")
+	@Native("M.Array.C.NativeArray.F.length$M.Int.C.Int")
 	public LLVMIdentifier<LLVMType> arrayLength(CodeContext c, LLVMIdentifier<LLVMPointer> arrayPointer) {
 		LLVMIdentifier<LLVMPointer<LLVMStructType>> arrayStructPointer =
 		        (LLVMIdentifier<LLVMPointer<LLVMStructType>>) (LLVMIdentifier<?>) arrayPointer;
@@ -347,7 +346,7 @@ public class Operations {
 		return codeGenerator.resolveIfNeeded(c, result);
 	}
 
-	@Native("M.Array.C.Array.F.get$M.Object.C.Object$M.Int.C.Int")
+	@Native("M.Array.C.NativeArray.F.get$M.Object.C.Object$M.Int.C.Int")
 	public LLVMIdentifier<LLVMType> arrayAccess(CodeContext c, LLVMIdentifier<LLVMPointer> arrayPointer,
 	        LLVMIdentifier<LLVMInt> index) {
 		LLVMIdentifier<LLVMPointer<LLVMStructType>> arrayStructPointer =
@@ -355,7 +354,7 @@ public class Operations {
 
 		codeGenerator.checkArrayBounds(c, arrayStructPointer, index);
 		LLVMIdentifier<LLVMType> result =
-		        llvmIdentifierFactory.newLocal(codeGenerator.mapToLLVMType(CoreClasses.objectType()));
+		        llvmIdentifierFactory.newLocal(codeGenerator.mapToLLVMType(Types.objectType()));
 		c.getelementptr(
 		        result,
 		        arrayStructPointer,
@@ -365,7 +364,7 @@ public class Operations {
 		return result;
 	}
 
-	@Native("M.Array.C.Array.P.set$M.Int.C.Int$M.Object.C.Object")
+	@Native("M.Array.C.NativeArray.P.set$M.Int.C.Int$M.Object.C.Object")
 	public void arraySet(CodeContext c, LLVMIdentifier<LLVMPointer> arrayPointer, LLVMIdentifier<LLVMInt> index,
 	        LLVMIdentifier<LLVMType> value) {
 
@@ -374,7 +373,7 @@ public class Operations {
 
 		codeGenerator.checkArrayBounds(c, arrayStructPointer, index);
 
-		LLVMType elementType = codeGenerator.mapToLLVMType((TypeDeclaration) CoreClasses.objectType());
+		LLVMType elementType = codeGenerator.mapToLLVMType(Types.objectType());
 		LLVMIdentifier<LLVMPointer<LLVMType>> element = llvmIdentifierFactory.newLocal(pointer(elementType));
 
 		c.getelementptr(

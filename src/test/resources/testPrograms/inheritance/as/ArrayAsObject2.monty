@@ -6,5 +6,5 @@
 
 Object a := [1, 0] as Object
 
-print((a as Array).get(0) as Int)
-print((a as Array).get(1) as Int)
+print((a as Array<Int>).get(0) as Int)
+print((a as Array<Int>).get(1) as Int)

@@ -4,5 +4,6 @@
 //
 // Expected output: 0
 
-Array a := Array([0])
+Array<Int> a := Array<Int>([0])
 print(a.get(0) as Int)
+

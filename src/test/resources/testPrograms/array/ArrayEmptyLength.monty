@@ -4,5 +4,5 @@
 //
 // Expected output: 0
 
-Array a := []
+Array<Object> a := []
 print(a.length())

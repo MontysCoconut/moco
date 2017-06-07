@@ -1,0 +1,1 @@
+TypeCheckVisitor caught error in Assignment at file: Assignment1.monty, line: 2, char: 0: Int does not match Bool

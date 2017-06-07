@@ -1,1 +1,1 @@
-ResolveVisitor caught error in null: Type is not defined: Boolean
+ResolveVisitor caught error in square:ClassDeclaration at file: neg_Function2.monty, line: 7, char: 0: Type is not defined: Boolean

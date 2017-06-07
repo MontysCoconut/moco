@@ -1,0 +1,3 @@
+case class Wrapper<Content>(Array<Content> content)
+
+println(Wrapper<Float>([1.1,1.2,1.3]).content.get(1))

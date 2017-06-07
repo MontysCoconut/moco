@@ -49,12 +49,11 @@ import de.uni.bremen.monty.moco.ast.expression.FunctionCall;
 import de.uni.bremen.monty.moco.ast.expression.MemberAccess;
 import de.uni.bremen.monty.moco.ast.expression.SelfExpression;
 import de.uni.bremen.monty.moco.ast.statement.Statement;
+import de.uni.bremen.monty.moco.ast.types.TypeContext;
+import de.uni.bremen.monty.moco.ast.types.Type;
 import de.uni.bremen.monty.moco.exception.InvalidPlaceToDeclareException;
-import sun.reflect.generics.tree.ReturnType;
 
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
 
 /** This visitor must traverse the entire AST, set up scopes and define declarations.
  * <p>
@@ -94,10 +93,10 @@ public class DeclarationVisitor extends BaseVisitor {
 		Block classBlock = node.getBlock();
 
 		currentScope.define(node);
-		currentScope = new ClassScope(currentScope);
+		currentScope = new ClassScope(currentScope, TypeContext.EMPTY);
 
-		for (AbstractGenericType abstractGenericType : node.getAbstractGenericTypes()) {
-			currentScope.define(abstractGenericType);
+		for (TypeParameterDeclaration typeParameterDeclaration : node.getTypeParameterDeclarations()) {
+			currentScope.define(typeParameterDeclaration);
 		}
 
 		if (node != CoreClasses.voidType()) {
@@ -147,7 +146,7 @@ public class DeclarationVisitor extends BaseVisitor {
 		boolean backToParentScope = false;
 
 		if (node.getParentNode() instanceof ClassDeclaration) {
-			currentScope = new ClassScope(currentScope);
+			currentScope = new ClassScope(currentScope, TypeContext.EMPTY);
 			backToParentScope = true;
 		} else if (!(node.getParentNode() instanceof ModuleDeclaration)) {
 			currentScope = new Scope(currentScope);
@@ -171,7 +170,7 @@ public class DeclarationVisitor extends BaseVisitor {
 		FunctionDeclaration initializer =
 		        new FunctionDeclaration(node.getPosition(), new Identifier(node.getIdentifier().getSymbol()
 		                + "_definit"), new Block(node.getPosition()), new ArrayList<VariableDeclaration>(),
-		                FunctionDeclaration.DeclarationType.DEFAULT_INITIALIZER, (TypeDeclaration) null, false);
+		                FunctionDeclaration.DeclarationType.DEFAULT_INITIALIZER, (Type) null, false);
 		initializer.setParentNode(node.getBlock());
 		Block initializerBlock = initializer.getBody();
 		initializerBlock.setParentNode(initializer);

@@ -1,0 +1,4 @@
+case class Wrapper<Content>(Content content)
+
+Array<Wrapper<Int>> a := [Wrapper<Int>(4)]
+println(a.get(0).content)

@@ -1,1 +1,1 @@
-ResolveVisitor caught error in null: Cyclic dependency detected: ClassA_definit
+ResolveVisitor caught error in FunctionCall at file: InheritanceCycle1.monty, line: 7, char: 0: Identifier is not defined: ClassB_definit

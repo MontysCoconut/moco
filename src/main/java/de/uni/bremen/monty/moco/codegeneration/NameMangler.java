@@ -44,7 +44,7 @@ import de.uni.bremen.monty.moco.ast.Identifier;
 import de.uni.bremen.monty.moco.ast.declaration.*;
 import de.uni.bremen.monty.moco.ast.statement.ConditionalStatement;
 import de.uni.bremen.monty.moco.ast.statement.WhileLoop;
-import de.uni.bremen.monty.moco.codegeneration.types.TypeConverter;
+import de.uni.bremen.monty.moco.ast.types.*;
 
 enum Mangled {
 	MODULE("M."), CLASS(".C."), FUNC(".F."), PROC(".P."), BLOCK(".B."), VAR(".V."), TYPE("$"), IF("IF."), ELSE("ELSE."), WHILE(
@@ -84,42 +84,29 @@ enum Mangled {
  *
  * mangled : packet_module(_class)?((_block|_proc|_func)*(_proc|_func|_var))?; * */
 public class NameMangler {
-	TypeConverter typeConverter;
 
-	private String mangleFunctionDeclaration(FunctionDeclaration node, String midTerm) {
+	private String mangleFunctionDeclaration(ConcreteFunctionType node, String midTerm) {
 		String parameter = "";
-		for (final VariableDeclaration variableDeclaration : node.getParameters()) {
-			if (escapeForLLVM(variableDeclaration.getIdentifier()).equals("self")) {
-			} else {
-				TypeDeclaration type = variableDeclaration.getType();
-				ClassDeclaration classDeclaration = getConcreteClass(node, type);
-				parameter += Mangled.TYPE + mangleClass(classDeclaration);
+		for (final ConcreteVariableType variableDeclaration : node.getParameter()) {
+			if (!escapeForLLVM(variableDeclaration.getIdentifier()).equals("self")) {
+				parameter += Mangled.TYPE + mangleClass(variableDeclaration.getType());
 			}
 		}
 
 		String base;
-		if (node.getDefiningClass() != null) {
-			base =
-			        mangleClass((ClassDeclaration) typeConverter.mapAbstractGenericToConcreteIfApplicable(node.getDefiningClass()));
+		if (node.getDeclarationType() == FunctionDeclaration.DeclarationType.UNBOUND) {
+			base = mangleBlock(node.getASTNode(), node.getContext());
 		} else {
-			base = mangleBlock(node);
+			base = mangleClass(node.getDefiningClass());
 		}
 
 		return base + midTerm + parameter;
 	}
 
-	private ClassDeclaration getConcreteClass(ASTNode node, TypeDeclaration type) {
-		if (type instanceof AbstractGenericType) {
-			ClassDeclarationVariation variation = typeConverter.getCurrentClassDeclarationVariation();
-			type = variation.mapAbstractToConcrete((AbstractGenericType) type);
-		}
-		return (ClassDeclaration) type;
-	}
-
-	public String mangleFunction(FunctionDeclaration node) {
+	public String mangleFunction(ConcreteFunctionType node) {
 		if (node.isFunction()) {
 			String funcName = Mangled.FUNC + escapeForLLVM(node.getIdentifier());
-			funcName += Mangled.TYPE + mangleClass(getConcreteClass(node, node.getReturnType()));
+			funcName += Mangled.TYPE + mangleClass(node.getReturnType());
 
 			return mangleFunctionDeclaration(node, funcName);
 
@@ -130,39 +117,40 @@ public class NameMangler {
 		}
 	}
 
-	public String mangleVariable(VariableDeclaration node) {
-		String base = mangleBlock(node);
+	public String mangleVariable(ConcreteVariableType node) {
+		String base = mangleBlock(node.getASTNode(), node.getContext());
 
 		String var =
 		        Mangled.VAR + escapeForLLVM(node.getIdentifier()) + Mangled.TYPE
-		                + mangleClass(getConcreteClass(node, node.getType()));
+		                + mangleClass(node.getType());
 
 		return base + var;
 	}
 
-	private String mangleBlock(ASTNode node) {
+	private String mangleBlock(ASTNode node, TypeContext context) {
 		ASTNode parent = node.getParentNode();
 		if (parent instanceof ModuleDeclaration) {
 			return mangleModule((ModuleDeclaration) parent);
 		} else if (parent instanceof ClassDeclaration) {
-			return mangleClass((ClassDeclaration) parent);
+			ClassDeclaration clazz = (ClassDeclaration) parent;
+			return mangleClass(TypeFactory.makeConcrete(clazz,context));
 		} else if (parent instanceof FunctionDeclaration) {
-			return mangleFunction((FunctionDeclaration) parent);
+			return mangleFunction(TypeFactory.makeConcrete((FunctionDeclaration) parent, context));
 		} else if (parent instanceof ConditionalStatement || parent instanceof WhileLoop) {
-			return Mangled.BLOCK + Integer.toHexString(System.identityHashCode(parent)) + mangleBlock(parent);
+			return Mangled.BLOCK + Integer.toHexString(System.identityHashCode(parent)) + mangleBlock(parent, context);
 		} else {
-			return mangleBlock(parent);
+			return mangleBlock(parent, context);
 		}
 	}
 
-	public String mangleClass(ClassDeclaration node) {
-		ModuleDeclaration module = (ModuleDeclaration) node.getParentNodeByType(ModuleDeclaration.class);
+	public String mangleClass(ConcreteType type){
+		ModuleDeclaration module = type.getModuleDeclaration();
 		String base = mangleModule(module);
 
-		String className = Mangled.CLASS + escapeForLLVM(node.getIdentifier());
-		if (node instanceof ClassDeclarationVariation) {
+		String className = Mangled.CLASS + escapeForLLVM(type.getIdentifier());
+		if (!type.getConcreteGenericTypes().isEmpty()) {
 			className += Mangled.TYPE;
-			for (ClassDeclaration concreteGenericType : ((ClassDeclarationVariation) node).getConcreteGenericTypes()) {
+			for (ConcreteType concreteGenericType : type.getConcreteGenericTypes()) {
 				className += Mangled.TYPE + mangleClass(concreteGenericType);
 			}
 		}
@@ -191,9 +179,5 @@ public class NameMangler {
 		string = string.replaceAll(">", "_greater");
 		string = string.replaceAll("%", "_rem");
 		return string;
-	}
-
-	public void setTypeConverter(TypeConverter converter) {
-		typeConverter = converter;
 	}
 }

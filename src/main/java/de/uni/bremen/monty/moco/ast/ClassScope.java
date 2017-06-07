@@ -39,9 +39,18 @@
 package de.uni.bremen.monty.moco.ast;
 
 import de.uni.bremen.monty.moco.ast.declaration.*;
+import de.uni.bremen.monty.moco.ast.types.FunctionType;
+import de.uni.bremen.monty.moco.ast.types.TypeContext;
+import de.uni.bremen.monty.moco.ast.types.TypeFactory;
 import de.uni.bremen.monty.moco.exception.*;
+import de.uni.bremen.monty.moco.util.JavaUtil;
+import de.uni.bremen.monty.moco.visitor.VisitOnceVisitor;
+
+import java.util.Collections;
 import java.util.List;
 import java.util.ArrayList;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 /** A scope in which identifier are associated with declarations.
  * <p>
@@ -64,6 +73,7 @@ import java.util.ArrayList;
  * Note: only single inheritance so far. */
 public class ClassScope extends Scope {
 
+	private final TypeContext context;
 	/** The parent class in inheritance hierachy. */
 	private List<ClassScope> parentClassesScopes;
 
@@ -71,8 +81,9 @@ public class ClassScope extends Scope {
 	 *
 	 * @param parent
 	 *            the parent scope in nesting hierachy */
-	public ClassScope(Scope parent) {
+	public ClassScope(Scope parent, TypeContext context) {
 		super(parent);
+		this.context = context;
 		this.parentClassesScopes = new ArrayList<>();
 	}
 
@@ -85,23 +96,23 @@ public class ClassScope extends Scope {
 	 * @param identifier
 	 *            the identifier
 	 * @return the declaration or null if nothing is found */
-	protected Declaration resolveMember(ResolvableIdentifier identifier) {
+	protected Optional<Declaration> resolveMember(ResolvableIdentifier identifier) {
 		Declaration declaration = members.get(identifier);
 
 		if (declaration != null) {
-			return declaration;
+			return Optional.of(declaration);
 		}
 		for (ClassScope scope : parentClassesScopes) {
 			try {
-				declaration = scope.resolveMember(identifier);
+				Optional<Declaration> parentDecl = scope.resolveMember(identifier);
+				if(parentDecl.isPresent()){
+					return parentDecl;
+				}
 			} catch (StackOverflowError soe) {
 				throw new CyclicDependencyException("Cyclic dependency detected: " + identifier.getSymbol());
 			}
-			if (declaration != null) {
-				return declaration;
-			}
 		}
-		return null;
+		return Optional.empty();
 	}
 
 	/** Resolve an identifier for list of overloaded functions in inherited scope.
@@ -109,18 +120,21 @@ public class ClassScope extends Scope {
 	 * @param identifier
 	 *            the identifier to resolve
 	 * @return the list of function declarations */
-	protected List<Declaration> resolveFunctionMember(ResolvableIdentifier identifier) {
-		List<Declaration> result = new ArrayList<>();
+	protected List<FunctionType> resolveFunctionMember(ResolvableIdentifier identifier, VisitOnceVisitor visitor) {
+		List<FunctionType> result = new ArrayList<>();
 
 		if (functions.containsKey(identifier)) {
-			result.addAll(functions.get(identifier));
+			result.addAll(getResolvedFunctions(identifier,visitor));
 		}
 		if (members.containsKey(identifier)) {
-			result.add(members.get(identifier));
+			Declaration declaration = members.get(identifier);
+			if(isFunctionVariable(declaration)) {
+				result.add(TypeFactory.createFunction((VariableDeclaration) declaration));
+			}
 		}
 
 		for (ClassScope scope : parentClassesScopes) {
-			result.addAll(scope.resolveFunctionMember(identifier));
+			result.addAll(scope.resolveFunctionMember(identifier,visitor));
 		}
 		return result;
 	}
@@ -133,13 +147,8 @@ public class ClassScope extends Scope {
 	 *            the identifier to resolve
 	 * @return the declaration or null if nothing is found */
 	@Override
-	public Declaration resolve(ResolvableIdentifier identifier) {
-		Declaration declaration = resolveMember(identifier);
-
-		if (declaration != null) {
-			return declaration;
-		}
-		return super.resolve(identifier);
+	public Optional<Declaration> _resolve(ResolvableIdentifier identifier) {
+		return JavaUtil.or(resolveMember(identifier), () -> super._resolve(identifier));
 	}
 
 	/** Resolve an identifier for list of overloaded functions.
@@ -150,18 +159,35 @@ public class ClassScope extends Scope {
 	 *            the identifier to resolve
 	 * @return the list of function declarations */
 	@Override
-	public List<Declaration> resolveFunction(ResolvableIdentifier identifier) {
-		List<Declaration> result = new ArrayList<>();
-		result.addAll(resolveFunctionMember(identifier));
+	public Optional<List<FunctionType>> _resolveFunction(ResolvableIdentifier identifier, VisitOnceVisitor visitor) {
+		List<FunctionType> result = new ArrayList<>();
+		result.addAll(resolveFunctionMember(identifier,visitor));
 		if (parent != null) {
-			try {
-				result.addAll(parent.resolveFunction(identifier));
-			} catch (UnknownIdentifierException e) {
-			}
+			result.addAll(parent._resolveFunction(identifier, visitor).orElse(Collections.emptyList()));
 		}
 		if (result.isEmpty()) {
-			throw new UnknownIdentifierException(identifier);
+			return Optional.empty();
 		}
-		return result;
+		return Optional.of(result);
+	}
+
+	@Override
+	protected List<FunctionType> getResolvedFunctions(ResolvableIdentifier identifier, VisitOnceVisitor visitor) {
+		return functions.get(identifier).stream().map(f -> {
+			visitor.visitDoubleDispatched(f);
+			return TypeFactory.from(f, context);
+		}).collect(Collectors.toList());
+	}
+
+	public ClassScope extend(TypeContext context) {
+		ClassScope classScope = new ClassScope(parent, this.context.extend(context));
+		classScope.parentClassesScopes = this.parentClassesScopes;
+		classScope.members = this.members;
+		classScope.functions = this.functions;
+		return classScope;
+	}
+
+	public TypeContext getContext() {
+		return context;
 	}
 }
